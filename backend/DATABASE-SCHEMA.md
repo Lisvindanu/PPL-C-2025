@@ -1,10 +1,10 @@
 # Database Schema - SkillConnect
 
-Skema database untuk 8 modul dengan MySQL. Total **17 tables**.
+Skema database untuk 8 modul dengan MySQL. Total **18 tables**.
 
 ---
 
-## 📋 Daftar Tables (17 Total)
+## 📋 Daftar Tables (18 Total)
 
 | # | Table | Modul |
 |---|-------|-------|
@@ -21,10 +21,11 @@ Skema database untuk 8 modul dengan MySQL. Total **17 tables**.
 | 11 | `percakapan` | Chat & Notification |
 | 12 | `pesan` | Chat & Notification |
 | 13 | `notifikasi` | Chat & Notification |
-| 14 | `favorit` | Recommendation |
-| 15 | `aktivitas_user` | Recommendation |
-| 16 | `preferensi_user` | Recommendation |
-| 17 | `rekomendasi_layanan` | Recommendation |
+| 14 | `log_aktivitas_admin` | Admin Dashboard |
+| 15 | `favorit` | Recommendation |
+| 16 | `aktivitas_user` | Recommendation |
+| 17 | `preferensi_user` | Recommendation |
+| 18 | `rekomendasi_layanan` | Recommendation |
 
 ---
 
@@ -441,7 +442,43 @@ CREATE TABLE notifikasi (
 
 ## Modul 7: Admin Dashboard & Analytics
 
-**Tidak ada table baru.** Admin query dari table yang sudah ada.
+### `log_aktivitas_admin`
+
+```sql
+CREATE TABLE log_aktivitas_admin (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  admin_id CHAR(36) NOT NULL,
+
+  aksi ENUM(
+    'block_user',
+    'unblock_user',
+    'block_service',
+    'unblock_service',
+    'delete_review',
+    'approve_withdrawal',
+    'reject_withdrawal',
+    'update_user',
+    'export_report'
+  ) NOT NULL,
+
+  target_type ENUM('user', 'layanan', 'ulasan', 'pesanan', 'pembayaran', 'system') NOT NULL,
+  target_id CHAR(36),
+
+  detail JSON,
+  ip_address VARCHAR(45),
+  user_agent TEXT,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_admin_id (admin_id),
+  INDEX idx_aksi (aksi),
+  INDEX idx_target (target_type, target_id),
+  INDEX idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+**Query Examples:**
 
 ```sql
 -- Statistik user & order
@@ -460,6 +497,13 @@ SELECT DATE(created_at) as tanggal, COUNT(*), SUM(total_bayar)
 FROM pembayaran
 WHERE status = 'berhasil'
 GROUP BY DATE(created_at);
+
+-- Admin activity audit trail
+SELECT a.*, u.email as admin_email
+FROM log_aktivitas_admin a
+JOIN users u ON a.admin_id = u.id
+WHERE a.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+ORDER BY a.created_at DESC;
 ```
 
 ---
@@ -753,6 +797,26 @@ CREATE TABLE rekomendasi_layanan (
         └──────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
+│                    MODUL 7: ADMIN DASHBOARD & ANALYTICS                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+        ┌──────────────────────┐
+        │ log_aktivitas_admin  │
+        │     (PK: id)         │
+        │                      │
+        │ FK: admin_id         │◄──── users (admin, 1:N)
+        │                      │
+        │ - aksi (block_user/  │
+        │   unblock_user/      │
+        │   delete_review/dll) │
+        │ - target_type        │
+        │ - target_id          │
+        │ - detail (JSON)      │
+        │ - ip_address         │
+        │ - user_agent         │
+        └──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────┐
 │                 MODUL 8: RECOMMENDATION & PERSONALIZATION                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -822,6 +886,7 @@ users (1) ─────────────> (N) ulasan (as penerima)
 users (N) <───────────> (N) percakapan (self M:M)
 users (1) ─────────────> (N) pesan (as pengirim)
 users (1) ─────────────> (N) notifikasi
+users (1) ─────────────> (N) log_aktivitas_admin (as admin)
 users (1) ─────────────> (N) favorit
 users (1) ─────────────> (N) aktivitas_user
 users (1) ─────────────> (1) preferensi_user
@@ -876,4 +941,4 @@ npx sequelize-cli db:migrate
 
 ---
 
-**Total: 17 tables. Perfect untuk Capstone! 🎉**
+**Total: 18 tables. Perfect untuk Capstone! 🎉**

@@ -61,7 +61,63 @@ admin/
 
 ## 📦 Database Schema
 
-**Note**: Modul admin TIDAK memerlukan table baru. Semua data diambil dari query table existing:
+### `log_aktivitas_admin` (Admin Activity Log)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const AdminActivityLog = sequelize.define('log_aktivitas_admin', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    admin_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    aksi: {
+      type: DataTypes.ENUM(
+        'block_user',
+        'unblock_user',
+        'block_service',
+        'unblock_service',
+        'delete_review',
+        'approve_withdrawal',
+        'reject_withdrawal',
+        'update_user',
+        'export_report'
+      ),
+      allowNull: false
+    },
+    target_type: {
+      type: DataTypes.ENUM('user', 'layanan', 'ulasan', 'pesanan', 'pembayaran', 'system'),
+      allowNull: false
+    },
+    target_id: DataTypes.CHAR(36),
+    detail: DataTypes.JSON,
+    ip_address: DataTypes.STRING(45),
+    user_agent: DataTypes.TEXT
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['admin_id'] },
+      { fields: ['aksi'] },
+      { fields: ['target_type', 'target_id'] },
+      { fields: ['created_at'] }
+    ]
+  });
+
+  return AdminActivityLog;
+};
+```
+
+**Note**: Modul admin juga query data dari table existing:
 - `users` - untuk statistik user
 - `pesanan` - untuk statistik order
 - `pembayaran` - untuk revenue analytics
@@ -349,7 +405,13 @@ class ExportReport {
 ### Block User Use Case
 ```javascript
 class BlockUser {
-  async execute(userId, adminId, reason) {
+  constructor(userRepository, adminLogRepository, emailService) {
+    this.userRepository = userRepository;
+    this.adminLogRepository = adminLogRepository;
+    this.emailService = emailService;
+  }
+
+  async execute(userId, adminId, reason, ipAddress, userAgent) {
     const user = await this.userRepository.findById(userId);
     if (!user) throw new Error('User not found');
 
@@ -357,8 +419,30 @@ class BlockUser {
       throw new Error('Cannot block admin user');
     }
 
+    // Simpan data sebelum diblokir (untuk audit trail)
+    const beforeData = {
+      email: user.email,
+      is_active: user.is_active,
+      role: user.role
+    };
+
     user.block(reason);
     await this.userRepository.update(user);
+
+    // Log aktivitas admin
+    await this.adminLogRepository.save({
+      adminId,
+      aksi: 'block_user',
+      targetType: 'user',
+      targetId: userId,
+      detail: {
+        reason,
+        beforeData,
+        afterData: { is_active: false }
+      },
+      ipAddress,
+      userAgent
+    });
 
     // Kirim email notifikasi ke user
     await this.emailService.sendBlockNotification(user.email, reason);
