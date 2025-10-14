@@ -3,6 +3,9 @@ backlog.md
 Modul4-PaymentGateway.md
 SRS-Modul4-PaymentGateway.md
 Presentasi-Modul4-PaymentGateway.md
+backend/PANDUAN-ANIN-PAYMENT.md
+BACKLOG-MODUL4-PAYMENT.csv
+BACKLOG-MODUL4-PAYMENT.md
 
 # Dependencies
 node_modules/
@@ -35,6 +38,7 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+.history/
 *.swp
 *.swo
 *~

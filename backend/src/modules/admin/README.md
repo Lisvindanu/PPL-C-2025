@@ -17,7 +17,8 @@ Modul untuk admin mengelola sistem, monitoring statistik, analytics, dan reporti
 admin/
 ├── domain/
 │   ├── entities/
-│   │   └── SystemStats.js       # Entity statistics
+│   │   ├── SystemStats.js       # Entity statistics
+│   │   └── AdminActivityLog.js  # Entity admin activity log
 │   └── services/
 │       ├── AnalyticsService.js  # Business logic analytics
 │       └── FraudDetectionService.js
@@ -28,25 +29,34 @@ admin/
 │   │   ├── GetRevenueAnalytics.js
 │   │   ├── BlockUser.js         # Block/suspend user
 │   │   ├── BlockService.js      # Block service
-│   │   └── ExportReport.js      # Export reports
+│   │   ├── DeleteReview.js      # Delete review (with log)
+│   │   ├── ExportReport.js      # Export reports
+│   │   └── GetAdminActivityLog.js  # Get admin activity history
 │   └── dtos/
 │       ├── StatsDto.js
-│       └── AnalyticsDto.js
+│       ├── AnalyticsDto.js
+│       └── AdminLogDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── SequelizeAnalyticsRepository.js
+│   │   ├── SequelizeAnalyticsRepository.js
+│   │   └── SequelizeAdminLogRepository.js
+│   ├── models/
+│   │   └── AdminActivityLogModel.js
 │   └── services/
 │       ├── ReportGenerator.js   # Generate PDF/CSV reports
 │       └── ChartService.js      # Generate chart data
 └── presentation/
     ├── controllers/
-    │   └── AdminController.js
+    │   ├── AdminController.js
+    │   └── AdminLogController.js
     └── routes/
-        └── adminRoutes.js
+        ├── adminRoutes.js
+        └── adminLogRoutes.js
 ```
 
 ## 🌐 API Endpoints
 
+### Admin Dashboard & Analytics
 | Method | Endpoint | Description | Auth |
 |--------|----------|-------------|------|
 | GET | `/api/admin/dashboard` | Dashboard overview stats | Admin |
@@ -56,8 +66,16 @@ admin/
 | GET | `/api/admin/analytics/orders` | Order trends | Admin |
 | PUT | `/api/admin/users/:id/block` | Block user | Admin |
 | PUT | `/api/admin/services/:id/block` | Block service | Admin |
+| DELETE | `/api/admin/reviews/:id` | Delete review | Admin |
 | POST | `/api/admin/reports/export` | Export report | Admin |
 | GET | `/api/admin/fraud-alerts` | Fraud detection alerts | Admin |
+
+### Admin Activity Log
+| Method | Endpoint | Description | Auth |
+|--------|----------|-------------|------|
+| GET | `/api/admin/logs` | Get admin activity logs | Admin |
+| GET | `/api/admin/logs/:id` | Get specific log detail | Admin |
+| GET | `/api/admin/logs/admin/:adminId` | Logs by specific admin | Admin |
 
 ## 📦 Database Schema
 
@@ -402,6 +420,118 @@ class ExportReport {
 }
 ```
 
+### Get Admin Activity Log Use Case
+```javascript
+class GetAdminActivityLog {
+  constructor(adminLogRepository, userRepository) {
+    this.adminLogRepository = adminLogRepository;
+    this.userRepository = userRepository;
+  }
+
+  async execute(filters = {}) {
+    const { page = 1, limit = 20, aksi, adminId, targetType, startDate, endDate } = filters;
+    const offset = (page - 1) * limit;
+
+    // Build query filters
+    const where = {};
+    if (aksi) where.aksi = aksi;
+    if (adminId) where.admin_id = adminId;
+    if (targetType) where.target_type = targetType;
+    if (startDate || endDate) {
+      where.created_at = {};
+      if (startDate) where.created_at.$gte = new Date(startDate);
+      if (endDate) where.created_at.$lte = new Date(endDate);
+    }
+
+    // Query logs with pagination
+    const [logs, total] = await Promise.all([
+      this.adminLogRepository.findAll({
+        where,
+        include: [{ model: 'users', as: 'admin', attributes: ['id', 'email', 'nama_depan', 'nama_belakang'] }],
+        order: [['created_at', 'DESC']],
+        limit,
+        offset
+      }),
+      this.adminLogRepository.count({ where })
+    ]);
+
+    return {
+      logs: logs.map(log => ({
+        logId: log.id,
+        admin: {
+          adminId: log.admin.id,
+          email: log.admin.email,
+          name: `${log.admin.nama_depan} ${log.admin.nama_belakang}`
+        },
+        aksi: log.aksi,
+        targetType: log.target_type,
+        targetId: log.target_id,
+        detail: log.detail,
+        ipAddress: log.ip_address,
+        userAgent: log.user_agent,
+        createdAt: log.created_at
+      })),
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    };
+  }
+
+  async getByAdmin(adminId, filters = {}) {
+    const { startDate, endDate } = filters;
+
+    // Get admin info
+    const admin = await this.userRepository.findById(adminId);
+    if (!admin || admin.role !== 'admin') {
+      throw new Error('Admin not found');
+    }
+
+    // Get logs
+    const where = { admin_id: adminId };
+    if (startDate || endDate) {
+      where.created_at = {};
+      if (startDate) where.created_at.$gte = new Date(startDate);
+      if (endDate) where.created_at.$lte = new Date(endDate);
+    }
+
+    const logs = await this.adminLogRepository.findAll({
+      where,
+      order: [['created_at', 'DESC']]
+    });
+
+    // Calculate stats
+    const stats = {
+      totalActions: logs.length,
+      byAction: {}
+    };
+
+    logs.forEach(log => {
+      stats.byAction[log.aksi] = (stats.byAction[log.aksi] || 0) + 1;
+    });
+
+    return {
+      admin: {
+        adminId: admin.id,
+        email: admin.email,
+        name: `${admin.nama_depan} ${admin.nama_belakang}`
+      },
+      stats,
+      logs: logs.map(log => ({
+        logId: log.id,
+        aksi: log.aksi,
+        targetType: log.target_type,
+        targetId: log.target_id,
+        detail: log.detail,
+        createdAt: log.created_at
+      }))
+    };
+  }
+}
+```
+
 ### Block User Use Case
 ```javascript
 class BlockUser {
@@ -552,6 +682,78 @@ Response: {
       timestamp: "2025-01-20T11:00:00Z"
     }
   ]
+}
+```
+
+### Get Admin Activity Logs
+```javascript
+GET /api/admin/logs?page=1&limit=20&aksi=block_user&startDate=2025-01-01
+Headers: { Authorization: "Bearer <admin_token>" }
+Response: {
+  success: true,
+  data: {
+    logs: [
+      {
+        logId: "log_123",
+        admin: {
+          adminId: "admin_456",
+          email: "admin@skillconnect.com",
+          name: "John Admin"
+        },
+        aksi: "block_user",
+        targetType: "user",
+        targetId: "user_789",
+        detail: {
+          reason: "Violation of terms",
+          beforeData: { is_active: true },
+          afterData: { is_active: false }
+        },
+        ipAddress: "192.168.1.100",
+        userAgent: "Mozilla/5.0...",
+        createdAt: "2025-01-20T10:30:00Z"
+      }
+    ],
+    pagination: {
+      page: 1,
+      limit: 20,
+      total: 150,
+      totalPages: 8
+    }
+  }
+}
+```
+
+### Get Logs by Specific Admin
+```javascript
+GET /api/admin/logs/admin/:adminId?startDate=2025-01-01&endDate=2025-01-31
+Headers: { Authorization: "Bearer <admin_token>" }
+Response: {
+  success: true,
+  data: {
+    admin: {
+      adminId: "admin_456",
+      email: "admin@skillconnect.com",
+      name: "John Admin"
+    },
+    stats: {
+      totalActions: 45,
+      byAction: {
+        block_user: 12,
+        delete_review: 8,
+        export_report: 25
+      }
+    },
+    logs: [
+      {
+        logId: "log_123",
+        aksi: "block_user",
+        targetType: "user",
+        targetId: "user_789",
+        detail: {...},
+        createdAt: "2025-01-20T10:30:00Z"
+      }
+    ]
+  }
 }
 ```
 

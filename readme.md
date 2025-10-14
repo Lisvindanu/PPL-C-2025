@@ -589,6 +589,7 @@ module.exports = Payment;
 
 ### Backend Documentation
 - [Backend README](backend/README.md) - Setup & overview backend
+- [Database Schema](backend/DATABASE-SCHEMA.md) - Complete database schema & relationships
 - [Structure Rules](backend/STRUCTURE-RULES.md) - Aturan struktur DDD
 - [MySQL Guide](backend/MYSQL-SEQUELIZE-GUIDE.md) - MySQL + Sequelize guide
 - [Frontend Integration Guide](backend/FRONTEND-INTEGRATION-GUIDE.md) - Cara FE consume API
@@ -600,6 +601,14 @@ module.exports = Payment;
 
 ### Frontend Documentation
 - [Frontend README](frontend/README.md) - Setup & Atomic Design guide
+- [Atoms Components](frontend/src/components/atoms/README.md) - Basic UI components
+- [Molecules Components](frontend/src/components/molecules/README.md) - Combined components
+- [Organisms Components](frontend/src/components/organisms/README.md) - Complex components
+- [Templates](frontend/src/components/templates/README.md) - Layout templates
+- [Pages](frontend/src/pages/README.md) - Complete pages
+- [Services](frontend/src/services/README.md) - API integration layer
+- [Hooks](frontend/src/hooks/README.md) - Custom React hooks
+- [Utils](frontend/src/utils/README.md) - Utility functions
 
 ---
 
@@ -663,11 +672,36 @@ chore: Maintenance tasks
 ## 🐛 Troubleshooting
 
 ### Backend tidak bisa connect ke MySQL
+
+**Windows (Laragon):**
+```bash
+# Start Laragon dan pastikan MySQL running
+# Buka Laragon > Start All
+
+# Test connection
+mysql -u root -p
+# Password default Laragon biasanya kosong atau "root"
+```
+
+**MacOS:**
 ```bash
 # Cek MySQL running
-brew services list  # MacOS
-# atau
-sudo systemctl status mysql  # Linux
+brew services list
+
+# Start MySQL jika belum running
+brew services start mysql
+
+# Test connection
+mysql -u root -p
+```
+
+**Linux:**
+```bash
+# Cek MySQL status
+sudo systemctl status mysql
+
+# Start MySQL jika belum running
+sudo systemctl start mysql
 
 # Test connection
 mysql -u root -p
