@@ -36,9 +36,9 @@ order/
 │       └── OrderResponseDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoOrderRepository.js
+│   │   └── SequelizeOrderRepository.js
 │   ├── models/
-│   │   └── OrderModel.js
+│   │   └── OrderModel.js        # Sequelize Model
 │   └── services/
 │       └── NotificationService.js # Kirim notifikasi status
 └── presentation/
@@ -72,36 +72,92 @@ rejected    cancelled
 ## 📦 Database Schema (OrderModel)
 
 ```javascript
-{
-  orderId: String (unique, auto-generated),
-  clientId: ObjectId (ref: User),
-  freelancerId: ObjectId (ref: User),
-  serviceId: ObjectId (ref: Service),
-  status: Enum [
-    'pending',        // Menunggu konfirmasi freelancer
-    'accepted',       // Freelancer terima
-    'rejected',       // Freelancer tolak
-    'in_progress',    // Sedang dikerjakan
-    'completed',      // Selesai
-    'cancelled'       // Dibatalkan
-  ],
-  price: Number,
-  deliveryTime: Number (days),
-  requirements: String,
-  isPaid: Boolean (default: false),
-  paymentId: ObjectId (ref: Payment),
-  files: [String],     // File dari freelancer
-  notes: String,
-  createdAt: Date,
-  updatedAt: Date,
-  completedAt: Date,
-  statusHistory: [{
-    status: String,
-    changedBy: ObjectId,
-    changedAt: Date,
-    note: String
-  }]
-}
+// Sequelize Model Definition
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Order = sequelize.define('pesanan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    nomor_pesanan: {
+      type: DataTypes.STRING(50),
+      unique: true,
+      allowNull: false
+    },
+    client_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' }
+    },
+    freelancer_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' }
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'layanan', key: 'id' }
+    },
+    paket_id: {
+      type: DataTypes.CHAR(36),
+      references: { model: 'paket_layanan', key: 'id' }
+    },
+    judul: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    deskripsi: DataTypes.TEXT,
+    catatan_client: DataTypes.TEXT,
+    harga: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    biaya_platform: {
+      type: DataTypes.DECIMAL(10, 2),
+      defaultValue: 0
+    },
+    total_bayar: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    waktu_pengerjaan: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    tenggat_waktu: DataTypes.DATE,
+    dikirim_pada: DataTypes.DATE,
+    selesai_pada: DataTypes.DATE,
+    status: {
+      type: DataTypes.ENUM(
+        'menunggu',
+        'diterima',
+        'ditolak',
+        'dikerjakan',
+        'dikirim',
+        'selesai',
+        'dibatalkan'
+      ),
+      defaultValue: 'menunggu'
+    },
+    lampiran_client: DataTypes.JSON,
+    lampiran_freelancer: DataTypes.JSON
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['nomor_pesanan'] },
+      { fields: ['client_id'] },
+      { fields: ['freelancer_id'] },
+      { fields: ['status'] }
+    ]
+  });
+
+  return Order;
+};
 ```
 
 ## 💡 Tips Implementasi

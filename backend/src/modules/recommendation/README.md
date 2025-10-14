@@ -34,13 +34,13 @@ recommendation/
 │       └── PreferenceDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   ├── MongoPreferenceRepository.js
-│   │   └── MongoRecommendationLogRepository.js
+│   │   ├── SequelizePreferenceRepository.js
+│   │   └── SequelizeRecommendationLogRepository.js
 │   ├── models/
 │   │   ├── UserPreferenceModel.js
 │   │   └── RecommendationLogModel.js
 │   └── services/
-│       └── MLService.js  # Optional: ML integration
+│       └── RecommendationAlgorithm.js  # Pure JavaScript algorithm
 └── presentation/
     ├── controllers/
     │   └── RecommendationController.js
@@ -501,49 +501,43 @@ Response: {
 }
 ```
 
-## 🤖 Machine Learning Integration (Optional)
+## 📊 Algorithm Implementation
 
-Jika ingin lebih advanced, bisa integrate dengan Python ML model:
+### Pendekatan Rekomendasi (Pure JavaScript)
 
-```javascript
-class MLService {
-  async getPredictions(userId) {
-    // Call Python microservice
-    const response = await axios.post('http://ml-service:5001/predict', {
-      userId
-    });
+Sistem rekomendasi SkillConnect menggunakan **Content-Based Filtering** dengan tracking user behavior:
 
-    return response.data.recommendations;
-  }
-}
-```
+1. **Content-Based Filtering** ✅
+   - Berdasarkan atribut service (kategori, tags, harga)
+   - Menggunakan weighted scoring system
+   - Pure JavaScript, NO external ML libraries
 
-Python ML Service (Flask):
-```python
-from flask import Flask, request, jsonify
-import pandas as pd
-from sklearn.neighbors import NearestNeighbors
+2. **User Activity Tracking** ✅
+   - Track service views → `aktivitas_user`
+   - Track searches → `aktivitas_user.kata_kunci`
+   - Track orders → `preferensi_user.orderedCategories`
+   - Track favorites → `favorit`
 
-app = Flask(__name__)
+3. **Scoring Weights**:
+   - Favorite categories: 40%
+   - Order history: 30%
+   - View history: 20%
+   - Price range match: 10%
 
-@app.route('/predict', methods=['POST'])
-def predict():
-    user_id = request.json['userId']
+4. **Similarity Calculation**:
+   - Same category: +0.5
+   - Common tags: +0.1 per tag
+   - Similar price (±30%): +0.2
+   - Similar rating: +0.2
 
-    # Load user-item matrix
-    # Run collaborative filtering
-    # Return recommendations
+### Why No ML?
 
-    return jsonify({
-        'recommendations': [...]
-    })
-```
+Untuk capstone project, algoritma content-based filtering sudah cukup karena:
+- ✅ Implementasi lebih simple
+- ✅ Tidak perlu Python microservice
+- ✅ Tidak perlu training data yang besar
+- ✅ Performance lebih cepat
+- ✅ Maintenance lebih mudah
+- ✅ Hasil rekomendasi tetap relevan
 
-## 📊 Algorithm Options
-
-1. **Content-Based Filtering** - Berdasarkan atribut service (kategori, tags, harga)
-2. **Collaborative Filtering** - Berdasarkan behavior user lain yang similar
-3. **Hybrid** - Kombinasi content-based + collaborative
-4. **Trending** - Berdasarkan popularitas waktu tertentu
-
-Untuk MVP, **Content-Based Filtering** sudah cukup!
+**Note**: Algoritma ini sudah terimplementasi lengkap di `RecommendationEngine` class di atas!

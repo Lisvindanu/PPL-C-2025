@@ -35,9 +35,9 @@ user/
 │       └── LoginDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoUserRepository.js
+│   │   └── SequelizeUserRepository.js
 │   ├── models/
-│   │   └── UserModel.js         # Mongoose Schema
+│   │   └── UserModel.js         # Sequelize Model
 │   └── services/
 │       ├── JwtService.js        # Generate & verify JWT token
 │       └── HashService.js       # Bcrypt hash password
@@ -79,22 +79,56 @@ Return { token, user }
 ## 📦 Database Schema (UserModel)
 
 ```javascript
-{
-  email: String (unique, required),
-  password: String (hashed, required),
-  role: Enum ['client', 'freelancer', 'admin'],
-  profile: {
-    firstName: String,
-    lastName: String,
-    phone: String,
-    avatar: String,
-    bio: String
-  },
-  isActive: Boolean (default: true),
-  emailVerified: Boolean (default: false),
-  createdAt: Date,
-  updatedAt: Date
-}
+// Sequelize Model Definition
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const User = sequelize.define('users', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      unique: true,
+      allowNull: false
+    },
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    role: {
+      type: DataTypes.ENUM('client', 'freelancer', 'admin'),
+      defaultValue: 'client'
+    },
+    nama_depan: DataTypes.STRING(100),
+    nama_belakang: DataTypes.STRING(100),
+    no_telepon: DataTypes.STRING(20),
+    avatar: DataTypes.STRING(255),
+    bio: DataTypes.TEXT,
+    kota: DataTypes.STRING(100),
+    provinsi: DataTypes.STRING(100),
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    email_verified_at: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['email'] },
+      { fields: ['role'] }
+    ]
+  });
+
+  return User;
+};
 ```
 
 ## 💡 Tips Implementasi

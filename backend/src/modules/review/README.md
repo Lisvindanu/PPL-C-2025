@@ -34,7 +34,7 @@ review/
 │       └── ReviewResponseDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoReviewRepository.js
+│   │   └── SequelizeReviewRepository.js
 │   ├── models/
 │   │   └── ReviewModel.js
 │   └── services/

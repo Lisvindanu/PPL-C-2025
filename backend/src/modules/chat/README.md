@@ -34,8 +34,8 @@ chat/
 │       └── NotificationDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   ├── MongoMessageRepository.js
-│   │   └── MongoNotificationRepository.js
+│   │   ├── SequelizeMessageRepository.js
+│   │   └── SequelizeNotificationRepository.js
 │   ├── models/
 │   │   ├── ConversationModel.js
 │   │   ├── MessageModel.js

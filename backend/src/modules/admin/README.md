@@ -34,9 +34,7 @@ admin/
 │       └── AnalyticsDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoAnalyticsRepository.js
-│   ├── models/
-│   │   └── ActivityLogModel.js  # Log semua aktivitas
+│   │   └── SequelizeAnalyticsRepository.js
 │   └── services/
 │       ├── ReportGenerator.js   # Generate PDF/CSV reports
 │       └── ChartService.js      # Generate chart data
@@ -60,22 +58,14 @@ admin/
 | PUT | `/api/admin/services/:id/block` | Block service | Admin |
 | POST | `/api/admin/reports/export` | Export report | Admin |
 | GET | `/api/admin/fraud-alerts` | Fraud detection alerts | Admin |
-| GET | `/api/admin/activity-logs` | Activity logs | Admin |
 
 ## 📦 Database Schema
 
-### ActivityLogModel
-```javascript
-{
-  userId: ObjectId (ref: User),
-  action: String (login, create_order, payment, etc),
-  module: String (user, order, payment, etc),
-  details: Object,
-  ipAddress: String,
-  userAgent: String,
-  timestamp: Date
-}
-```
+**Note**: Modul admin TIDAK memerlukan table baru. Semua data diambil dari query table existing:
+- `users` - untuk statistik user
+- `pesanan` - untuk statistik order
+- `pembayaran` - untuk revenue analytics
+- `layanan` - untuk service statistics
 
 ## 💡 Tips Implementasi
 
@@ -369,17 +359,6 @@ class BlockUser {
 
     user.block(reason);
     await this.userRepository.update(user);
-
-    // Log aktivitas
-    await this.activityLogRepository.save({
-      userId: adminId,
-      action: 'block_user',
-      module: 'admin',
-      details: {
-        blockedUserId: userId,
-        reason
-      }
-    });
 
     // Kirim email notifikasi ke user
     await this.emailService.sendBlockNotification(user.email, reason);
