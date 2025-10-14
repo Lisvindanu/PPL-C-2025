@@ -36,9 +36,9 @@ service/
 │       └── ServiceResponseDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoServiceRepository.js
+│   │   └── SequelizeServiceRepository.js
 │   ├── models/
-│   │   └── ServiceModel.js
+│   │   └── ServiceModel.js      # Sequelize Model
 │   └── services/
 │       └── ImageUploadService.js # Upload gambar layanan
 └── presentation/
@@ -74,27 +74,184 @@ GET /api/services?
   &limit=10
 ```
 
-## 📦 Database Schema (ServiceModel)
+## 📦 Database Schema
+
+### 1. `kategori` (Service Categories)
 
 ```javascript
-{
-  freelancerId: ObjectId (ref: User),
-  title: String (required),
-  description: String,
-  category: String (enum: ['design', 'development', 'writing', ...]),
-  price: Number (required, min: 0),
-  images: [String],
-  deliveryTime: Number (days),
-  rating: {
-    average: Number (default: 0),
-    count: Number (default: 0)
-  },
-  tags: [String],
-  status: Enum ['active', 'inactive', 'deleted'],
-  totalOrders: Number (default: 0),
-  createdAt: Date,
-  updatedAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Category = sequelize.define('kategori', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    nama: {
+      type: DataTypes.STRING(100),
+      unique: true,
+      allowNull: false
+    },
+    slug: {
+      type: DataTypes.STRING(100),
+      unique: true,
+      allowNull: false
+    },
+    deskripsi: DataTypes.TEXT,
+    icon: DataTypes.STRING(255),
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['slug'] }
+    ]
+  });
+
+  return Category;
+};
+```
+
+### 2. `layanan` (Main Service Table)
+
+```javascript
+// Sequelize Model Definition
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Service = sequelize.define('layanan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    freelancer_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' }
+    },
+    kategori_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'kategori', key: 'id' }
+    },
+    judul: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    slug: {
+      type: DataTypes.STRING(255),
+      unique: true,
+      allowNull: false
+    },
+    deskripsi: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    harga: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    waktu_pengerjaan: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    batas_revisi: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },
+    thumbnail: DataTypes.STRING(255),
+    gambar: DataTypes.JSON,
+    rating_rata_rata: {
+      type: DataTypes.DECIMAL(3, 2),
+      defaultValue: 0
+    },
+    jumlah_rating: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    total_pesanan: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    jumlah_dilihat: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    status: {
+      type: DataTypes.ENUM('draft', 'aktif', 'nonaktif'),
+      defaultValue: 'draft'
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['freelancer_id'] },
+      { fields: ['kategori_id'] },
+      { fields: ['status'] },
+      { type: 'FULLTEXT', fields: ['judul', 'deskripsi'] }
+    ]
+  });
+
+  return Service;
+};
+```
+
+### 3. `paket_layanan` (Service Packages: Basic/Standard/Premium)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const ServicePackage = sequelize.define('paket_layanan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe: {
+      type: DataTypes.ENUM('basic', 'standard', 'premium'),
+      allowNull: false
+    },
+    nama: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    deskripsi: DataTypes.TEXT,
+    harga: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    waktu_pengerjaan: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    batas_revisi: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },
+    fitur: DataTypes.JSON
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['layanan_id'] },
+      { unique: true, fields: ['layanan_id', 'tipe'], name: 'unique_layanan_paket' }
+    ]
+  });
+
+  return ServicePackage;
+};
 ```
 
 ## 💡 Tips Implementasi
@@ -103,44 +260,51 @@ GET /api/services?
 ```javascript
 class SearchServices {
   async execute(filters) {
-    const query = {};
+    const { Op } = require('sequelize');
+    const where = {};
+    const order = [];
 
-    // Text search
+    // Text search using FULLTEXT index
     if (filters.search) {
-      query.$text = { $search: filters.search };
+      where[Op.or] = [
+        { judul: { [Op.like]: `%${filters.search}%` } },
+        { deskripsi: { [Op.like]: `%${filters.search}%` } }
+      ];
     }
 
     // Filter by category
     if (filters.category) {
-      query.category = filters.category;
+      where.kategori_id = filters.category;
     }
 
     // Filter by price range
     if (filters.minPrice || filters.maxPrice) {
-      query.price = {};
-      if (filters.minPrice) query.price.$gte = filters.minPrice;
-      if (filters.maxPrice) query.price.$lte = filters.maxPrice;
+      where.harga = {};
+      if (filters.minPrice) where.harga[Op.gte] = filters.minPrice;
+      if (filters.maxPrice) where.harga[Op.lte] = filters.maxPrice;
     }
 
     // Filter by rating
     if (filters.minRating) {
-      query['rating.average'] = { $gte: filters.minRating };
+      where.rating_rata_rata = { [Op.gte]: filters.minRating };
     }
 
-    // Sort
+    // Sort options
     const sortOptions = {
-      'price_asc': { price: 1 },
-      'price_desc': { price: -1 },
-      'rating': { 'rating.average': -1 },
-      'popular': { totalOrders: -1 }
+      'price_asc': [['harga', 'ASC']],
+      'price_desc': [['harga', 'DESC']],
+      'rating': [['rating_rata_rata', 'DESC']],
+      'popular': [['total_pesanan', 'DESC']]
     };
 
-    return await this.serviceRepository.find(
-      query,
-      sortOptions[filters.sortBy],
-      filters.page,
-      filters.limit
-    );
+    const offset = (filters.page - 1) * filters.limit;
+
+    return await this.serviceRepository.findAndCountAll({
+      where,
+      order: sortOptions[filters.sortBy] || [['created_at', 'DESC']],
+      limit: filters.limit,
+      offset
+    });
   }
 }
 ```
@@ -150,12 +314,14 @@ class SearchServices {
 class GetPopularServices {
   async execute(limit = 10) {
     // Ambil layanan dengan rating tertinggi atau order terbanyak
-    return await this.serviceRepository.find(
-      { status: 'active' },
-      { 'rating.average': -1, totalOrders: -1 },
-      1,
+    return await this.serviceRepository.findAll({
+      where: { status: 'aktif' },
+      order: [
+        ['rating_rata_rata', 'DESC'],
+        ['total_pesanan', 'DESC']
+      ],
       limit
-    );
+    });
   }
 }
 ```

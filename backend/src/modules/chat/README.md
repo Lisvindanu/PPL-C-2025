@@ -34,8 +34,8 @@ chat/
 │       └── NotificationDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   ├── MongoMessageRepository.js
-│   │   └── MongoNotificationRepository.js
+│   │   ├── SequelizeMessageRepository.js
+│   │   └── SequelizeNotificationRepository.js
 │   ├── models/
 │   │   ├── ConversationModel.js
 │   │   ├── MessageModel.js
@@ -93,65 +93,164 @@ chat/
 
 ## 📦 Database Schema
 
-### ConversationModel
+### 1. `percakapan` (Conversation Model)
+
 ```javascript
-{
-  participants: [ObjectId] (ref: User),
-  orderId: ObjectId (ref: Order),  // Optional: jika chat terkait order
-  lastMessage: {
-    text: String,
-    senderId: ObjectId,
-    timestamp: Date
-  },
-  unreadCount: {
-    [userId]: Number  // Unread count per user
-  },
-  createdAt: Date,
-  updatedAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Conversation = sequelize.define('percakapan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user1_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    user2_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    pesanan_id: {
+      type: DataTypes.CHAR(36),
+      references: { model: 'pesanan', key: 'id' },
+      onDelete: 'SET NULL'
+    },
+    pesan_terakhir: DataTypes.TEXT,
+    pesan_terakhir_pada: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { unique: true, fields: ['user1_id', 'user2_id'], name: 'unique_conversation' },
+      { fields: ['user1_id'] },
+      { fields: ['user2_id'] }
+    ]
+  });
+
+  return Conversation;
+};
 ```
 
-### MessageModel
+### 2. `pesan` (Message Model)
+
 ```javascript
-{
-  conversationId: ObjectId (ref: Conversation),
-  senderId: ObjectId (ref: User),
-  text: String,
-  attachments: [{
-    type: String (image/file),
-    url: String,
-    fileName: String
-  }],
-  status: Enum ['sent', 'delivered', 'read'],
-  readBy: [ObjectId],
-  createdAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Message = sequelize.define('pesan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    percakapan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'percakapan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    pengirim_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    pesan: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    tipe: {
+      type: DataTypes.ENUM('text', 'image', 'file'),
+      defaultValue: 'text'
+    },
+    lampiran: DataTypes.JSON,
+    is_read: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    dibaca_pada: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['percakapan_id'] },
+      { fields: ['pengirim_id'] }
+    ]
+  });
+
+  return Message;
+};
 ```
 
-### NotificationModel
+### 3. `notifikasi` (Notification Model)
+
 ```javascript
-{
-  userId: ObjectId (ref: User),
-  type: Enum [
-    'new_order',
-    'order_accepted',
-    'order_rejected',
-    'order_completed',
-    'payment_success',
-    'new_message',
-    'new_review'
-  ],
-  title: String,
-  message: String,
-  data: {
-    orderId: String,
-    serviceId: String,
-    // ... additional data
-  },
-  isRead: Boolean (default: false),
-  link: String,  // URL to navigate
-  createdAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Notification = sequelize.define('notifikasi', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe: {
+      type: DataTypes.ENUM(
+        'pesanan_baru',
+        'pesanan_diterima',
+        'pesanan_ditolak',
+        'pesanan_selesai',
+        'pembayaran_berhasil',
+        'pesan_baru',
+        'ulasan_baru'
+      ),
+      allowNull: false
+    },
+    judul: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    pesan: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
+    related_id: DataTypes.CHAR(36),
+    related_type: DataTypes.STRING(50),
+    is_read: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    dibaca_pada: DataTypes.DATE,
+    dikirim_via_email: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['user_id'] },
+      { fields: ['is_read'] }
+    ]
+  });
+
+  return Notification;
+};
 ```
 
 ## 💡 Tips Implementasi

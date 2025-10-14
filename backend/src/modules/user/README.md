@@ -35,9 +35,9 @@ user/
 │       └── LoginDto.js
 ├── infrastructure/
 │   ├── repositories/
-│   │   └── MongoUserRepository.js
+│   │   └── SequelizeUserRepository.js
 │   ├── models/
-│   │   └── UserModel.js         # Mongoose Schema
+│   │   └── UserModel.js         # Sequelize Model
 │   └── services/
 │       ├── JwtService.js        # Generate & verify JWT token
 │       └── HashService.js       # Bcrypt hash password
@@ -76,25 +76,152 @@ Generate JWT Token
 Return { token, user }
 ```
 
-## 📦 Database Schema (UserModel)
+## 📦 Database Schema
+
+### 1. `users` (Main User Table)
 
 ```javascript
-{
-  email: String (unique, required),
-  password: String (hashed, required),
-  role: Enum ['client', 'freelancer', 'admin'],
-  profile: {
-    firstName: String,
-    lastName: String,
-    phone: String,
-    avatar: String,
-    bio: String
-  },
-  isActive: Boolean (default: true),
-  emailVerified: Boolean (default: false),
-  createdAt: Date,
-  updatedAt: Date
-}
+// Sequelize Model Definition
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const User = sequelize.define('users', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    email: {
+      type: DataTypes.STRING(255),
+      unique: true,
+      allowNull: false
+    },
+    password: {
+      type: DataTypes.STRING(255),
+      allowNull: false
+    },
+    role: {
+      type: DataTypes.ENUM('client', 'freelancer', 'admin'),
+      defaultValue: 'client'
+    },
+    nama_depan: DataTypes.STRING(100),
+    nama_belakang: DataTypes.STRING(100),
+    no_telepon: DataTypes.STRING(20),
+    avatar: DataTypes.STRING(255),
+    bio: DataTypes.TEXT,
+    kota: DataTypes.STRING(100),
+    provinsi: DataTypes.STRING(100),
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    is_verified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    email_verified_at: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['email'] },
+      { fields: ['role'] }
+    ]
+  });
+
+  return User;
+};
+```
+
+### 2. `user_tokens` (Email Verification & Password Reset)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const UserToken = sequelize.define('user_tokens', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    token: {
+      type: DataTypes.STRING(500),
+      allowNull: false
+    },
+    type: {
+      type: DataTypes.ENUM('email_verification', 'password_reset'),
+      allowNull: false
+    },
+    expires_at: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    used_at: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['token'] },
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return UserToken;
+};
+```
+
+### 3. `profil_freelancer` (Freelancer Extended Profile)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const FreelancerProfile = sequelize.define('profil_freelancer', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      unique: true,
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    judul_profesi: DataTypes.STRING(255),
+    keahlian: DataTypes.JSON,
+    portfolio_url: DataTypes.STRING(255),
+    total_pekerjaan_selesai: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    rating_rata_rata: {
+      type: DataTypes.DECIMAL(3, 2),
+      defaultValue: 0
+    },
+    total_ulasan: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return FreelancerProfile;
+};
 ```
 
 ## 💡 Tips Implementasi
