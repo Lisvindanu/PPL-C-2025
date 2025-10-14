@@ -63,41 +63,191 @@ recommendation/
 
 ## 📦 Database Schema
 
-### UserPreferenceModel
+### 1. `favorit` (Favorite Services)
+
 ```javascript
-{
-  userId: ObjectId (ref: User),
-  favoriteCategories: [String],  // Kategori yang sering dilihat
-  priceRange: {
-    min: Number,
-    max: Number
-  },
-  favoriteServices: [ObjectId],  // Services di-favorite
-  viewedServices: [{
-    serviceId: ObjectId,
-    viewCount: Number,
-    lastViewed: Date
-  }],
-  orderedCategories: [String],   // Kategori yang pernah di-order
-  searchHistory: [{
-    query: String,
-    timestamp: Date
-  }],
-  updatedAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Favorite = sequelize.define('favorit', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { unique: true, fields: ['user_id', 'layanan_id'], name: 'unique_user_favorit' },
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return Favorite;
+};
 ```
 
-### RecommendationLogModel
+### 2. `aktivitas_user` (User Activity Tracking)
+
 ```javascript
-{
-  userId: ObjectId (ref: User),
-  serviceId: ObjectId (ref: Service),
-  recommendationType: String (personalized/similar/popular),
-  position: Number,  // Posisi rekomendasi di list
-  clicked: Boolean (default: false),
-  clickedAt: Date,
-  createdAt: Date
-}
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const UserActivity = sequelize.define('aktivitas_user', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe_aktivitas: {
+      type: DataTypes.ENUM('view', 'search', 'click'),
+      allowNull: false
+    },
+    kata_kunci: DataTypes.STRING(255),
+    jumlah_view: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },
+    terakhir_dilihat: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['user_id'] },
+      { fields: ['layanan_id'] },
+      { fields: ['tipe_aktivitas'] }
+    ]
+  });
+
+  return UserActivity;
+};
+```
+
+### 3. `preferensi_user` (User Preferences)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const UserPreference = sequelize.define('preferensi_user', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      unique: true,
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    kategori_favorit: {
+      type: DataTypes.JSON,
+      defaultValue: []
+    },
+    rentang_harga_min: DataTypes.DECIMAL(10, 2),
+    rentang_harga_max: DataTypes.DECIMAL(10, 2),
+    kategori_pesanan: {
+      type: DataTypes.JSON,
+      defaultValue: []
+    },
+    riwayat_pencarian: {
+      type: DataTypes.JSON,
+      defaultValue: []
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return UserPreference;
+};
+```
+
+### 4. `rekomendasi_layanan` (Recommendation Log)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const RecommendationLog = sequelize.define('rekomendasi_layanan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe_rekomendasi: {
+      type: DataTypes.ENUM('personalized', 'similar', 'popular'),
+      allowNull: false
+    },
+    posisi: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    diklik: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    diklik_pada: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['user_id'] },
+      { fields: ['layanan_id'] },
+      { fields: ['tipe_rekomendasi'] },
+      { fields: ['diklik'] }
+    ]
+  });
+
+  return RecommendationLog;
+};
 ```
 
 ## 💡 Tips Implementasi

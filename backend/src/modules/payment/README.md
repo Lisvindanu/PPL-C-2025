@@ -201,6 +201,51 @@ module.exports = (sequelize) => {
 };
 ```
 
+### 2. `metode_pembayaran` (Saved Payment Methods)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const PaymentMethod = sequelize.define('metode_pembayaran', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe: {
+      type: DataTypes.ENUM('rekening_bank', 'e_wallet', 'kartu_kredit'),
+      allowNull: false
+    },
+    provider: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    nomor_rekening: DataTypes.STRING(50),
+    nama_pemilik: DataTypes.STRING(255),
+    empat_digit_terakhir: DataTypes.STRING(4),
+    is_default: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return PaymentMethod;
+};
+```
+
 ## 💡 Tips Implementasi
 
 ### Create Payment Use Case

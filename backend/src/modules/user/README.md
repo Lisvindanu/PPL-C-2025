@@ -76,7 +76,9 @@ Generate JWT Token
 Return { token, user }
 ```
 
-## 📦 Database Schema (UserModel)
+## 📦 Database Schema
+
+### 1. `users` (Main User Table)
 
 ```javascript
 // Sequelize Model Definition
@@ -128,6 +130,97 @@ module.exports = (sequelize) => {
   });
 
   return User;
+};
+```
+
+### 2. `user_tokens` (Email Verification & Password Reset)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const UserToken = sequelize.define('user_tokens', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    token: {
+      type: DataTypes.STRING(500),
+      allowNull: false
+    },
+    type: {
+      type: DataTypes.ENUM('email_verification', 'password_reset'),
+      allowNull: false
+    },
+    expires_at: {
+      type: DataTypes.DATE,
+      allowNull: false
+    },
+    used_at: DataTypes.DATE
+  }, {
+    timestamps: true,
+    underscored: true,
+    updatedAt: false,
+    indexes: [
+      { fields: ['token'] },
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return UserToken;
+};
+```
+
+### 3. `profil_freelancer` (Freelancer Extended Profile)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const FreelancerProfile = sequelize.define('profil_freelancer', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      unique: true,
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    judul_profesi: DataTypes.STRING(255),
+    keahlian: DataTypes.JSON,
+    portfolio_url: DataTypes.STRING(255),
+    total_pekerjaan_selesai: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    },
+    rating_rata_rata: {
+      type: DataTypes.DECIMAL(3, 2),
+      defaultValue: 0
+    },
+    total_ulasan: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['user_id'] }
+    ]
+  });
+
+  return FreelancerProfile;
 };
 ```
 

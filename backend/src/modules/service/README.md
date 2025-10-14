@@ -74,7 +74,49 @@ GET /api/services?
   &limit=10
 ```
 
-## 📦 Database Schema (ServiceModel)
+## 📦 Database Schema
+
+### 1. `kategori` (Service Categories)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const Category = sequelize.define('kategori', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    nama: {
+      type: DataTypes.STRING(100),
+      unique: true,
+      allowNull: false
+    },
+    slug: {
+      type: DataTypes.STRING(100),
+      unique: true,
+      allowNull: false
+    },
+    deskripsi: DataTypes.TEXT,
+    icon: DataTypes.STRING(255),
+    is_active: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    }
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['slug'] }
+    ]
+  });
+
+  return Category;
+};
+```
+
+### 2. `layanan` (Main Service Table)
 
 ```javascript
 // Sequelize Model Definition
@@ -156,6 +198,59 @@ module.exports = (sequelize) => {
   });
 
   return Service;
+};
+```
+
+### 3. `paket_layanan` (Service Packages: Basic/Standard/Premium)
+
+```javascript
+const { DataTypes } = require('sequelize');
+
+module.exports = (sequelize) => {
+  const ServicePackage = sequelize.define('paket_layanan', {
+    id: {
+      type: DataTypes.CHAR(36),
+      primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
+    },
+    layanan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    tipe: {
+      type: DataTypes.ENUM('basic', 'standard', 'premium'),
+      allowNull: false
+    },
+    nama: {
+      type: DataTypes.STRING(100),
+      allowNull: false
+    },
+    deskripsi: DataTypes.TEXT,
+    harga: {
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: false
+    },
+    waktu_pengerjaan: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    batas_revisi: {
+      type: DataTypes.INTEGER,
+      defaultValue: 1
+    },
+    fitur: DataTypes.JSON
+  }, {
+    timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['layanan_id'] },
+      { unique: true, fields: ['layanan_id', 'tipe'], name: 'unique_layanan_paket' }
+    ]
+  });
+
+  return ServicePackage;
 };
 ```
 
