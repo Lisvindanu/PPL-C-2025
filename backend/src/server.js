@@ -46,8 +46,11 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// TODO: Import dan register module routes di sini
-// Example:
+// Module Routes
+const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
+
+// TODO: Import other module routes
 // const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 // app.use('/api/users', userRoutes);
 
@@ -56,9 +59,6 @@ app.get('/health', async (req, res) => {
 
 // const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 // app.use('/api/orders', orderRoutes);
-
-// const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
-// app.use('/api/payments', paymentRoutes);
 
 // const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);

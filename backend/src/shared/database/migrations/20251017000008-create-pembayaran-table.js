@@ -82,8 +82,9 @@ module.exports = {
         comment: 'Channel pembayaran (gopay, ovo, bca_va, dll)'
       },
       payment_gateway: {
-        type: Sequelize.ENUM('midtrans', 'xendit', 'manual'),
+        type: Sequelize.ENUM('midtrans', 'xendit', 'mock', 'manual'),
         allowNull: false,
+        defaultValue: 'mock',
         comment: 'Payment gateway yang digunakan'
       },
       payment_url: {
