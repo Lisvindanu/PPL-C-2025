@@ -1,6 +1,8 @@
 /* Simple migration runner: runs all .js files in migrations folder in order */
+require('dotenv').config();
 const fs = require('fs');
 const path = require('path');
+const { Sequelize } = require('sequelize');
 const { sequelize } = require('./connection');
 
 async function runMigrations() {
@@ -26,7 +28,7 @@ async function runMigrations() {
     }
     console.log(`Running migration: ${file}`);
     // eslint-disable-next-line no-await-in-loop
-    await migration.up(sequelize.getQueryInterface(), sequelize);
+    await migration.up(sequelize.getQueryInterface(), Sequelize);
   }
   console.log('All migrations executed.');
 }
