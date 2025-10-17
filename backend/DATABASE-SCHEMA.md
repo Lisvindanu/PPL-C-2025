@@ -273,7 +273,7 @@ CREATE TABLE pembayaran (
   ) NOT NULL,
   channel VARCHAR(100),
 
-  payment_gateway ENUM('midtrans', 'xendit', 'manual') NOT NULL,
+  payment_gateway ENUM('midtrans', 'xendit', 'mock', 'manual') NOT NULL DEFAULT 'mock',
   payment_url TEXT,
 
   status ENUM('menunggu', 'berhasil', 'gagal', 'kadaluarsa') DEFAULT 'menunggu',
