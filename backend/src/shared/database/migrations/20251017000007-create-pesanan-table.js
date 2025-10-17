@@ -113,16 +113,18 @@ module.exports = {
       },
       status: {
         type: Sequelize.ENUM(
-          'menunggu',
-          'diterima',
-          'ditolak',
+          'menunggu_pembayaran',
+          'dibayar',
           'dikerjakan',
-          'dikirim',
+          'menunggu_review',
+          'revisi',
           'selesai',
-          'dibatalkan'
+          'dispute',
+          'dibatalkan',
+          'refunded'
         ),
         allowNull: false,
-        defaultValue: 'menunggu',
+        defaultValue: 'menunggu_pembayaran',
         comment: 'Status pesanan'
       },
       lampiran_client: {

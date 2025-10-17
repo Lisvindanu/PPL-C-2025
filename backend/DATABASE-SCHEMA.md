@@ -1,10 +1,10 @@
 # Database Schema - SkillConnect
 
-Skema database untuk 8 modul dengan MySQL. Total **18 tables**.
+Skema database untuk 8 modul dengan MySQL. Total **24 tables** (dengan Escrow & Dispute System).
 
 ---
 
-## 📋 Daftar Tables (18 Total)
+## 📋 Daftar Tables (24 Total)
 
 | # | Table | Modul |
 |---|-------|-------|
@@ -17,15 +17,21 @@ Skema database untuk 8 modul dengan MySQL. Total **18 tables**.
 | 7 | `pesanan` | Order & Booking |
 | 8 | `pembayaran` | Payment Gateway |
 | 9 | `metode_pembayaran` | Payment Gateway |
-| 10 | `ulasan` | Review & Rating |
-| 11 | `percakapan` | Chat & Notification |
-| 12 | `pesan` | Chat & Notification |
-| 13 | `notifikasi` | Chat & Notification |
-| 14 | `log_aktivitas_admin` | Admin Dashboard |
-| 15 | `favorit` | Recommendation |
-| 16 | `aktivitas_user` | Recommendation |
-| 17 | `preferensi_user` | Recommendation |
-| 18 | `rekomendasi_layanan` | Recommendation |
+| 10 | `escrow` | **Payment Gateway (NEW)** |
+| 11 | `revisi` | **Order & Booking (NEW)** |
+| 12 | `dispute` | **Order & Booking (NEW)** |
+| 13 | `dispute_pesan` | **Order & Booking (NEW)** |
+| 14 | `refund` | **Payment Gateway (NEW)** |
+| 15 | `pencairan_dana` | **Payment Gateway (NEW)** |
+| 16 | `ulasan` | Review & Rating |
+| 17 | `percakapan` | Chat & Notification |
+| 18 | `pesan` | Chat & Notification |
+| 19 | `notifikasi` | Chat & Notification |
+| 20 | `log_aktivitas_admin` | Admin Dashboard |
+| 21 | `favorit` | Recommendation |
+| 22 | `aktivitas_user` | Recommendation |
+| 23 | `preferensi_user` | Recommendation |
+| 24 | `rekomendasi_layanan` | Recommendation |
 
 ---
 
@@ -210,14 +216,16 @@ CREATE TABLE pesanan (
   selesai_pada DATETIME,
 
   status ENUM(
-    'menunggu',
-    'diterima',
-    'ditolak',
+    'menunggu_pembayaran',
+    'dibayar',
     'dikerjakan',
-    'dikirim',
+    'menunggu_review',
+    'revisi',
     'selesai',
-    'dibatalkan'
-  ) DEFAULT 'menunggu',
+    'dispute',
+    'dibatalkan',
+    'refunded'
+  ) DEFAULT 'menunggu_pembayaran',
 
   lampiran_client JSON,
   lampiran_freelancer JSON,
@@ -309,6 +317,197 @@ CREATE TABLE metode_pembayaran (
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `escrow`
+
+**💡 Tabel baru untuk menahan dana (Escrow System)**
+
+```sql
+CREATE TABLE escrow (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  pembayaran_id CHAR(36) NOT NULL,
+  pesanan_id CHAR(36) NOT NULL,
+
+  jumlah_ditahan DECIMAL(10, 2) NOT NULL,
+  biaya_platform DECIMAL(10, 2) DEFAULT 0,
+
+  status ENUM('held', 'released', 'refunded', 'disputed', 'partial_released', 'completed') DEFAULT 'held',
+
+  ditahan_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  akan_dirilis_pada DATETIME,
+  dirilis_pada DATETIME,
+  alasan TEXT,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (pembayaran_id) REFERENCES pembayaran(id) ON DELETE RESTRICT,
+  FOREIGN KEY (pesanan_id) REFERENCES pesanan(id) ON DELETE RESTRICT,
+  INDEX idx_pembayaran_id (pembayaran_id),
+  INDEX idx_pesanan_id (pesanan_id),
+  INDEX idx_status (status),
+  INDEX idx_akan_dirilis_pada (akan_dirilis_pada)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `revisi`
+
+**💡 Tabel baru untuk tracking request revisi**
+
+```sql
+CREATE TABLE revisi (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  pesanan_id CHAR(36) NOT NULL,
+
+  ke_berapa INT NOT NULL,
+  catatan TEXT NOT NULL,
+  lampiran JSON,
+
+  status ENUM('diminta', 'dikerjakan', 'selesai', 'ditolak') DEFAULT 'diminta',
+
+  diminta_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  selesai_pada DATETIME,
+  lampiran_revisi JSON,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (pesanan_id) REFERENCES pesanan(id) ON DELETE CASCADE,
+  INDEX idx_pesanan_id (pesanan_id),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `dispute`
+
+**💡 Tabel baru untuk komplain/sengketa**
+
+```sql
+CREATE TABLE dispute (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  pesanan_id CHAR(36) NOT NULL,
+  pembayaran_id CHAR(36) NOT NULL,
+  escrow_id CHAR(36) NOT NULL,
+  diajukan_oleh CHAR(36) NOT NULL,
+
+  tipe ENUM('not_as_described', 'low_quality', 'late_delivery', 'communication_issue', 'other') NOT NULL,
+  alasan TEXT NOT NULL,
+  bukti JSON,
+
+  status ENUM('open', 'under_review', 'resolved', 'closed') DEFAULT 'open',
+  keputusan ENUM('client_win', 'freelancer_win', 'partial_refund', 'no_action'),
+  alasan_keputusan TEXT,
+
+  dibuka_pada DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  diputuskan_pada DATETIME,
+  diputuskan_oleh CHAR(36),
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (pesanan_id) REFERENCES pesanan(id) ON DELETE RESTRICT,
+  FOREIGN KEY (pembayaran_id) REFERENCES pembayaran(id) ON DELETE RESTRICT,
+  FOREIGN KEY (escrow_id) REFERENCES escrow(id) ON DELETE RESTRICT,
+  FOREIGN KEY (diajukan_oleh) REFERENCES users(id) ON DELETE RESTRICT,
+  FOREIGN KEY (diputuskan_oleh) REFERENCES users(id) ON DELETE SET NULL,
+  INDEX idx_pesanan_id (pesanan_id),
+  INDEX idx_status (status),
+  INDEX idx_diajukan_oleh (diajukan_oleh),
+  INDEX idx_diputuskan_oleh (diputuskan_oleh)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `dispute_pesan`
+
+**💡 Chat/komunikasi dalam dispute**
+
+```sql
+CREATE TABLE dispute_pesan (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  dispute_id CHAR(36) NOT NULL,
+  pengirim_id CHAR(36) NOT NULL,
+
+  pesan TEXT NOT NULL,
+  lampiran JSON,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (dispute_id) REFERENCES dispute(id) ON DELETE CASCADE,
+  FOREIGN KEY (pengirim_id) REFERENCES users(id) ON DELETE CASCADE,
+  INDEX idx_dispute_id (dispute_id),
+  INDEX idx_pengirim_id (pengirim_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `refund`
+
+**💡 Tabel untuk pengembalian dana**
+
+```sql
+CREATE TABLE refund (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  pembayaran_id CHAR(36) NOT NULL,
+  escrow_id CHAR(36) NOT NULL,
+  user_id CHAR(36) NOT NULL,
+
+  jumlah_refund DECIMAL(10, 2) NOT NULL,
+  alasan TEXT NOT NULL,
+
+  status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+  transaction_id VARCHAR(255),
+
+  diproses_pada DATETIME,
+  selesai_pada DATETIME,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (pembayaran_id) REFERENCES pembayaran(id) ON DELETE RESTRICT,
+  FOREIGN KEY (escrow_id) REFERENCES escrow(id) ON DELETE RESTRICT,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+  INDEX idx_pembayaran_id (pembayaran_id),
+  INDEX idx_escrow_id (escrow_id),
+  INDEX idx_user_id (user_id),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+```
+
+### `pencairan_dana`
+
+**💡 Withdrawal/pencairan dana freelancer**
+
+```sql
+CREATE TABLE pencairan_dana (
+  id CHAR(36) PRIMARY KEY DEFAULT (UUID()),
+  escrow_id CHAR(36) NOT NULL,
+  freelancer_id CHAR(36) NOT NULL,
+  metode_pembayaran_id CHAR(36),
+
+  jumlah DECIMAL(10, 2) NOT NULL,
+  biaya_platform DECIMAL(10, 2) DEFAULT 0,
+  jumlah_bersih DECIMAL(10, 2) NOT NULL,
+
+  metode_pencairan ENUM('transfer_bank', 'e_wallet') NOT NULL,
+  nomor_rekening VARCHAR(50),
+  nama_pemilik VARCHAR(255),
+
+  status ENUM('pending', 'processing', 'completed', 'failed') DEFAULT 'pending',
+  bukti_transfer VARCHAR(255),
+  catatan TEXT,
+
+  dicairkan_pada DATETIME,
+
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+  FOREIGN KEY (escrow_id) REFERENCES escrow(id) ON DELETE RESTRICT,
+  FOREIGN KEY (freelancer_id) REFERENCES users(id) ON DELETE RESTRICT,
+  FOREIGN KEY (metode_pembayaran_id) REFERENCES metode_pembayaran(id) ON DELETE SET NULL,
+  INDEX idx_escrow_id (escrow_id),
+  INDEX idx_freelancer_id (freelancer_id),
+  INDEX idx_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
@@ -941,4 +1140,4 @@ npx sequelize-cli db:migrate
 
 ---
 
-**Total: 18 tables. Perfect untuk Capstone! 🎉**
+**Total: 24 tables (18 core + 6 escrow/dispute system). Perfect untuk Capstone! 🎉**
