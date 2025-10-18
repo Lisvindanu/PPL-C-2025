@@ -30,3 +30,9 @@ class ForgotPassword {
 }
 
 module.exports = ForgotPassword;
+
+
+
+
+
+//
