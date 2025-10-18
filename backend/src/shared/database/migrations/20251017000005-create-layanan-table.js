@@ -4,33 +4,33 @@ module.exports = {
   up: async (queryInterface, Sequelize) => {
     await queryInterface.createTable('layanan', {
       id: {
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: Sequelize.UUID,  
         primaryKey: true,
+        defaultValue: Sequelize.UUIDV4,
         allowNull: false,
         comment: 'Primary key UUID'
       },
       freelancer_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.UUID,  
         allowNull: false,
+        comment: 'Foreign key ke users (freelancer)',
         references: {
           model: 'users',
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'CASCADE',
-        comment: 'Foreign key ke users (freelancer)'
+        onDelete: 'CASCADE'
       },
       kategori_id: {
-        type: Sequelize.UUID,
+        type: Sequelize.UUID,  
         allowNull: false,
+        comment: 'Foreign key ke kategori',
         references: {
           model: 'kategori',
           key: 'id'
         },
         onUpdate: 'CASCADE',
-        onDelete: 'RESTRICT',
-        comment: 'Foreign key ke kategori'
+        onDelete: 'RESTRICT'
       },
       judul: {
         type: Sequelize.STRING(255),
@@ -66,18 +66,16 @@ module.exports = {
       },
       thumbnail: {
         type: Sequelize.STRING(255),
-        allowNull: true,
         comment: 'URL thumbnail utama'
       },
       gambar: {
         type: Sequelize.JSON,
-        allowNull: true,
         comment: 'Array URL gambar tambahan'
       },
       rating_rata_rata: {
         type: Sequelize.DECIMAL(3, 2),
         allowNull: false,
-        defaultValue: 0.00,
+        defaultValue: 0,
         comment: 'Rating rata-rata'
       },
       jumlah_rating: {
@@ -114,13 +112,20 @@ module.exports = {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP')
       }
+    }, {
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_unicode_ci'
     });
 
-    // Indexes
+    // Add indexes
+    await queryInterface.addIndex('layanan', ['slug'], {
+      name: 'layanan_slug',
+      unique: true
+    });
     await queryInterface.addIndex('layanan', ['freelancer_id']);
     await queryInterface.addIndex('layanan', ['kategori_id']);
     await queryInterface.addIndex('layanan', ['status']);
-    await queryInterface.addIndex('layanan', ['slug']);
+    await queryInterface.addIndex('layanan', ['rating_rata_rata']);
   },
 
   down: async (queryInterface, Sequelize) => {
