@@ -1,117 +1,65 @@
 // backend/src/modules/user/presentation/routes/userRoutes.js
 const express = require('express');
 const router = express.Router();
+const UserController = require('../controllers/UserController');
+const authMiddleware = require('../../../../shared/middleware/authMiddleware');
 
-// Temporary test routes (akan diganti dengan controller nanti)
+const userController = new UserController();
 
 /**
  * @route   POST /api/users/register
  * @desc    Register new user
  * @access  Public
  */
-router.post('/register', (req, res) => {
-  try {
-    const { email, password, firstName, lastName, role } = req.body;
-
-    // Validasi input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
-    }
-
-    // TODO: Implement register logic with Use Case
-    // Temporary response
-    res.status(201).json({
-      success: true,
-      message: 'User registered successfully (TEMPORARY)',
-      data: {
-        userId: 'temp-user-id',
-        email,
-        role: role || 'client'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+router.post('/register', userController.register);
 
 /**
  * @route   POST /api/users/login
  * @desc    Login user
  * @access  Public
  */
-router.post('/login', (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validasi input
-    if (!email || !password) {
-      return res.status(400).json({
-        success: false,
-        message: 'Email and password are required'
-      });
-    }
-
-    // TODO: Implement login logic with Use Case
-    // Temporary response
-    res.status(200).json({
-      success: true,
-      message: 'Login successful (TEMPORARY)',
-      data: {
-        token: 'temporary-jwt-token',
-        user: {
-          id: 'temp-user-id',
-          email,
-          role: 'client',
-          firstName: 'Test',
-          lastName: 'User'
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
+router.post('/login', userController.login);
 
 /**
  * @route   GET /api/users/profile
  * @desc    Get user profile
  * @access  Private
  */
-router.get('/profile', (req, res) => {
-  // TODO: Add authentication middleware
-  res.status(200).json({
-    success: true,
-    data: {
-      id: 'temp-user-id',
-      email: 'test@example.com',
-      firstName: 'Test',
-      lastName: 'User',
-      role: 'client'
-    }
-  });
-});
+router.get('/profile', authMiddleware, userController.getProfile);
 
 /**
  * @route   PUT /api/users/profile
  * @desc    Update user profile
  * @access  Private
  */
-router.put('/profile', (req, res) => {
-  // TODO: Add authentication middleware
-  res.status(200).json({
-    success: true,
-    message: 'Profile updated successfully',
-    data: req.body
-  });
-});
+router.put('/profile', authMiddleware, userController.updateProfile);
+
+/**
+ * @route   POST /api/users/forgot-password
+ * @desc    Request password reset
+ * @access  Public
+ */
+router.post('/forgot-password', userController.forgotPassword);
+
+/**
+ * @route   POST /api/users/reset-password
+ * @desc    Reset password with token
+ * @access  Public
+ */
+router.post('/reset-password', userController.resetPassword);
+
+/**
+ * @route   POST /api/users/logout
+ * @desc    Logout user (invalidate token)
+ * @access  Private
+ */
+router.post('/logout', authMiddleware, userController.logout);
+
+/**
+ * @route   PUT /api/users/role
+ * @desc    Change user role
+ * @access  Private
+ */
+router.put('/role', authMiddleware, userController.changeRole);
 
 module.exports = router;
