@@ -87,11 +87,18 @@ module.exports = {
     });
 
     // Add indexes
-    await queryInterface.addIndex('users', ['email'], {
-      name: 'users_email',
-      unique: true
-    });
-    await queryInterface.addIndex('users', ['role']);
+    // `email` is already declared as unique in column definition which creates the index.
+    // Add role index; ignore errors if index already exists.
+    try {
+      await queryInterface.addIndex('users', ['role']);
+    } catch (err) {
+      // Duplicate index name or already exists -> ignore
+      if (err && (err.original && err.original.code === 'ER_DUP_KEYNAME' || err.code === 'ER_DUP_KEYNAME')) {
+        console.log('Index `users_role` already exists, skipping');
+      } else {
+        throw err;
+      }
+    }
   },
 
   down: async (queryInterface, Sequelize) => {

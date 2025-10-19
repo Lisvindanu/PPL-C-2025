@@ -46,19 +46,22 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// Module Routes
-const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
-app.use('/api/payments', paymentRoutes);
+// ==================== MODULE ROUTES ====================
+// Import routes
+const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 
-// TODO: Import other module routes
-// const userRoutes = require('./modules/user/presentation/routes/userRoutes');
-// app.use('/api/users', userRoutes);
+// Register routes
+app.use('/api/users', userRoutes);
 
+// TODO: Tambahkan routes modul lain di sini
 // const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
 // app.use('/api/services', serviceRoutes);
 
 // const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 // app.use('/api/orders', orderRoutes);
+
+// const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
+// app.use('/api/payments', paymentRoutes);
 
 // const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);
@@ -97,6 +100,7 @@ connectDatabase().then(() => {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
   });
 
   // Graceful shutdown
