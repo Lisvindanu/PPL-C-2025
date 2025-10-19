@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock Payment Gateway - SkillConnect</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 500px;
+      width: 100%;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .content {
+      padding: 30px;
+    }
+
+    .payment-info {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .payment-info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .payment-info-row:last-child {
+      margin-bottom: 0;
+      padding-top: 12px;
+      border-top: 2px dashed #dee2e6;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .payment-info-label {
+      color: #6c757d;
+    }
+
+    .payment-info-value {
+      color: #212529;
+      font-weight: 500;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 16px;
+    }
+
+    .payment-methods {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .payment-method {
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .payment-method:hover {
+      border-color: #667eea;
+      background: #f8f9ff;
+    }
+
+    .payment-method.selected {
+      border-color: #667eea;
+      background: #f8f9ff;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .payment-method-icon {
+      width: 48px;
+      height: 48px;
+      background: #667eea;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .payment-method-info {
+      flex: 1;
+    }
+
+    .payment-method-name {
+      font-weight: 600;
+      color: #212529;
+      margin-bottom: 4px;
+    }
+
+    .payment-method-desc {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .payment-method-radio {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #dee2e6;
+      border-radius: 50%;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .payment-method.selected .payment-method-radio {
+      border-color: #667eea;
+    }
+
+    .payment-method.selected .payment-method-radio::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px;
+      height: 10px;
+      background: #667eea;
+      border-radius: 50%;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-success {
+      background: #28a745;
+      color: white;
+      margin-top: 12px;
+    }
+
+    .btn-danger {
+      background: #dc3545;
+      color: white;
+      margin-top: 12px;
+    }
+
+    .qr-code {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .qr-code.active {
+      display: block;
+    }
+
+    .qr-code-img {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 16px;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 96px;
+    }
+
+    .qr-code-text {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+
+    .va-number {
+      display: none;
+      text-align: center;
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      margin-bottom: 24px;
+    }
+
+    .va-number.active {
+      display: block;
+    }
+
+    .va-number-label {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 8px;
+    }
+
+    .va-number-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #212529;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      font-family: 'Courier New', monospace;
+    }
+
+    .copy-btn {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover {
+      background: #5568d3;
+    }
+
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .success-screen.active {
+      display: block;
+    }
+
+    .success-icon {
+      width: 80px;
+      height: 80px;
+      background: #28a745;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 48px;
+      color: white;
+    }
+
+    .success-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 12px;
+    }
+
+    .success-message {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 24px;
+    }
+
+    .failed-screen {
+      display: none;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .failed-screen.active {
+      display: block;
+    }
+
+    .failed-icon {
+      width: 80px;
+      height: 80px;
+      background: #dc3545;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 48px;
+      color: white;
+    }
+
+    .failed-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #212529;
+      margin-bottom: 12px;
+    }
+
+    .failed-message {
+      font-size: 14px;
+      color: #6c757d;
+      margin-bottom: 24px;
+    }
+
+    .timer {
+      display: inline-block;
+      background: #fff3cd;
+      color: #856404;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .loading.active {
+      display: block;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f4f6;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      font-size: 14px;
+      color: #6c757d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <h1>🔒 Mock Payment Gateway</h1>
+        <p>SkillConnect Development</p>
+      </div>
+
+      <div class="content">
+        <!-- Payment Info -->
+        <div class="payment-info">
+          <div class="payment-info-row">
+            <span class="payment-info-label">Transaction ID</span>
+            <span class="payment-info-value" id="transactionId">-</span>
+          </div>
+          <div class="payment-info-row">
+            <span class="payment-info-label">Order</span>
+            <span class="payment-info-value" id="orderId">-</span>
+          </div>
+          <div class="payment-info-row">
+            <span class="payment-info-label">Amount</span>
+            <span class="payment-info-value" id="amount">-</span>
+          </div>
+          <div class="payment-info-row">
+            <span class="payment-info-label">Total Payment</span>
+            <span class="payment-info-value" id="totalAmount">-</span>
+          </div>
+        </div>
+
+        <!-- Timer -->
+        <div style="text-align: center;">
+          <div class="timer">
+            ⏱️ Expires in: <span id="countdown">23:59:59</span>
+          </div>
+        </div>
+
+        <!-- Payment Method Selection -->
+        <div id="paymentSelection">
+          <div class="section-title">Select Payment Method</div>
+
+          <div class="payment-methods">
+            <div class="payment-method" data-method="qris" onclick="selectMethod('qris')">
+              <div class="payment-method-icon">📱</div>
+              <div class="payment-method-info">
+                <div class="payment-method-name">QRIS</div>
+                <div class="payment-method-desc">Scan QR with any e-wallet</div>
+              </div>
+              <div class="payment-method-radio"></div>
+            </div>
+
+            <div class="payment-method" data-method="va" onclick="selectMethod('va')">
+              <div class="payment-method-icon">🏦</div>
+              <div class="payment-method-info">
+                <div class="payment-method-name">Virtual Account</div>
+                <div class="payment-method-desc">BCA, BNI, Mandiri, BRI</div>
+              </div>
+              <div class="payment-method-radio"></div>
+            </div>
+
+            <div class="payment-method" data-method="ewallet" onclick="selectMethod('ewallet')">
+              <div class="payment-method-icon">💳</div>
+              <div class="payment-method-info">
+                <div class="payment-method-name">E-Wallet</div>
+                <div class="payment-method-desc">GoPay, OVO, DANA, ShopeePay</div>
+              </div>
+              <div class="payment-method-radio"></div>
+            </div>
+
+            <div class="payment-method" data-method="credit_card" onclick="selectMethod('credit_card')">
+              <div class="payment-method-icon">💎</div>
+              <div class="payment-method-info">
+                <div class="payment-method-name">Credit Card</div>
+                <div class="payment-method-desc">Visa, Mastercard, JCB</div>
+              </div>
+              <div class="payment-method-radio"></div>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="payBtn" disabled onclick="processPayment()">
+            Pay Now
+          </button>
+        </div>
+
+        <!-- QR Code Display -->
+        <div class="qr-code" id="qrCode">
+          <div class="qr-code-img">📱</div>
+          <div class="qr-code-text">Scan this QR code with your e-wallet app</div>
+          <div class="qr-code-text" style="font-weight: 600; color: #212529;">
+            Waiting for payment...
+          </div>
+        </div>
+
+        <!-- Virtual Account Display -->
+        <div class="va-number" id="vaNumber">
+          <div class="va-number-label">Virtual Account Number</div>
+          <div class="va-number-value" id="vaNumberValue">8808 1234 5678 9012</div>
+          <button class="copy-btn" onclick="copyVA()">📋 Copy Number</button>
+          <div style="margin-top: 16px; font-size: 14px; color: #6c757d;">
+            Transfer to this VA number from your mobile banking
+          </div>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <div class="loading-text">Processing payment...</div>
+        </div>
+
+        <!-- Success Screen -->
+        <div class="success-screen" id="successScreen">
+          <div class="success-icon">✓</div>
+          <div class="success-title">Payment Successful!</div>
+          <div class="success-message">
+            Your payment has been processed successfully.<br>
+            You will be redirected shortly...
+          </div>
+          <button class="btn btn-success" onclick="redirectBack()">
+            Back to SkillConnect
+          </button>
+        </div>
+
+        <!-- Failed Screen -->
+        <div class="failed-screen" id="failedScreen">
+          <div class="failed-icon">✕</div>
+          <div class="failed-title">Payment Failed</div>
+          <div class="failed-message">
+            Your payment could not be processed.<br>
+            Please try again or use a different payment method.
+          </div>
+          <button class="btn btn-danger" onclick="retryPayment()">
+            Try Again
+          </button>
+          <button class="btn btn-primary" onclick="redirectBack()">
+            Cancel & Go Back
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let selectedMethod = null;
+    let transactionData = null;
+    let countdownInterval = null;
+
+    // Parse URL params
+    function getUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      return {
+        transaction_id: params.get('transaction_id') || 'PAY-MOCK-' + Date.now(),
+        order_id: params.get('order_id') || 'ORD-001',
+        amount: params.get('amount') || '250000',
+        total: params.get('total') || '265000'
+      };
+    }
+
+    // Initialize page
+    function init() {
+      transactionData = getUrlParams();
+
+      document.getElementById('transactionId').textContent = transactionData.transaction_id;
+      document.getElementById('orderId').textContent = transactionData.order_id;
+      document.getElementById('amount').textContent = formatRupiah(transactionData.amount);
+      document.getElementById('totalAmount').textContent = formatRupiah(transactionData.total);
+
+      startCountdown();
+    }
+
+    // Format Rupiah
+    function formatRupiah(amount) {
+      return 'Rp ' + parseInt(amount).toLocaleString('id-ID');
+    }
+
+    // Countdown timer
+    function startCountdown() {
+      let timeLeft = 24 * 60 * 60; // 24 hours in seconds
+
+      countdownInterval = setInterval(() => {
+        timeLeft--;
+
+        const hours = Math.floor(timeLeft / 3600);
+        const minutes = Math.floor((timeLeft % 3600) / 60);
+        const seconds = timeLeft % 60;
+
+        document.getElementById('countdown').textContent =
+          String(hours).padStart(2, '0') + ':' +
+          String(minutes).padStart(2, '0') + ':' +
+          String(seconds).padStart(2, '0');
+
+        if (timeLeft <= 0) {
+          clearInterval(countdownInterval);
+          showExpired();
+        }
+      }, 1000);
+    }
+
+    // Select payment method
+    function selectMethod(method) {
+      selectedMethod = method;
+
+      // Update UI
+      document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+      });
+      document.querySelector(`[data-method="${method}"]`).classList.add('selected');
+
+      // Enable pay button
+      document.getElementById('payBtn').disabled = false;
+    }
+
+    // Process payment
+    function processPayment() {
+      if (!selectedMethod) return;
+
+      // Hide selection
+      document.getElementById('paymentSelection').style.display = 'none';
+
+      // Show appropriate payment UI
+      if (selectedMethod === 'qris') {
+        document.getElementById('qrCode').classList.add('active');
+        simulatePayment();
+      } else if (selectedMethod === 'va') {
+        document.getElementById('vaNumber').classList.add('active');
+        simulatePayment();
+      } else {
+        // For ewallet and credit card, show loading then success
+        document.getElementById('loading').classList.add('active');
+        setTimeout(() => {
+          document.getElementById('loading').classList.remove('active');
+          showSuccess();
+        }, 2000);
+      }
+    }
+
+    // Simulate payment (auto success after 3 seconds)
+    function simulatePayment() {
+      setTimeout(() => {
+        document.getElementById('qrCode').classList.remove('active');
+        document.getElementById('vaNumber').classList.remove('active');
+        document.getElementById('loading').classList.add('active');
+
+        setTimeout(() => {
+          document.getElementById('loading').classList.remove('active');
+
+          // Random success/failure for testing (80% success)
+          if (Math.random() < 0.8) {
+            showSuccess();
+            triggerWebhook('success');
+          } else {
+            showFailed();
+            triggerWebhook('failed');
+          }
+        }, 1500);
+      }, 3000);
+    }
+
+    // Show success screen
+    function showSuccess() {
+      clearInterval(countdownInterval);
+      document.getElementById('successScreen').classList.add('active');
+
+      // Auto redirect after 3 seconds
+      setTimeout(() => {
+        redirectBack();
+      }, 3000);
+    }
+
+    // Show failed screen
+    function showFailed() {
+      clearInterval(countdownInterval);
+      document.getElementById('failedScreen').classList.add('active');
+    }
+
+    // Show expired
+    function showExpired() {
+      alert('Payment link has expired!');
+      redirectBack();
+    }
+
+    // Generate signature (same logic as backend)
+    async function generateSignature(transaction_id, status, gross_amount) {
+      const secret = 'mock-secret-key-change-in-production'; // Must match MOCK_PAYMENT_SECRET in .env
+      const payload = `${transaction_id}:${status}:${gross_amount}:${secret}`;
+
+      // SHA256 hash
+      const msgBuffer = new TextEncoder().encode(payload);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      return hashHex;
+    }
+
+    // Trigger webhook to backend
+    async function triggerWebhook(status) {
+      try {
+        const transaction_status = status === 'success' ? 'settlement' : 'deny';
+        const signature = await generateSignature(
+          transactionData.transaction_id,
+          transaction_status,
+          transactionData.total
+        );
+
+        const webhookPayload = {
+          transaction_id: transactionData.transaction_id,
+          external_id: 'MOCK-' + Date.now(),
+          transaction_status: transaction_status,
+          status_code: status === 'success' ? '200' : '400',
+          gross_amount: transactionData.total,
+          payment_type: 'mock_' + selectedMethod,
+          transaction_time: new Date().toISOString(),
+          signature: signature
+        };
+
+        console.log('[MOCK PAYMENT] Sending webhook:', webhookPayload);
+
+        const response = await fetch('http://localhost:5001/api/payments/webhook', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookPayload)
+        });
+
+        const data = await response.json();
+        console.log('[MOCK PAYMENT] Webhook response:', data);
+
+        if (data.success && data.escrow_created) {
+          console.log('[MOCK PAYMENT] ✅ Escrow created:', data.escrow_id);
+        }
+      } catch (error) {
+        console.error('[MOCK PAYMENT] Webhook error:', error);
+      }
+    }
+
+    // Copy VA number
+    function copyVA() {
+      const vaNumber = document.getElementById('vaNumberValue').textContent;
+      navigator.clipboard.writeText(vaNumber.replace(/\s/g, ''));
+
+      const btn = event.target;
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => {
+        btn.textContent = originalText;
+      }, 2000);
+    }
+
+    // Retry payment
+    function retryPayment() {
+      document.getElementById('failedScreen').classList.remove('active');
+      document.getElementById('paymentSelection').style.display = 'block';
+      selectedMethod = null;
+      document.querySelectorAll('.payment-method').forEach(el => {
+        el.classList.remove('selected');
+      });
+      document.getElementById('payBtn').disabled = true;
+      startCountdown();
+    }
+
+    // Redirect back
+    function redirectBack() {
+      // In real scenario, redirect to frontend app
+      window.location.href = 'http://localhost:3000/orders'; // Adjust to your frontend URL
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>

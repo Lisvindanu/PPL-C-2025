@@ -18,6 +18,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev')); // Logging
 
+// Serve static files (mock payment gateway)
+app.use('/mock-payment', express.static('public/mock-payment'));
+
 // ==================== ROUTES ====================
 // Health check
 app.get('/', (req, res) => {
@@ -60,8 +63,8 @@ app.use('/api/users', userRoutes);
 // const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 // app.use('/api/orders', orderRoutes);
 
-// const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
-// app.use('/api/payments', paymentRoutes);
+const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
 
 // const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);
