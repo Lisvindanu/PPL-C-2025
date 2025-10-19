@@ -28,7 +28,17 @@ async function runMigrations() {
     }
     console.log(`Running migration: ${file}`);
     // eslint-disable-next-line no-await-in-loop
-    await migration.up(sequelize.getQueryInterface(), Sequelize);
+    try {
+      await migration.up(sequelize.getQueryInterface(), Sequelize);
+    } catch (err) {
+      // If migration failed due to duplicate index name (already applied), skip and continue.
+      const isDupIndex = err && (err.original && err.original.code === 'ER_DUP_KEYNAME' || err.code === 'ER_DUP_KEYNAME');
+      if (isDupIndex) {
+        console.log(`Migration ${file} encountered duplicate index; skipping error and continuing.`);
+        continue;
+      }
+      throw err;
+    }
   }
   console.log('All migrations executed.');
 }

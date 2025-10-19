@@ -51,8 +51,8 @@ const paymentRoutes = require('./modules/payment/presentation/routes/paymentRout
 app.use('/api/payments', paymentRoutes);
 
 // TODO: Import other module routes
-// const userRoutes = require('./modules/user/presentation/routes/userRoutes');
-// app.use('/api/users', userRoutes);
+const userRoutes = require('./modules/user/presentation/routes/userRoutes');
+app.use('/api/users', userRoutes);
 
 // const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
 // app.use('/api/services', serviceRoutes);
