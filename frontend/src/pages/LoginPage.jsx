@@ -42,7 +42,9 @@ export default function LoginPage() {
       </div>
       <Button variant="outline" className="w-full mt-4">Lanjutkan dengan Google</Button>
       <div className="text-center mt-4">
-        <a className="text-[#3A2B2A] underline">Lupa kata sandi Anda?</a>
+        <Link to="/forgot-password" className="text-[#3A2B2A] underline hover:no-underline">
+          Lupa kata sandi Anda?
+        </Link>
       </div>
     </div>
   )

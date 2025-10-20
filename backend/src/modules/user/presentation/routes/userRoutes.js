@@ -42,11 +42,25 @@ router.put('/profile', authMiddleware, userController.updateProfile);
 router.post('/forgot-password', userController.forgotPassword);
 
 /**
+ * @route   POST /api/users/verify-otp
+ * @desc    Verify OTP for password reset
+ * @access  Public
+ */
+router.post('/verify-otp', userController.verifyOTP);
+
+/**
  * @route   POST /api/users/reset-password
  * @desc    Reset password with token
  * @access  Public
  */
 router.post('/reset-password', userController.resetPassword);
+
+/**
+ * @route   POST /api/users/update-password-direct
+ * @desc    Update password directly (for hybrid service)
+ * @access  Public
+ */
+router.post('/update-password-direct', userController.updatePasswordDirect);
 
 /**
  * @route   POST /api/users/logout

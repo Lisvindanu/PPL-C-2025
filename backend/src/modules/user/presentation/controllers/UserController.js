@@ -6,6 +6,7 @@ const LoginUser = require('../../application/use-cases/LoginUser');
 const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
+const VerifyOTP = require('../../application/use-cases/VerifyOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
 
 class UserController {
@@ -19,6 +20,7 @@ class UserController {
     this.updateProfileUseCase = new UpdateProfile({ userRepository });
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
+    this.verifyOTPUseCase = new VerifyOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
   }
 
@@ -98,10 +100,57 @@ class UserController {
     }
   };
 
+  verifyOTP = async (req, res, next) => {
+    try {
+      const result = await this.verifyOTPUseCase.execute(req.body);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   resetPassword = async (req, res, next) => {
     try {
-  const result = await this.resetPasswordUseCase.execute(req.body);
+      const result = await this.resetPasswordUseCase.execute(req.body);
       res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updatePasswordDirect = async (req, res, next) => {
+    try {
+      const { email, newPassword } = req.body;
+      
+      if (!email || !newPassword) {
+        const err = new Error('Email and newPassword are required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // Find user by email
+      const user = await this.loginUser.userRepository.findByEmail(email);
+      if (!user) {
+        const err = new Error('User not found');
+        err.statusCode = 404;
+        throw err;
+      }
+
+      // Hash new password
+      const hashedPassword = await this.loginUser.hashService.hash(newPassword);
+      
+      // Update password in database
+      await user.update({ password: hashedPassword });
+
+      console.log(`✅ Password updated for user: ${email}`);
+
+      res.json({ 
+        success: true, 
+        data: { 
+          message: 'Password updated successfully',
+          email: email
+        } 
+      });
     } catch (err) {
       next(err);
     }
