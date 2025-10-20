@@ -1,0 +1,506 @@
+const StatsDto = require('../../application/dtos/StatsDto');
+const ChartService = require('../../infrastructure/services/ChartService');
+
+class AdminController {
+  constructor(
+    getDashboardStats,
+    getUserAnalyticsUseCase,
+    getRevenueAnalyticsUseCase,
+    getOrderAnalyticsUseCase,
+    blockUserUseCase,
+    unblockUserUseCase,
+    blockServiceUseCase,
+    deleteReviewUseCase,
+    exportReportUseCase,
+    getActivityLogsUseCase,
+    fraudDetectionService,
+    adminLogService,
+    sequelize
+  ) {
+    this.sequelize = sequelize;
+    this.getDashboardStats = getDashboardStats;
+    this.getUserAnalyticsUseCase = getUserAnalyticsUseCase;
+    this.getRevenueAnalyticsUseCase = getRevenueAnalyticsUseCase;
+    this.getOrderAnalyticsUseCase = getOrderAnalyticsUseCase;
+    this.blockUserUseCase = blockUserUseCase;
+    this.unblockUserUseCase = unblockUserUseCase;
+    this.blockServiceUseCase = blockServiceUseCase;
+    this.deleteReviewUseCase = deleteReviewUseCase;
+    this.exportReportUseCase = exportReportUseCase;
+    this.getActivityLogsUseCase = getActivityLogsUseCase;
+    this.fraudDetectionService = fraudDetectionService;
+    this.adminLogService = adminLogService;
+  }
+
+  async getDashboard(req, res) {
+    try {
+      const stats = await this.getDashboardStats.execute();
+      res.json({
+        success: true,
+        message: 'Dashboard stats retrieved',
+        data: StatsDto.toResponse(stats)
+      });
+    } catch (error) {
+      console.error('Error in getDashboard:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getUsers(req, res) {
+    try {
+      const { role, status, page = 1, limit = 10 } = req.query;
+      
+      const filters = {
+        role: role || null,
+        status: status || 'all',
+        page: parseInt(page),
+        limit: parseInt(limit)
+      };
+
+      const users = await this.adminLogService.getUserList(filters);
+      
+      res.json({
+        success: true,
+        message: 'Users retrieved',
+        data: users.data,
+        pagination: {
+          page: users.page,
+          limit: users.limit,
+          total: users.total,
+          totalPages: Math.ceil(users.total / users.limit)
+        }
+      });
+    } catch (error) {
+      console.error('Error in getUsers:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+// Update blockUser method di AdminController.js
+async blockUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    // Validasi input
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'reason is required'
+      });
+    }
+
+    // Ambil adminId dari token yang sudah di-verify (bukan hardcoded)
+    const adminId = req.user.id;
+    
+    const ipAddress = req.ip || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    const result = await this.blockUserUseCase.execute(
+      adminId,
+      id,
+      reason,
+      ipAddress,
+      userAgent
+    );
+
+    res.json({
+      success: true,
+      message: 'User blocked successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in blockUser:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+// Tambah method unblockUser juga
+async unblockUser(req, res) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'reason is required'
+      });
+    }
+
+    const adminId = req.user.id;
+    const ipAddress = req.ip || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    const result = await this.unblockUserUseCase.execute(
+      adminId,
+      id,
+      reason,
+      ipAddress,
+      userAgent
+    );
+
+    res.json({
+      success: true,
+      message: 'User unblocked successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in unblockUser:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+  async getUserAnalytics(req, res) {
+    try {
+      const data = await this.getUserAnalyticsUseCase.execute();
+      const chart = ChartService.formatForChart(data, 'line');
+      res.json({
+        success: true,
+        message: 'User analytics retrieved',
+        data: chart
+      });
+    } catch (error) {
+      console.error('Error in getUserAnalytics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getRevenueAnalytics(req, res) {
+    try {
+      const { startDate, endDate } = req.query;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({
+          success: false,
+          error: 'startDate and endDate are required'
+        });
+      }
+
+      const data = await this.getRevenueAnalyticsUseCase.execute(
+        new Date(startDate),
+        new Date(endDate)
+      );
+      const chart = ChartService.formatForChart(data, 'line');
+
+      res.json({
+        success: true,
+        message: 'Revenue analytics retrieved',
+        data: chart
+      });
+    } catch (error) {
+      console.error('Error in getRevenueAnalytics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getOrderAnalytics(req, res) {
+    try {
+      let { startDate, endDate, month, year } = req.query;
+
+      // Jika ada month & year
+      if (month && year) {
+        const monthNum = parseInt(month);
+        const yearNum = parseInt(year);
+        
+        startDate = new Date(yearNum, monthNum - 1, 1).toISOString().split('T')[0];
+        endDate = new Date(yearNum, monthNum, 0).toISOString().split('T')[0];
+      }
+      // Default: bulan saat ini
+      else if (!startDate || !endDate) {
+        const today = new Date();
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
+      }
+
+      const data = await this.getOrderAnalyticsUseCase.execute(startDate, endDate);
+      const chart = ChartService.formatForChart(data, 'bar');
+
+      res.json({
+        success: true,
+        message: 'Order analytics retrieved',
+        data: chart
+      });
+    } catch (error) {
+      console.error('Error in getOrderAnalytics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async blockService(req, res) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'reason is required'
+        });
+      }
+
+      const ipAddress = req.ip || 'unknown';
+      const userAgent = req.get('user-agent') || 'unknown';
+      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
+
+      const result = await this.blockServiceUseCase.execute(
+        adminId,
+        id,
+        reason,
+        ipAddress,
+        userAgent
+      );
+
+      res.json({
+        success: true,
+        message: 'Service blocked successfully',
+        data: result
+      });
+    } catch (error) {
+      console.error('Error in blockService:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async deleteReview(req, res) {
+    try {
+      const { id } = req.params;
+      const { reason } = req.body;
+
+      if (!reason) {
+        return res.status(400).json({
+          success: false,
+          error: 'reason is required'
+        });
+      }
+
+      const ipAddress = req.ip || 'unknown';
+      const userAgent = req.get('user-agent') || 'unknown';
+      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
+
+      const result = await this.deleteReviewUseCase.execute(
+        adminId,
+        id,
+        reason,
+        ipAddress,
+        userAgent
+      );
+
+      res.json({
+        success: true,
+        message: 'Review deleted successfully',
+        data: result
+      });
+    } catch (error) {
+      console.error('Error in deleteReview:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async exportReport(req, res) {
+    try {
+      const { reportType, format, filters } = req.body;
+
+      if (!reportType || !format) {
+        return res.status(400).json({
+          success: false,
+          error: 'reportType and format are required'
+        });
+      }
+
+      const ipAddress = req.ip || 'unknown';
+      const userAgent = req.get('user-agent') || 'unknown';
+      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
+
+      const report = await this.exportReportUseCase.execute(
+        adminId,
+        reportType,
+        format,
+        filters || {},
+        ipAddress,
+        userAgent
+      );
+
+      if (format === 'csv' || format === 'excel') {
+        res.download(report.filename);
+      } else if (format === 'pdf') {
+        res.json({
+          success: true,
+          message: 'Report generation in progress',
+          data: report
+        });
+      } else {
+        res.json({
+          success: true,
+          message: 'Report exported successfully',
+          data: report
+        });
+      }
+    } catch (error) {
+      console.error('Error in exportReport:', error);
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async checkFraud(req, res) {
+    try {
+      const suspicious = await this.fraudDetectionService.checkSuspiciousPatterns();
+      res.json({
+        success: true,
+        message: 'Fraud detection alerts retrieved',
+        data: suspicious,
+        count: suspicious.length
+      });
+    } catch (error) {
+      console.error('Error in checkFraud:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getActivityLogs(req, res) {
+    try {
+      const { adminId, action, limit = 50, offset = 0 } = req.query;
+
+      const filters = {
+        adminId: adminId || null,
+        action: action || null,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      };
+
+      const logs = await this.getActivityLogsUseCase.execute(filters);
+
+      res.json({
+        success: true,
+        message: 'Activity logs retrieved',
+        data: logs.data,
+        pagination: {
+          limit: logs.limit,
+          offset: logs.offset,
+          total: logs.total
+        }
+      });
+    } catch (error) {
+      console.error('Error in getActivityLogs:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getActivityLogDetail(req, res) {
+    try {
+      const { id } = req.params;
+
+      const log = await this.adminLogService.getLogDetail(id);
+
+      if (!log) {
+        return res.status(404).json({
+          success: false,
+          error: 'Log not found'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Activity log detail retrieved',
+        data: log
+      });
+    } catch (error) {
+      console.error('Error in getActivityLogDetail:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getActivityLogsByAdmin(req, res) {
+    try {
+      const { adminId } = req.params;
+      const { limit = 50, offset = 0 } = req.query;
+
+      const filters = {
+        adminId,
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      };
+
+      const logs = await this.getActivityLogsUseCase.execute(filters);
+
+      res.json({
+        success: true,
+        message: 'Admin activity logs retrieved',
+        data: logs.data,
+        pagination: {
+          limit: logs.limit,
+          offset: logs.offset,
+          total: logs.total
+        }
+      });
+    } catch (error) {
+      console.error('Error in getActivityLogsByAdmin:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getServices(req, res) {
+    try {
+      const services = await this.sequelize.query(
+        'SELECT id, judul, freelancer_id, kategori_id, status, created_at FROM layanan LIMIT 50',
+        { raw: true, type: this.sequelize.QueryTypes.SELECT }
+      );
+      
+      res.json({
+        success: true,
+        message: 'Services retrieved',
+        data: services
+      });
+    } catch (error) {
+      console.error('Error in getServices:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+}
+
+module.exports = AdminController;
