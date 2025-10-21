@@ -8,15 +8,17 @@ export default {
         body: ["Inter", "sans-serif"],
       },
       colors: {
-        primary: {
-          50: "#eff6ff",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-        },
-        success: "#10b981",
-        warning: "#f59e0b",
-        danger: "#ef4444",
+        primary: "#CCD5AE",  
+        secondary: "#FDFCF2",  
+        text: "#1B1B1B",       
+        error: "#FF0000",      
+        disabled: "#B3B3B3",   
+        
+
+        primaryLight: "#E8EDD3",
+        primaryDark: "#B8C48A",
+        textLight: "#4A4A4A",
+        textMuted: "#6B7280",
       },
     },
   },
