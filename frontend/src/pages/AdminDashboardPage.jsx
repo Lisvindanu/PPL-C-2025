@@ -22,21 +22,7 @@ export default function AdminDashboardPage() {
       // Fetch dashboard stats
       const dashboardResponse = await adminService.getDashboard({ timeRange: 'today' });
       
-      // Check jika endpoint belum ada (404) atau error lainnya
       if (!dashboardResponse.success) {
-        const errorMsg = dashboardResponse.message?.toLowerCase() || '';
-        
-        // Jika 404 atau endpoint not found, gunakan data sementara
-        if (errorMsg.includes('404') || 
-            errorMsg.includes('not found') || 
-            errorMsg.includes('endpoint not found')) {
-          console.warn('⚠️ Dashboard endpoint belum tersedia. Menggunakan data sementara.');
-          setTemporaryData();
-          setLoading(false);
-          return;
-        }
-        
-        // Error lain, throw untuk ditangkap di catch
         throw new Error(dashboardResponse.message || 'Failed to fetch dashboard data');
       }
 
@@ -81,50 +67,9 @@ export default function AdminDashboardPage() {
       setLoading(false);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      
-      // Jika error 404 atau connection error, gunakan data sementara
-      if (err.message?.includes('404') || err.message?.includes('not found') || err.message?.includes('Network Error')) {
-        console.warn('⚠️ Menggunakan data sementara karena backend belum siap');
-        setTemporaryData();
-      } else {
-        setError(err.message);
-      }
+      setError(err.message || 'Terjadi kesalahan saat memuat data dashboard.');
       setLoading(false);
     }
-  };
-
-  const setTemporaryData = () => {
-    // Data sementara saat backend belum siap
-    const tempStats = [
-      {
-        title: "Total Pengguna",
-        value: "0",
-        icon: <User size={20} />,
-        bgColor: "bg-skill-primary"
-      },
-      {
-        title: "Total Pesanan",
-        value: "0",
-        icon: <ShoppingCart size={20} />,
-        bgColor: "bg-skill-tertiary"
-      },
-      {
-        title: "Pesanan Selesai",
-        value: "0 (0%)",
-        icon: <CheckCircle size={20} />,
-        bgColor: "bg-skill-primary"
-      },
-      {
-        title: "Total Pendapatan",
-        value: "Rp 0",
-        icon: <DollarSign size={20} />,
-        bgColor: "bg-skill-tertiary"
-      }
-    ];
-
-    setStats(tempStats);
-    setUserData([]);
-    setOrderData([]);
   };
 
   const fetchUserAnalytics = async () => {
@@ -132,7 +77,6 @@ export default function AdminDashboardPage() {
       const response = await adminService.getUserStatusDistribution();
       
       if (response.success && response.data) {
-        // Data sudah dalam format: [{ name: 'Aktif', value: 100 }]
         setUserData(response.data);
       } else {
         setUserData([]);
@@ -148,7 +92,6 @@ export default function AdminDashboardPage() {
       const response = await adminService.getOrderTrends();
       
       if (response.success && response.data) {
-        // Data sudah dalam format: [{ month: '2024-01', orders: 244 }]
         setOrderData(response.data);
       } else {
         setOrderData([]);

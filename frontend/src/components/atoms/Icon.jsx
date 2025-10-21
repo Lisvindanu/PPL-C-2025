@@ -1,4 +1,4 @@
-export default function Icon({ name, size = "md", className = "", ...props }) {
+export default function Icon({ name, size = "md", className = "", children, ...props }) {
   const sizes = {
     sm: "w-4 h-4",
     md: "w-5 h-5",
@@ -37,7 +37,7 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
 
   return (
     <span className={`inline-flex items-center ${className}`} {...props}>
-      {icons[name] || null}
+      {children || icons[name] || null}
     </span>
   )
 }
