@@ -1,5 +1,5 @@
 import React from 'react'
-import { Bookmark, Briefcase, Clock } from 'lucide-react'
+import { Bookmark, BookmarkCheck, Briefcase, Clock } from 'lucide-react'
 
 const ServiceCard = ({ service, onSelect }) => {
   const formatPrice = (price, currency, period) => {
@@ -20,7 +20,11 @@ const ServiceCard = ({ service, onSelect }) => {
           className="w-full h-full object-cover"
         />
         <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors">
-          <Bookmark className="w-5 h-5 text-text" />
+          {service.isBookmarked ? (
+            <BookmarkCheck className="w-5 h-5 text-primary" />
+          ) : (
+            <Bookmark className="w-5 h-5 text-text" />
+          )}
         </button>
       </div>
 
