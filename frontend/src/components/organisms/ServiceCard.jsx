@@ -1,7 +1,7 @@
 import React from 'react'
 import { Bookmark, BookmarkCheck, Briefcase, Clock } from 'lucide-react'
 
-const ServiceCard = ({ service, onSelect }) => {
+const ServiceCard = ({ service, onSelect, onBookmark }) => {
   const formatPrice = (price, currency, period) => {
     if (period === 'month') {
       return `$${price}/${period}`
@@ -19,7 +19,10 @@ const ServiceCard = ({ service, onSelect }) => {
           alt={service.title}
           className="w-full h-full object-cover"
         />
-        <button className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors">
+        <button 
+          onClick={onBookmark}
+          className="absolute top-3 right-3 p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors"
+        >
           {service.isBookmarked ? (
             <BookmarkCheck className="w-5 h-5 text-primary" />
           ) : (

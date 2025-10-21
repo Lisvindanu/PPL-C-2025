@@ -1,8 +1,15 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { User } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import ServiceCard from '../components/organisms/ServiceCard'
+import { useToast } from '../components/organisms/ToastProvider'
 
 const OrderPage = () => {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [bookmarkedServices, setBookmarkedServices] = useState(new Set())
+  const [selectedService, setSelectedService] = useState(null)
+  const [activeTab, setActiveTab] = useState('services')
   const services = [
     {
       id: 1,
@@ -90,6 +97,29 @@ const OrderPage = () => {
     console.log('Order submitted:', orderData)
     setActiveTab('orders')
     setSelectedService(null)
+    // Tampilkan pesan sukses dan redirect ke halaman bookmark
+    toast.show('Order berhasil! Mengarahkan ke halaman bookmark...', 'success')
+    setTimeout(() => {
+      navigate('/bookmarks')
+    }, 1500)
+  }
+
+  const handleBookmark = (serviceId) => {
+    setBookmarkedServices(prev => {
+      const newBookmarks = new Set(prev)
+      if (newBookmarks.has(serviceId)) {
+        newBookmarks.delete(serviceId)
+        toast.show('Layanan dihapus dari bookmark', 'info')
+      } else {
+        newBookmarks.add(serviceId)
+        toast.show('Layanan ditambahkan ke bookmark', 'success')
+      }
+      return newBookmarks
+    })
+  }
+
+  const handleBookmarkPageRedirect = () => {
+    navigate('/bookmarks')
   }
 
   return (
@@ -107,7 +137,12 @@ const OrderPage = () => {
             <nav className="hidden md:flex items-center space-x-8">
               <a href="#" className="text-text hover:text-primary transition-colors">Beranda</a>
               <a href="#" className="text-text hover:text-primary transition-colors">Layanan</a>
-              <a href="#" className="text-text hover:text-primary transition-colors">Bookmark</a>
+              <button 
+                onClick={handleBookmarkPageRedirect}
+                className="text-text hover:text-primary transition-colors"
+              >
+                Bookmark
+              </button>
               <a href="#" className="text-text hover:text-primary transition-colors">Pesanan</a>
             </nav>
             
@@ -161,8 +196,12 @@ const OrderPage = () => {
             {services.map((service) => (
               <ServiceCard
                 key={service.id}
-                service={service}
+                service={{
+                  ...service,
+                  isBookmarked: bookmarkedServices.has(service.id)
+                }}
                 onSelect={() => handleServiceSelect(service)}
+                onBookmark={() => handleBookmark(service.id)}
               />
             ))}
           </div>

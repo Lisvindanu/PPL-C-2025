@@ -1,8 +1,14 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { User, Bookmark } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import ServiceCard from '../components/organisms/ServiceCard'
+import { useToast } from '../components/organisms/ToastProvider'
 
 const BookmarkPage = () => {
+  const navigate = useNavigate()
+  const toast = useToast()
+  const [bookmarkedServiceIds, setBookmarkedServiceIds] = useState(new Set([1, 2, 3]))
+  
   const bookmarkedServices = [
     {
       id: 1,
@@ -63,6 +69,24 @@ const BookmarkPage = () => {
     }
   ]
 
+  const handleBookmark = (serviceId) => {
+    setBookmarkedServiceIds(prev => {
+      const newBookmarks = new Set(prev)
+      if (newBookmarks.has(serviceId)) {
+        newBookmarks.delete(serviceId)
+        toast.show('Layanan dihapus dari bookmark', 'info')
+      } else {
+        newBookmarks.add(serviceId)
+        toast.show('Layanan ditambahkan ke bookmark', 'success')
+      }
+      return newBookmarks
+    })
+  }
+
+  const handleOrderPageRedirect = () => {
+    navigate('/orders')
+  }
+
   return (
     <div className="min-h-screen bg-secondary">
       {/* Header */}
@@ -80,7 +104,12 @@ const BookmarkPage = () => {
               <a href="#" className="text-textMuted hover:text-primary transition-colors">Beranda</a>
               <a href="#" className="text-textMuted hover:text-primary transition-colors">Layanan</a>
               <a href="#" className="text-primary font-medium">Bookmark</a>
-              <a href="#" className="text-textMuted hover:text-primary transition-colors">Pesanan</a>
+              <button 
+                onClick={handleOrderPageRedirect}
+                className="text-textMuted hover:text-primary transition-colors"
+              >
+                Pesanan
+              </button>
             </nav>
             
             <div className="flex items-center space-x-4">
@@ -103,7 +132,7 @@ const BookmarkPage = () => {
               Layanan yang telah Anda bookmark untuk referensi di masa mendatang
             </p>
             <p className="text-lg text-textLight">
-              {bookmarkedServices.length} Layanan disimpan
+              {bookmarkedServiceIds.size} Layanan disimpan
             </p>
           </div>
         </div>
@@ -113,15 +142,32 @@ const BookmarkPage = () => {
       <div className="bg-secondary py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {bookmarkedServices.map((service) => (
-                <ServiceCard
-                  key={service.id}
-                  service={service}
-                  onSelect={() => console.log('Service selected:', service.title)}
-                />
-              ))}
-            </div>
+            {bookmarkedServiceIds.size === 0 ? (
+              <div className="text-center py-12">
+                <Bookmark className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-text mb-2">Belum Ada Bookmark</h3>
+                <p className="text-textMuted mb-4">Layanan yang Anda bookmark akan muncul di sini</p>
+                <button 
+                  onClick={handleOrderPageRedirect}
+                  className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primaryDark transition-colors"
+                >
+                  Jelajahi Layanan
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {bookmarkedServices
+                  .filter(service => bookmarkedServiceIds.has(service.id))
+                  .map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      onSelect={() => console.log('Service selected:', service.title)}
+                      onBookmark={() => handleBookmark(service.id)}
+                    />
+                  ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
