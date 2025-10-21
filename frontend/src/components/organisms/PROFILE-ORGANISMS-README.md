@@ -4,7 +4,90 @@ Komponen organisms yang dibuat khusus untuk ProfilePage menggunakan atomic desig
 
 ## Komponen yang Dibuat
 
-### 1. ProfileInfo.jsx
+### 1. AuthCard.jsx
+Organism untuk kartu autentikasi dengan form login/register.
+
+**Props:**
+- `title`: Judul kartu
+- `subtitle`: Subtitle kartu
+- `children`: Form content
+- `footer`: Footer content
+- `className`: CSS class tambahan
+
+**Fitur:**
+- Layout kartu dengan header dan footer
+- Styling yang konsisten
+- Responsive design
+
+### 2. EditForm.jsx
+Organism untuk tombol aksi edit (batal/simpan).
+
+**Props:**
+- `isEditing`: Status editing mode
+- `loading`: Status loading
+- `onSave`: Handler untuk menyimpan
+- `onCancel`: Handler untuk membatalkan
+
+**Fitur:**
+- Tombol Batal dan Simpan
+- Loading state pada tombol simpan
+- Hanya muncul saat mode editing
+
+### 3. Header.jsx
+Organism untuk header navigasi dengan logo dan menu.
+
+**Props:**
+- `user`: Data user yang login
+- `onLogout`: Handler logout
+- `className`: CSS class tambahan
+
+**Fitur:**
+- Logo dan navigasi
+- User menu dengan dropdown
+- Responsive design
+
+### 4. LoadingOverlay.jsx
+Organism untuk menampilkan loading overlay.
+
+**Props:**
+- `loading`: Status loading
+- `message`: Pesan loading
+- `className`: CSS class tambahan
+
+**Fitur:**
+- Overlay full screen
+- Modal loading dengan pesan
+- Hanya muncul saat loading
+
+### 5. OrderChart.jsx
+Organism untuk menampilkan chart analytics pesanan.
+
+**Props:**
+- `data`: Data chart
+- `className`: CSS class tambahan
+
+**Fitur:**
+- Line chart untuk trend pesanan
+- Format bulan Indonesia
+- Data dari database
+
+### 6. PortfolioSection.jsx
+Organism untuk menampilkan portfolio dengan grid layout dan pagination.
+
+**Props:**
+- `isEditing`: Status editing mode
+- `portfolio`: Data portfolio
+- `onAdd`: Handler tambah portfolio
+- `onEdit`: Handler edit portfolio
+- `onDelete`: Handler hapus portfolio
+
+**Fitur:**
+- Grid layout untuk portfolio items
+- Hover effect dengan overlay
+- Tombol tambah portfolio (mode edit)
+- Pagination controls
+
+### 7. ProfileInfo.jsx
 Organism untuk menampilkan informasi utama profile (job title, rate, about, verification, services).
 
 **Props:**
@@ -23,7 +106,33 @@ Organism untuk menampilkan informasi utama profile (job title, rate, about, veri
 **Komponen yang Digunakan:**
 - TextField, TextArea, Select, Icon, VerificationBadge
 
-### 2. SkillsSection.jsx
+### 8. ProfileLoadingOverlay.jsx
+Organism untuk menampilkan loading overlay khusus profile.
+
+**Props:**
+- `loading`: Status loading
+- `message`: Pesan loading
+
+**Fitur:**
+- Overlay full screen
+- Modal loading dengan pesan
+- Hanya muncul saat loading
+
+### 9. Sidebar.jsx
+Organism untuk sidebar navigasi.
+
+**Props:**
+- `user`: Data user
+- `activeItem`: Item yang aktif
+- `onItemClick`: Handler klik item
+- `className`: CSS class tambahan
+
+**Fitur:**
+- Menu navigasi
+- User info
+- Responsive design
+
+### 10. SkillsSection.jsx
 Organism untuk menampilkan dan mengelola skills, bahasa, lisensi, pendidikan, dan asosiasi.
 
 **Props:**
@@ -41,42 +150,40 @@ Organism untuk menampilkan dan mengelola skills, bahasa, lisensi, pendidikan, da
 **Komponen yang Digunakan:**
 - TextField, Icon, SkillTag, LanguageItem
 
-### 3. PortfolioSection.jsx
-Organism untuk menampilkan portfolio dengan grid layout dan pagination.
+### 11. StatsGrid.jsx
+Organism untuk menampilkan grid statistik.
 
 **Props:**
-- `isEditing`: Status editing mode
+- `stats`: Data statistik
+- `className`: CSS class tambahan
 
 **Fitur:**
-- Grid layout untuk portfolio items
-- Hover effect dengan overlay
-- Tombol tambah portfolio (mode edit)
-- Pagination controls
+- Grid layout untuk statistik
+- Card statistik dengan icon
+- Responsive design
 
-### 4. EditForm.jsx
-Organism untuk tombol aksi edit (batal/simpan).
+### 12. ToastProvider.jsx
+Organism untuk provider toast notification.
 
 **Props:**
-- `isEditing`: Status editing mode
-- `loading`: Status loading
-- `onSave`: Handler untuk menyimpan
-- `onCancel`: Handler untuk membatalkan
+- `children`: Child components
 
 **Fitur:**
-- Tombol Batal dan Simpan
-- Loading state pada tombol simpan
-- Hanya muncul saat mode editing
+- Context provider untuk toast
+- Toast container
+- Auto dismiss
 
-### 5. ProfileLoadingOverlay.jsx
-Organism untuk menampilkan loading overlay.
+### 13. UserChart.jsx
+Organism untuk menampilkan chart analytics user.
 
 **Props:**
-- `loading`: Status loading
+- `data`: Data chart
+- `className`: CSS class tambahan
 
 **Fitur:**
-- Overlay full screen
-- Modal loading dengan pesan
-- Hanya muncul saat loading
+- Pie chart untuk distribusi user
+- Data dari database
+- Legend dan stats
 
 ## Struktur Atomic Design
 
