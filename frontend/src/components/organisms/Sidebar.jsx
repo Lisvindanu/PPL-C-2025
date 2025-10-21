@@ -17,7 +17,7 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: <Menu size={18} />, label: 'Dashboard', path: '/dashboard' },
+    { id: 'dashboard', icon: <Menu size={18} />, label: 'Dashboard'},
   ];
 
   return (
