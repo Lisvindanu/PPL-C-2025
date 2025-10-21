@@ -1,7 +1,24 @@
 # Modul 4 - Payment Gateway
 
+**Mock Payment Gateway with Escrow & Withdrawal System**
+
+---
+
+## 📚 Documentation
+
+### 🚀 Start Here:
+1. **[PAYMENT-MODULE-GUIDE.md](./PAYMENT-MODULE-GUIDE.md)** ⭐ **READ THIS FIRST** - Complete guide dengan flow diagrams
+2. **[docs/QUICK-START.md](./docs/QUICK-START.md)** - Quick setup & copy-paste commands
+
+### 📖 Additional Guides:
+- **[docs/API-TESTING.md](./docs/API-TESTING.md)** - All API endpoints testing
+- **[docs/FLOW-TESTING.md](./docs/FLOW-TESTING.md)** - End-to-end testing scenarios
+- **[../../../public/mock-payment/README.md](../../../public/mock-payment/README.md)** - Mock payment UI guide
+
+---
+
 ## 📋 Deskripsi
-Modul untuk mengelola pembayaran digital melalui payment gateway (Midtrans/Xendit), verifikasi otomatis, riwayat transaksi, dan invoice.
+Modul untuk mengelola pembayaran digital dengan Mock Payment Gateway, Escrow System, dan Withdrawal/Payout untuk freelancer.
 
 ## 🎯 User Stories
 - **P-1**: Pembayaran digital (Midtrans/Xendit)

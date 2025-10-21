@@ -18,6 +18,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev')); // Logging
 
+// Serve static files (mock payment gateway)
+app.use('/mock-payment', express.static('public/mock-payment'));
+
 // ==================== ROUTES ====================
 // Health check
 app.get('/', (req, res) => {
@@ -46,19 +49,22 @@ app.get('/health', async (req, res) => {
   }
 });
 
-// TODO: Import dan register module routes di sini
-// Example:
-// const userRoutes = require('./modules/user/presentation/routes/userRoutes');
-// app.use('/api/users', userRoutes);
+// ==================== MODULE ROUTES ====================
+// Import routes
+const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 
+// Register routes
+app.use('/api/users', userRoutes);
+
+// TODO: Tambahkan routes modul lain di sini
 // const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
 // app.use('/api/services', serviceRoutes);
 
 // const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 // app.use('/api/orders', orderRoutes);
 
-// const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
-// app.use('/api/payments', paymentRoutes);
+const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
 
 // const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);
@@ -66,8 +72,25 @@ app.get('/health', async (req, res) => {
 // const chatRoutes = require('./modules/chat/presentation/routes/chatRoutes');
 // app.use('/api/chat', chatRoutes);
 
-// const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
-// app.use('/api/admin', adminRoutes);
+// Import sequelize for dependencies
+const { sequelize } = require('./shared/database/connection');
+
+// Auth routes (public - untuk login)
+const setupAuthDependencies = require('./modules/admin/config/authDependencies');
+const { authController } = setupAuthDependencies(sequelize);
+const authRoutes = require('./modules/admin/presentation/routes/authRoutes');
+app.use('/api/auth', authRoutes(authController));
+
+// Admin routes
+const authMiddleware = require('./shared/middleware/authMiddleware');
+const adminMiddleware = require('./shared/middleware/adminMiddleware');
+
+// Initialize admin dependencies
+const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
+const { adminController } = setupAdminDependencies(sequelize);
+
+const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
 
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
 // app.use('/api/recommendations', recommendationRoutes);
@@ -97,6 +120,7 @@ connectDatabase().then(() => {
   const server = app.listen(PORT, () => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
   });
 
   // Graceful shutdown
