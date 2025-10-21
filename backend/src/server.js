@@ -72,8 +72,25 @@ app.use('/api/payments', paymentRoutes);
 // const chatRoutes = require('./modules/chat/presentation/routes/chatRoutes');
 // app.use('/api/chat', chatRoutes);
 
-// const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
-// app.use('/api/admin', adminRoutes);
+// Import sequelize for dependencies
+const { sequelize } = require('./shared/database/connection');
+
+// Auth routes (public - untuk login)
+const setupAuthDependencies = require('./modules/admin/config/authDependencies');
+const { authController } = setupAuthDependencies(sequelize);
+const authRoutes = require('./modules/admin/presentation/routes/authRoutes');
+app.use('/api/auth', authRoutes(authController));
+
+// Admin routes
+const authMiddleware = require('./shared/middleware/authMiddleware');
+const adminMiddleware = require('./shared/middleware/adminMiddleware');
+
+// Initialize admin dependencies
+const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
+const { adminController } = setupAdminDependencies(sequelize);
+
+const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
 
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
 // app.use('/api/recommendations', recommendationRoutes);

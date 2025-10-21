@@ -31,7 +31,25 @@ Komponen untuk menampilkan badge dengan berbagai variant warna.
 <Badge variant="success">Terverifikasi</Badge>
 ```
 
-### 3. Icon.jsx
+### 3. Button.jsx
+Komponen tombol dengan berbagai variant dan ukuran.
+
+**Props:**
+- `children`: Konten tombol
+- `variant`: Variant styling - "primary", "secondary", "outline", "danger" (default: "primary")
+- `size`: Ukuran - "sm", "md", "lg" (default: "md")
+- `disabled`: Status disabled
+- `onClick`: Handler klik
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Button variant="primary" size="md" onClick={handleClick}>
+  Simpan
+</Button>
+```
+
+### 4. Icon.jsx
 Komponen untuk menampilkan icon SVG dengan berbagai ukuran.
 
 **Props:**
@@ -44,28 +62,124 @@ Komponen untuk menampilkan icon SVG dengan berbagai ukuran.
 <Icon name="edit" size="sm" />
 ```
 
-### 4. TextField.jsx
-Komponen input text dengan berbagai variant styling.
+### 5. Input.jsx
+Komponen input field dasar dengan styling yang konsisten.
+
+**Props:**
+- `type`: Tipe input (default: "text")
+- `value`: Nilai input
+- `onChange`: Handler perubahan nilai
+- `placeholder`: Placeholder text
+- `disabled`: Status disabled
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Input 
+  type="text"
+  value={name} 
+  onChange={(e) => setName(e.target.value)} 
+  placeholder="Masukkan nama"
+/>
+```
+
+### 6. Label.jsx
+Komponen label untuk form dengan styling yang konsisten.
+
+**Props:**
+- `children`: Konten label
+- `htmlFor`: ID elemen yang terkait
+- `required`: Status required (menampilkan asterisk)
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Label htmlFor="name" required>
+  Nama Lengkap
+</Label>
+```
+
+### 7. Logo.jsx
+Komponen logo dengan berbagai ukuran.
+
+**Props:**
+- `size`: Ukuran logo - "sm", "md", "lg", "xl" (default: "md")
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Logo size="lg" />
+```
+
+### 8. PasswordInput.jsx
+Komponen input password dengan fitur show/hide.
 
 **Props:**
 - `value`: Nilai input
 - `onChange`: Handler perubahan nilai
 - `placeholder`: Placeholder text
-- `type`: Tipe input (default: "text")
-- `variant`: Variant styling - "default", "filled" (default: "default")
+- `disabled`: Status disabled
 - `className`: CSS class tambahan
 
 **Contoh Penggunaan:**
 ```jsx
-<TextField 
-  value={name} 
-  onChange={(e) => setName(e.target.value)} 
-  placeholder="Masukkan nama"
-  variant="filled"
+<PasswordInput 
+  value={password} 
+  onChange={(e) => setPassword(e.target.value)} 
+  placeholder="Masukkan password"
 />
 ```
 
-### 5. TextArea.jsx
+### 9. Select.jsx
+Komponen select dropdown dengan styling yang konsisten.
+
+**Props:**
+- `value`: Nilai yang dipilih
+- `onChange`: Handler perubahan nilai
+- `options`: Array objek dengan format `{value, label}`
+- `placeholder`: Placeholder text (default: "Pilih...")
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Select 
+  value={role} 
+  onChange={(e) => setRole(e.target.value)} 
+  options={[
+    {value: 'client', label: 'Client'},
+    {value: 'freelancer', label: 'Freelancer'}
+  ]}
+/>
+```
+
+### 10. Spinner.jsx
+Komponen loading spinner dengan berbagai ukuran.
+
+**Props:**
+- `size`: Ukuran spinner - "sm", "md", "lg" (default: "md")
+- `color`: Warna spinner - "primary", "secondary", "white" (default: "primary")
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Spinner size="md" color="primary" />
+```
+
+### 11. Text.jsx
+Komponen text dengan berbagai variant typography.
+
+**Props:**
+- `children`: Konten text
+- `variant`: Variant typography - "h1", "h2", "h3", "body", "caption" (default: "body")
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<Text variant="h1">Judul</Text>
+<Text variant="body">Paragraf text</Text>
+```
+
+### 12. TextArea.jsx
 Komponen textarea dengan styling yang konsisten.
 
 **Props:**
@@ -85,25 +199,24 @@ Komponen textarea dengan styling yang konsisten.
 />
 ```
 
-### 6. Select.jsx
-Komponen select dropdown dengan styling yang konsisten.
+### 13. TextField.jsx
+Komponen input text dengan berbagai variant styling.
 
 **Props:**
-- `value`: Nilai yang dipilih
+- `value`: Nilai input
 - `onChange`: Handler perubahan nilai
-- `options`: Array objek dengan format `{value, label}`
-- `placeholder`: Placeholder text (default: "Pilih...")
+- `placeholder`: Placeholder text
+- `type`: Tipe input (default: "text")
+- `variant`: Variant styling - "default", "filled" (default: "default")
 - `className`: CSS class tambahan
 
 **Contoh Penggunaan:**
 ```jsx
-<Select 
-  value={role} 
-  onChange={(e) => setRole(e.target.value)} 
-  options={[
-    {value: 'client', label: 'Client'},
-    {value: 'freelancer', label: 'Freelancer'}
-  ]}
+<TextField 
+  value={name} 
+  onChange={(e) => setName(e.target.value)} 
+  placeholder="Masukkan nama"
+  variant="filled"
 />
 ```
 

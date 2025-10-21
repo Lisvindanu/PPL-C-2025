@@ -4,7 +4,73 @@ Komponen molecules yang dibuat khusus untuk ProfilePage menggunakan atomic desig
 
 ## Komponen yang Dibuat
 
-### 1. ProfileHeader.jsx
+### 1. FormGroup.jsx
+Komponen wrapper untuk form field dengan label dan input.
+
+**Props:**
+- `label`: Text label
+- `children`: Input component
+- `required`: Status required (menampilkan asterisk)
+- `error`: Error message
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<FormGroup label="Nama Lengkap" required>
+  <Input value={name} onChange={handleChange} />
+</FormGroup>
+```
+
+### 2. InfoCard.jsx
+Kartu informasi dengan layout yang terstruktur.
+
+**Props:**
+- `title`: Judul kartu
+- `subtitle`: Subtitle kartu
+- `children`: Konten kartu
+- `className`: CSS class tambahan
+
+**Contoh Penggunaan:**
+```jsx
+<InfoCard title="Informasi Pribadi" subtitle="Data diri Anda">
+  <p>Konten informasi...</p>
+</InfoCard>
+```
+
+### 3. LanguageItem.jsx
+Komponen untuk menampilkan dan mengedit item bahasa dengan level kemahiran.
+
+**Props:**
+- `language`: Objek bahasa dengan `name` dan `level`
+- `isEditing`: Status editing mode
+- `onLanguageChange`: Handler untuk perubahan bahasa
+- `onRemove`: Handler untuk menghapus bahasa
+
+**Fitur:**
+- Mode tampilan: nama bahasa dan level
+- Mode edit: input nama + select level + tombol hapus
+- Level options: Dasar, Menengah, Fasih, Native
+
+### 4. NavItem.jsx
+Komponen item navigasi dengan icon dan label.
+
+**Props:**
+- `icon`: Icon component
+- `label`: Text label
+- `active`: Status aktif
+- `onClick`: Handler klik
+
+**Contoh Penggunaan:**
+```jsx
+<NavItem 
+  icon={<Icon name="home" />} 
+  label="Dashboard" 
+  active={true}
+  onClick={handleClick}
+/>
+```
+
+### 5. ProfileHeader.jsx
 Header komponen untuk halaman profile dengan navigasi dan tombol aksi.
 
 **Props:**
@@ -21,21 +87,29 @@ Header komponen untuk halaman profile dengan navigasi dan tombol aksi.
 - Tombol logout
 - Responsive design
 
-### 2. InfoCard.jsx
-Kartu informasi utama profile dengan foto, nama, dan lokasi.
+### 6. RoleCard.jsx
+Komponen kartu untuk memilih role (client/freelancer).
 
 **Props:**
-- `profile`: Data profile user
-- `isEditing`: Status editing mode
-- `onProfileChange`: Handler untuk perubahan data profile
+- `role`: Role yang dipilih
+- `title`: Judul role
+- `description`: Deskripsi role
+- `icon`: Icon role
+- `selected`: Status terpilih
+- `onClick`: Handler klik
 
-**Fitur:**
-- Foto profil dengan tombol edit
-- Input nama yang dapat diedit
-- Input lokasi yang dapat diedit
-- Tombol share dan sewa
+**Contoh Penggunaan:**
+```jsx
+<RoleCard 
+  role="freelancer"
+  title="Freelancer"
+  description="Tawarkan jasa Anda"
+  selected={true}
+  onClick={handleSelect}
+/>
+```
 
-### 3. SkillTag.jsx
+### 7. SkillTag.jsx
 Komponen untuk menampilkan dan mengedit skill dalam bentuk tag.
 
 **Props:**
@@ -49,21 +123,27 @@ Komponen untuk menampilkan dan mengedit skill dalam bentuk tag.
 - Mode edit: input field dengan tombol hapus
 - Styling yang konsisten
 
-### 4. LanguageItem.jsx
-Komponen untuk menampilkan dan mengedit item bahasa dengan level kemahiran.
+### 8. StatCard.jsx
+Komponen kartu statistik dengan icon dan nilai.
 
 **Props:**
-- `language`: Objek bahasa dengan `name` dan `level`
-- `isEditing`: Status editing mode
-- `onLanguageChange`: Handler untuk perubahan bahasa
-- `onRemove`: Handler untuk menghapus bahasa
+- `title`: Judul statistik
+- `value`: Nilai statistik
+- `icon`: Icon component
+- `bgColor`: Background color
+- `className`: CSS class tambahan
 
-**Fitur:**
-- Mode tampilan: nama bahasa dan level
-- Mode edit: input nama + select level + tombol hapus
-- Level options: Dasar, Menengah, Fasih, Native
+**Contoh Penggunaan:**
+```jsx
+<StatCard 
+  title="Total Pekerjaan"
+  value="25"
+  icon={<Icon name="work" />}
+  bgColor="bg-blue-500"
+/>
+```
 
-### 5. VerificationBadge.jsx
+### 9. VerificationBadge.jsx
 Komponen untuk menampilkan status verifikasi dengan icon.
 
 **Props:**

@@ -1,4 +1,3 @@
-/** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
@@ -17,6 +16,14 @@ export default {
         success: "#10b981",
         warning: "#f59e0b",
         danger: "#ef4444",
+        skill: {
+          primary: "#CCD5AE",    
+          secondary: "#E0E5B6",  
+          tertiary: "#FAEDCE",   
+          bg: "#FEFAE0",         
+          chart1: "#B8C5A3",     
+          chart2: "#A8B88F",     
+        },
       },
     },
   },

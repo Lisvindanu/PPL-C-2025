@@ -27,7 +27,14 @@ export default function LoginPage() {
     try {
       await login(form)
       toast.show('Logged in successfully', 'success')
-      navigate('/dashboard', { replace: true })
+      
+      // Check user role and redirect accordingly
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else {
+        navigate('/dashboard', { replace: true })
+      }
     } catch (_) {
       toast.show('Invalid email or password', 'error')
     }
