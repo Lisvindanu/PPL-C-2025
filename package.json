@@ -18,6 +18,7 @@
   "scripts": {
     "migrate": "node backend/src/shared/database/migrations.js",
     "seed": "node backend/src/shared/database/seeders/seed.js",
+    "reset": "node backend/src/shared/database/seeders/reset.js",
     "start": "node backend/src/app.js",
     "dev": "nodemon backend/src/app.js"
   }
