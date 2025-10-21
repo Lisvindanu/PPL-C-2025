@@ -1,4 +1,3 @@
-// backend/src/app.js
 // ================================
 // 📦 Import Dependencies
 // ================================
@@ -32,28 +31,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const { sequelize, connectDatabase } = require('./shared/database/connection');
 
 connectDatabase()
-  .then(() => {
-    console.log('✅ Database authenticated successfully');
-  })
-  .catch((err) => {
-    console.error('❌ Database connection error:', err.message);
-  });
+  .then(() => console.log('✅ Database authenticated successfully'))
+  .catch((err) => console.error('❌ Database connection error:', err.message));
 
 // ================================
 // 🚀 Initialize Dependencies
 // ================================
-// Auth dependencies
-const setupAuthDependencies = require('./modules/admin/config/authDependencies');
-const { authController } = setupAuthDependencies(sequelize);
-
-// Admin dependencies
 const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
 const { adminController, adminLogController } = setupAdminDependencies(sequelize);
 
 // ================================
 // 🚏 Import Routes
 // ================================
-const authRoutes = require('./modules/admin/presentation/routes/authRoutes');
+const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
 
@@ -61,20 +51,14 @@ const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRout
 // 🛣️ Register Routes
 // ================================
 
-// Public routes (tidak perlu auth)
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    message: 'Server is running',
-    port: PORT,
-    env: process.env.NODE_ENV
-  });
-});
+// User routes (public & private)
+app.use('/api/users', userRoutes);
 
-// Auth routes (public - untuk login)
-app.use('/api/auth', authRoutes(authController));
+// Protected admin routes (memerlukan auth + admin role)
+app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
+app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
 
-// Test DB (untuk development saja)
+// Test DB (untuk development)
 if (process.env.NODE_ENV === 'development') {
   app.get('/api/test-db', async (req, res) => {
     try {
@@ -93,10 +77,6 @@ if (process.env.NODE_ENV === 'development') {
   });
 }
 
-// Protected admin routes (memerlukan auth + admin role)
-app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
-app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
-
 // ================================
 // 404 Handler
 // ================================
@@ -114,13 +94,9 @@ app.use((req, res) => {
 // ================================
 app.use((err, req, res, next) => {
   console.error('Error:', err);
-
-  const statusCode = err.statusCode || 500;
-  const message = err.message || 'Internal Server Error';
-
-  res.status(statusCode).json({
+  res.status(err.statusCode || 500).json({
     status: 'error',
-    message: message,
+    message: err.message || 'Internal Server Error',
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 });
@@ -136,7 +112,6 @@ app.listen(PORT, () => {
 ║  Port: ${PORT}
 ║  Environment: ${process.env.NODE_ENV}
 ║  Database: ${process.env.DB_NAME}
-║  Auth: ${process.env.NODE_ENV === 'production' ? '✅ Enabled' : '⚠️ Development Mode'}
 ╚════════════════════════════════════╝
   `);
 });
