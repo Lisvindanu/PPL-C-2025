@@ -143,7 +143,7 @@ async countOrders(status = null) {
       const result = await this.sequelize.query(`
         SELECT 
           DATE_FORMAT(dibayar_pada, '%Y-%m') as month,
-          SUM(total_bayar) as amount
+          SUM(biaya_platform) as amount
         FROM pembayaran
         WHERE status = "berhasil" 
           AND dibayar_pada >= ? 
