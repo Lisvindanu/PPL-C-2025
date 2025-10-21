@@ -64,6 +64,80 @@ async countOrders(status = null) {
     }
   }
 
+  // Get user status distribution for pie chart
+  async getUserStatusDistribution() {
+    try {
+      const result = await this.sequelize.query(`
+        SELECT 
+          CASE 
+            WHEN is_active = 1 THEN 'Aktif'
+            WHEN is_active = 0 THEN 'Nonaktif'
+            ELSE 'Nonaktif'
+          END as name,
+          COUNT(*) as value
+        FROM users
+        GROUP BY is_active
+        ORDER BY value DESC
+      `, {
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+      return result;
+    } catch (error) {
+      throw new Error(`Failed to get user status distribution: ${error.message}`);
+    }
+  }
+
+  // Get order trends for line chart
+  async getOrderTrends() {
+    try {
+      // Get data for last 12 months
+      const result = await this.sequelize.query(`
+        SELECT 
+          DATE_FORMAT(created_at, '%Y-%m') as month,
+          COUNT(*) as orders
+        FROM pesanan
+        WHERE created_at >= DATE_SUB(NOW(), INTERVAL 12 MONTH)
+        GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+        ORDER BY month ASC
+      `, {
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // Generate complete 12 months data with Indonesian month names
+      const monthNames = [
+        'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+        'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      ];
+
+      const currentDate = new Date();
+      const completeData = [];
+
+      // Generate last 12 months
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const monthKey = `${year}-${month}`;
+        const monthName = monthNames[date.getMonth()];
+
+        // Find data for this month
+        const monthData = result.find(item => item.month === monthKey);
+        const orders = monthData ? monthData.orders : 0;
+
+        completeData.push({
+          month: monthName,
+          orders: orders
+        });
+      }
+
+      return completeData;
+    } catch (error) {
+      throw new Error(`Failed to get order trends: ${error.message}`);
+    }
+  }
+
   async getRevenueTrend(startDate, endDate) {
     try {
       const result = await this.sequelize.query(`

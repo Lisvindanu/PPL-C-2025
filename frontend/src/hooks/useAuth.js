@@ -34,7 +34,45 @@ export function useAuth() {
     }
   }
 
-  return { login, register, loading, error }
+  const getProfile = async () => {
+    setLoading(true); setError(null)
+    try {
+      const { data } = await authService.getProfile()
+      setLoading(false)
+      return data
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to get profile')
+      setLoading(false)
+      throw e
+    }
+  }
+
+  const updateProfile = async (data) => {
+    setLoading(true); setError(null)
+    try {
+      const { data: result } = await authService.updateProfile(data)
+      setLoading(false)
+      return result
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to update profile')
+      setLoading(false)
+      throw e
+    }
+  }
+
+  const logout = async () => {
+    setLoading(true); setError(null)
+    try {
+      await authService.logout()
+      setLoading(false)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Logout failed')
+      setLoading(false)
+      throw e
+    }
+  }
+
+  return { login, register, getProfile, updateProfile, logout, loading, error }
 }
 
 

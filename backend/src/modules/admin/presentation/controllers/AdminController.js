@@ -15,6 +15,7 @@ class AdminController {
     getActivityLogsUseCase,
     fraudDetectionService,
     adminLogService,
+    analyticsService,
     sequelize
   ) {
     this.sequelize = sequelize;
@@ -30,6 +31,7 @@ class AdminController {
     this.getActivityLogsUseCase = getActivityLogsUseCase;
     this.fraudDetectionService = fraudDetectionService;
     this.adminLogService = adminLogService;
+    this.analyticsService = analyticsService;
   }
 
   async getDashboard(req, res) {
@@ -174,6 +176,40 @@ async unblockUser(req, res) {
       });
     } catch (error) {
       console.error('Error in getUserAnalytics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getUserStatusDistribution(req, res) {
+    try {
+      const data = await this.analyticsService.getUserStatusDistribution();
+      res.json({
+        success: true,
+        message: 'User status distribution retrieved',
+        data: data
+      });
+    } catch (error) {
+      console.error('Error in getUserStatusDistribution:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getOrderTrends(req, res) {
+    try {
+      const data = await this.analyticsService.getOrderTrends();
+      res.json({
+        success: true,
+        message: 'Order trends retrieved',
+        data: data
+      });
+    } catch (error) {
+      console.error('Error in getOrderTrends:', error);
       res.status(500).json({
         success: false,
         error: error.message

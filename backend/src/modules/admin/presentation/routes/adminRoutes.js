@@ -28,6 +28,8 @@ router.put('/users/:id/unblock', (req, res) => adminController.unblockUser(req, 
   // Analytics
   // ================================
   router.get('/analytics/users', (req, res) => adminController.getUserAnalytics(req, res));
+  router.get('/analytics/users/status', (req, res) => adminController.getUserStatusDistribution(req, res));
+  router.get('/analytics/orders/trends', (req, res) => adminController.getOrderTrends(req, res));
   router.get('/analytics/revenue', (req, res) => adminController.getRevenueAnalytics(req, res));
   router.get('/analytics/orders', (req, res) => adminController.getOrderAnalytics(req, res));
 

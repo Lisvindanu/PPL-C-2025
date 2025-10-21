@@ -106,6 +106,7 @@ module.exports = function setupAdminDependencies(sequelize) {
     getAdminActivityLog,
     fraudDetectionService,
     adminLogService,
+    analyticsService,
     sequelize
   );
 

@@ -37,6 +37,14 @@ class AnalyticsService {
     return await this.analyticsRepository.getUserTrend();
   }
 
+  async getUserStatusDistribution() {
+    return await this.analyticsRepository.getUserStatusDistribution();
+  }
+
+  async getOrderTrends() {
+    return await this.analyticsRepository.getOrderTrends();
+  }
+
   async getRevenueAnalytics(startDate, endDate) {
     return await this.analyticsRepository.getRevenueTrend(startDate, endDate);
   }

@@ -52,30 +52,28 @@ export default function RegisterClientPage() {
 
   if (step === 1) {
     return (
-      <AuthLayout title="Register Client">
+      <AuthLayout>
         <div className="w-full max-w-4xl text-center">
-          <h2 className="text-[#D8CCBC] text-xl mb-8">Join as a client or freelancer</h2>
+          <h2 className="text-[#1B1B1B] text-3xl mb-8 font-medium font-title">Bergabung sebagai klien atau pekerja lepas</h2>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <RoleCard
-              title="I'm a client, hiring for project"
-              description="Looking to hire talented freelancers"
+              title="Saya seorang klien, sedang merekrut untuk sebuah proyek"
               icon={<div className="w-4 h-4 bg-[#4B0713] rounded-full"></div>}
               selected={role === 'client'}
               onClick={() => handleRoleSelect('client')}
             />
             <RoleCard
-              title="I'm a freelancer, looking for work"
-              description="Ready to showcase your skills"
+              title="Saya seorang pekerja lepas, sedang mencari pekerjaan"
               icon={<div className="w-4 h-4 bg-[#4B0713] rounded-full"></div>}
               selected={role === 'freelancer'}
               onClick={() => handleRoleSelect('freelancer')}
             />
           </div>
           <Button variant="role" className="px-8" onClick={() => setStep(2)}>
-            Join as a Client
+            Bergabung sebagai Klien
           </Button>
-          <div className="text-center mt-4 text-sm text-[#D8CCBC]">
-            Already had account? <Link to="/login" className="underline">Log in</Link>
+          <div className="text-center mt-4 text-sm text-[#1B1B1B] font-body">
+            Sudah punya akun? <Link to="/login" className="underline">Masuk</Link>
           </div>
         </div>
       </AuthLayout>
@@ -86,32 +84,32 @@ export default function RegisterClientPage() {
     <AuthLayout
       title="Register Client"
       bottom={(
-        <div className="w-full max-w-xl text-right text-[#D8CCBC]">
-          Looking for work? <Link to="/register/freelancer" className="underline">Join as a Freelancer</Link>
+        <div className="w-full max-w-xl text-right text-[#1B1B1B]">
+          Mencari pekerjaan? <Link to="/register/freelancer" className="underline">Bergabung sebagai Freelancer</Link>
         </div>
       )}
     >
       <LoadingOverlay show={loading} text="Creating account..." />
-      <AuthCard title="Create an account">
+      <AuthCard title="Buat Akun">
         <div className="text-right mb-4">
-          <Link to="/login" className="text-[#6C5A55] text-sm underline">log in instead</Link>
+          <Link to="/login" className="text-[#1B1B1B] text-sm underline">Masuk</Link>
         </div>
         <form onSubmit={submit}>
-          <FormGroup label="First name" name="firstName" value={form.firstName} onChange={onChange} error={errors.firstName} />
-          <FormGroup label="Last name" name="lastName" value={form.lastName} onChange={onChange} error={errors.lastName} />
+          <FormGroup label="Nama Pertama" name="firstName" value={form.firstName} onChange={onChange} error={errors.firstName} />
+          <FormGroup label="Nama Terakhir" name="lastName" value={form.lastName} onChange={onChange} error={errors.lastName} />
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
-          <FormGroup label="Password" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
+          <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
           <div className="text-sm text-[#6C5A55] mb-4">
-            <input type="checkbox" className="mr-2" /> By creating an account, I agree to our <a href="#" className="underline">Terms of use</a> and <a href="#" className="underline">Privacy Policy</a>
+            <input type="checkbox" className="mr-2" /> Dengan membuat akun, saya setuju dengan <a href="#" className="underline">Ketentuan</a> dan <a href="#" className="underline">Kebijakan Privasi</a> kami.
           </div>
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
-          <Button type="submit" variant="neutral" className="w-full" disabled={loading}>{loading ? 'Loading...' : 'Create an account'}</Button>
-          <div className="flex items-center gap-4 text-[#C7B9A7] my-4">
-            <div className="flex-1 h-px bg-[#C7B9A7]" />
-            <span>OR</span>
-            <div className="flex-1 h-px bg-[#C7B9A7]" />
+          <Button type="submit" variant="neutral" className="w-full" disabled={loading}>{loading ? 'Loading...' : 'Buat Akun'}</Button>
+          <div className="flex items-center gap-4 text-[#8a8a8a] my-4">
+            <div className="flex-1 h-px bg-[#B3B3B3]" />
+            <span>Atau</span>
+            <div className="flex-1 h-px bg-[#B3B3B3]" />
           </div>
-          <Button variant="outline" className="w-full">Continue with Google</Button>
+          <Button variant="outline" className="w-full">Lanjutkan dengan Google</Button>
         </form>
       </AuthCard>
     </AuthLayout>

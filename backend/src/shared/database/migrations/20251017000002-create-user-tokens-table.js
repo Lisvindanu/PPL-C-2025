@@ -50,13 +50,34 @@ module.exports = {
       collate: 'utf8mb4_unicode_ci'
     });
 
-    // Add indexes
-    await queryInterface.addIndex('user_tokens', ['token'], {
-      name: 'user_tokens_token'
-    });
-    await queryInterface.addIndex('user_tokens', ['user_id']);
-    await queryInterface.addIndex('user_tokens', ['type']);
-    await queryInterface.addIndex('user_tokens', ['expires_at']);
+    // Add indexes (ignore if already exists)
+    try {
+      await queryInterface.addIndex('user_tokens', ['token'], {
+        name: 'user_tokens_token'
+      });
+    } catch (err) {
+      if (err && (err.original && err.original.code === 'ER_DUP_KEYNAME' || err.code === 'ER_DUP_KEYNAME')) {
+        console.log('Index `user_tokens_token` already exists, skipping');
+      } else {
+        throw err;
+      }
+    }
+
+    const addIndexSafe = async (fields) => {
+      try {
+        await queryInterface.addIndex('user_tokens', fields);
+      } catch (err) {
+        if (err && (err.original && err.original.code === 'ER_DUP_KEYNAME' || err.code === 'ER_DUP_KEYNAME')) {
+          console.log(`Index on ${fields.join(',')} already exists, skipping`);
+        } else {
+          throw err;
+        }
+      }
+    };
+
+    await addIndexSafe(['user_id']);
+    await addIndexSafe(['type']);
+    await addIndexSafe(['expires_at']);
   },
 
   down: async (queryInterface, Sequelize) => {

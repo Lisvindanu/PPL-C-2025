@@ -2,7 +2,7 @@
 
 const LoginUser = require('../application/use-cases/LoginUser');
 const AuthController = require('../presentation/controllers/AuthController');
-const SequelizeUserRepository = require('../../admin/infrastructure/repositories/SequelizeUserRepository');
+const SequelizeUserRepository = require('../infrastructure/repositories/SequelizeUserRepository');
 
 module.exports = function setupAuthDependencies(sequelize) {
   // Create repositories
