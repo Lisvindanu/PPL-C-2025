@@ -85,7 +85,7 @@ const ServiceCard = ({ service, onSelect, onBookmark }) => {
           </div>
           <button
             onClick={onSelect}
-            className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primaryDark transition-colors"
+            className="px-3 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primaryDark transition-colors text-sm"
           >
             Pesan Sekarang
           </button>
