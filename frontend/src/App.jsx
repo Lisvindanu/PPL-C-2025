@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
 import RegisterClientPage from "./pages/RegisterClientPage";
 import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
@@ -11,6 +12,7 @@ import ServicePage from "./pages/freelance/ServicePage";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
@@ -46,7 +48,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

@@ -154,11 +154,115 @@ async function seedUsers() {
   }
 }
 
+async function seedKategori() {
+  const kategoris = [
+    {
+      id: uuidv4(),
+      nama: 'Pengembangan Website',
+      slug: 'pengembangan-website',
+      deskripsi: 'Layanan pengembangan website profesional untuk berbagai kebutuhan bisnis',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    {
+      id: uuidv4(),
+      nama: 'Pengembangan Aplikasi Mobile',
+      slug: 'pengembangan-aplikasi-mobile',
+      deskripsi: 'Pembuatan aplikasi mobile Android dan iOS yang inovatif dan user-friendly',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    {
+      id: uuidv4(),
+      nama: 'UI/UX Design',
+      slug: 'ui-ux-design',
+      deskripsi: 'Desain antarmuka dan pengalaman pengguna yang menarik dan intuitif',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    {
+      id: uuidv4(),
+      nama: 'Data Science & Machine Learning',
+      slug: 'data-science-machine-learning',
+      deskripsi: 'Analisis data dan implementasi machine learning untuk solusi bisnis cerdas',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    {
+      id: uuidv4(),
+      nama: 'Cybersecurity & Testing',
+      slug: 'cybersecurity-testing',
+      deskripsi: 'Layanan keamanan siber dan pengujian aplikasi untuk melindungi sistem Anda',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    },
+    {
+      id: uuidv4(),
+      nama: 'Copy Writing',
+      slug: 'copy-writing',
+      deskripsi: 'Penulisan konten kreatif dan persuasif untuk berbagai kebutuhan marketing',
+      icon: null,
+      is_active: true,
+      created_at: new Date(),
+      updated_at: new Date()
+    }
+  ];
+
+  try {
+    // Check if kategori already exist
+    const [existingKategori] = await sequelize.query(
+      'SELECT nama FROM kategori WHERE nama IN (?)',
+      {
+        replacements: [kategoris.map(k => k.nama)]
+      }
+    );
+
+    if (existingKategori.length > 0) {
+      console.log('⚠️  Some categories already exist. Skipping seeding...');
+      console.log('Existing categories:', existingKategori.map(k => k.nama).join(', '));
+      return;
+    }
+
+    // Insert kategori
+    await sequelize.query(`
+      INSERT INTO kategori (
+        id, nama, slug, deskripsi, icon, is_active, created_at, updated_at
+      ) VALUES ?
+    `, {
+      replacements: [kategoris.map(k => [
+        k.id, k.nama, k.slug, k.deskripsi, k.icon, k.is_active, k.created_at, k.updated_at
+      ])]
+    });
+
+    console.log('✅ Kategori seeded successfully!\n');
+    console.log('📋 Categories Added:');
+    console.log('━'.repeat(60));
+    kategoris.forEach(k => {
+      console.log(`   - ${k.nama}`);
+    });
+    console.log('━'.repeat(60));
+  } catch (error) {
+    console.error('❌ Kategori seeding failed:', error.message);
+    throw error;
+  }
+}
+
 async function runSeeders() {
   try {
     console.log('🌱 Starting database seeding...\n');
 
     await seedUsers();
+    await seedKategori();
 
     console.log('\n✅ All seeders completed successfully!');
     process.exit(0);
@@ -172,4 +276,4 @@ if (require.main === module) {
   runSeeders();
 }
 
-module.exports = { runSeeders, seedUsers };
+module.exports = { runSeeders, seedUsers, seedKategori };

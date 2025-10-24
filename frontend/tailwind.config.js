@@ -17,15 +17,30 @@ export default {
         warning: "#f59e0b",
         danger: "#ef4444",
         skill: {
-          primary: "#CCD5AE",    
-          secondary: "#E0E5B6",  
-          tertiary: "#FAEDCE",   
-          bg: "#FEFAE0",         
-          chart1: "#B8C5A3",     
-          chart2: "#A8B88F",     
+          primary: "#CCD5AE",
+          secondary: "#E0E5B6",
+          tertiary: "#FAEDCE",
+          bg: "#FEFAE0",
+          chart1: "#B8C5A3",
+          chart2: "#A8B88F",
         },
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          /* IE and Edge */
+          '-ms-overflow-style': 'none',
+          /* Firefox */
+          'scrollbar-width': 'none',
+          /* Safari and Chrome */
+          '&::-webkit-scrollbar': {
+            display: 'none'
+          }
+        }
+      })
+    }
+  ],
 };
