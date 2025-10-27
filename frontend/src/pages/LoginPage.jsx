@@ -42,14 +42,14 @@ export default function LoginPage() {
 
   const footer = (
     <div className="mt-6">
-      <div className="flex items-center gap-4 text-[#8a8a8a]">
-        <div className="flex-1 h-px bg-[#B3B3B3]" />
+      <div className="flex items-center gap-4 text-[#1D375B]">
+        <div className="flex-1 h-px bg-[#9DBBDD]" />
         <span>Atau</span>
-        <div className="flex-1 h-px bg-[#B3B3B3]" />
+        <div className="flex-1 h-px bg-[#9DBBDD]" />
       </div>
       <Button variant="outline" className="w-full mt-4">Lanjutkan dengan Google</Button>
       <div className="text-center mt-4">
-        <a className="text-[#3A2B2A] underline">Lupa kata sandi Anda?</a>
+        <a className="text-[#4782BE] underline cursor-pointer hover:text-[#1D375B]">Lupa kata sandi Anda?</a>
       </div>
     </div>
   )
@@ -59,8 +59,8 @@ export default function LoginPage() {
       title="Login"
       bottom={(
         <div className="w-full max-w-xl">
-          <div className="bg-[#f9f7f8] rounded-lg px-6 py-4 text-center text-[#3A2B2A]">
-            Belum punya akun? <Link to="/register/client" className="underline">Daftar</Link>
+          <div className="bg-[#FFFFFF] border border-[#9DBBDD] rounded-lg px-6 py-4 text-center text-[#1D375B]">
+            Belum punya akun? <Link to="/register/client" className="text-[#4782BE] font-semibold underline hover:text-[#1D375B]">Daftar</Link>
           </div>
         </div>
       )}

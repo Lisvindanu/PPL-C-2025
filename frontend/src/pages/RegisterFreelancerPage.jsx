@@ -54,17 +54,17 @@ export default function RegisterFreelancerPage() {
     return (
       <AuthLayout>
         <div className="w-full max-w-4xl text-center">
-          <h2 className="text-[#1B1B1B] font-medium text-3xl mb-8 font-title">Bergabung sebagai klien atau pekerja lepas</h2>
+          <h2 className="text-[#1D375B] font-medium text-3xl mb-8 font-title">Bergabung sebagai klien atau pekerja lepas</h2>
           <div className="grid grid-cols-2 gap-6 mb-8">
             <RoleCard
               title="Saya seorang klien, sedang merekrut untuk sebuah proyek"
-              icon={<div className="w-4 h-4 bg-[#4B0713] rounded-full"></div>}
+              icon={<div className="w-4 h-4 bg-[#FFFFFF] rounded-full"></div>}
               selected={role === 'client'}
               onClick={() => handleRoleSelect('client')}
             />
             <RoleCard
               title="Saya seorang pekerja lepas, sedang mencari pekerjaan"
-              icon={<div className="w-4 h-4 bg-[#4B0713] rounded-full"></div>}
+              icon={<div className="w-4 h-4 bg-[#FFFFFF] rounded-full"></div>}
               selected={role === 'freelancer'}
               onClick={() => handleRoleSelect('freelancer')}
             />
@@ -72,8 +72,8 @@ export default function RegisterFreelancerPage() {
           <Button variant="role" className="px-8" onClick={() => setStep(2)}>
             Lamar sebagai Pekerja Lepas
           </Button>
-          <div className="text-center mt-4 text-sm text-[#1B1B1B] font-body">
-            Sudah punya akun? <Link to="/login" className="underline">Masuk</Link>
+          <div className="text-center mt-4 text-sm text-[#1D375B] font-body">
+            Sudah punya akun? <Link to="/login" className="text-[#4782BE] font-semibold underline hover:text-[#1D375B]">Masuk</Link>
           </div>
         </div>
       </AuthLayout>
@@ -84,30 +84,30 @@ export default function RegisterFreelancerPage() {
     <AuthLayout
       title="Register Freelancer"
       bottom={(
-        <div className="w-full max-w-xl text-right text-[#1B1B1B]">
-          Di sini untuk merekrut pekerja? <Link to="/register/client" className="underline">Bergabung sebagai Klien</Link>
+        <div className="w-full max-w-xl text-right text-[#1D375B]">
+          Di sini untuk merekrut pekerja? <Link to="/register/client" className="text-[#4782BE] font-semibold underline hover:text-[#1D375B]">Bergabung sebagai Klien</Link>
         </div>
       )}
     >
       <LoadingOverlay show={loading} text="Creating account..." />
       <AuthCard title="Buat Akun">
         <div className="text-right mb-4">
-          <Link to="/login" className="text-[#6C5A55] text-sm underline">Masuk</Link>
+          <Link to="/login" className="text-[#4782BE] text-sm font-semibold underline hover:text-[#1D375B]">Masuk</Link>
         </div>
         <form onSubmit={submit}>
           <FormGroup label="Nama Pertama" name="firstName" value={form.firstName} onChange={onChange} error={errors.firstName} />
           <FormGroup label="Nama Terakhir" name="lastName" value={form.lastName} onChange={onChange} error={errors.lastName} />
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
           <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
-          <div className="text-sm text-[#6C5A55] mb-4">
-            <input type="checkbox" className="mr-2" /> Dengan membuat akun, saya setuju dengan <a href="#" className="underline">Ketentuan</a> dan <a href="#" className="underline">Kebijakan Privasi</a> kami.
+          <div className="text-sm text-[#1D375B] mb-4">
+            <input type="checkbox" className="mr-2" /> Dengan membuat akun, saya setuju dengan <a href="#" className="text-[#4782BE] underline hover:text-[#1D375B]">Ketentuan</a> dan <a href="#" className="text-[#4782BE] underline hover:text-[#1D375B]">Kebijakan Privasi</a> kami.
           </div>
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
           <Button type="submit" variant="neutral" className="w-full" disabled={loading}>{loading ? 'Loading...' : 'Buat Akun'}</Button>
-          <div className="flex items-center gap-4 text-[#8a8a8a] my-4">
-            <div className="flex-1 h-px bg-[#B3B3B3]" />
+          <div className="flex items-center gap-4 text-[#1D375B] my-4">
+            <div className="flex-1 h-px bg-[#9DBBDD]" />
             <span>Atau</span>
-            <div className="flex-1 h-px bg-[#B3B3B3]" />
+            <div className="flex-1 h-px bg-[#9DBBDD]" />
           </div>
           <Button variant="outline" className="w-full">Lanjutkan dengan Google</Button>
         </form>

@@ -6,7 +6,7 @@ import { UserChart } from '../organisms/UserChart';
 import { OrderChart } from '../organisms/OrderChart';
 
 export const DashboardLayout = ({ stats, userData, orderData, activeMenu = 'dashboard' }) => (
-  <div className="flex h-screen bg-skill-bg">
+  <div className="flex h-screen bg-skill-primary">
     <Sidebar activeMenu={activeMenu} />
     <div className="flex-1 overflow-auto">
       <Header />

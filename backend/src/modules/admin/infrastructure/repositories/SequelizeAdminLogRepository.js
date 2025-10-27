@@ -1,32 +1,37 @@
 const { sequelize } = require('../../../../shared/database/connection');
-
+const { v4: uuidv4 } = require('uuid');
 class SequelizeAdminLogRepository {
   constructor(sequelize) {
     this.sequelize = sequelize;
   }
 
-  async save(log) {
-    try {
-      const result = await this.sequelize.query(`
-        INSERT INTO log_aktivitas_admin 
-        (id, admin_id, aksi, target_type, target_id, detail, ip_address, user_agent, created_at)
-        VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW())
-      `, {
-        replacements: [
-          log.adminId,
-          log.action,
-          log.targetType,
-          log.targetId,
-          JSON.stringify(log.detail || {}),
-          log.ipAddress,
-          log.userAgent
-        ]
-      });
-      return result;
-    } catch (error) {
-      throw new Error(`Failed to save log: ${error.message}`);
-    }
+ // Install: npm install uuid
+
+async save(log) {
+  try {
+    const logId = uuidv4(); // Generate UUID di JavaScript
+    
+    const result = await this.sequelize.query(`
+      INSERT INTO log_aktivitas_admin 
+      (id, admin_id, aksi, target_type, target_id, detail, ip_address, user_agent, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+    `, {
+      replacements: [
+        logId,              // ← UUID dari JavaScript
+        log.admin_id,       
+        log.aksi,           
+        log.target_type,    
+        log.target_id,      
+        JSON.stringify(log.detail || {}),
+        log.ip_address,     
+        log.user_agent      
+      ]
+    });
+    return result;
+  } catch (error) {
+    throw new Error(`Failed to save log: ${error.message}`);
   }
+}
 
   async getLogs(filters = {}) {
     try {

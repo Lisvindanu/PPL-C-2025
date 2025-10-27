@@ -25,6 +25,7 @@ const GetOrderAnalytics = require('../application/use-cases/GetOrderAnalytics');
 const BlockUser = require('../application/use-cases/BlockUser');
 const UnblockUser = require('../application/use-cases/UnblockUser');
 const BlockService = require('../application/use-cases/BlockService');
+const UnblockService = require('../application/use-cases/UnblockService'); // ← TAMBAHKAN INI
 const DeleteReview = require('../application/use-cases/DeleteReview');
 const ExportReport = require('../application/use-cases/ExportReport');
 const GetAdminActivityLog = require('../application/use-cases/GetAdminActivityLog');
@@ -84,6 +85,7 @@ module.exports = function setupAdminDependencies(sequelize) {
   const blockUser = new BlockUser(sequelize, adminLogRepository);
   const unblockUser = new UnblockUser(sequelize, adminLogRepository);
   const blockService = new BlockService(serviceRepository, adminLogRepository);
+  const unblockService = new UnblockService(serviceRepository, adminLogRepository); // ← TAMBAHKAN INI
   const deleteReview = new DeleteReview(reviewRepository, adminLogRepository);
 
   const reportGenerator = new ReportGenerator(sequelize);
@@ -101,6 +103,7 @@ module.exports = function setupAdminDependencies(sequelize) {
     blockUser,
     unblockUser,
     blockService,
+    unblockService, // ← TAMBAHKAN INI
     deleteReview,
     exportReport,
     getAdminActivityLog,
