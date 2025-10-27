@@ -121,8 +121,11 @@ export const UserChart = ({ data }) => {
             // Convert to radians for positioning
             const angleRad = (midAngle * Math.PI) / 180;
             
-            // Position in the middle of the donut ring
-            const radiusPixels = 100;
+            // Dynamic radius based on slice size - smaller slices get closer to center
+            const baseRadius = 100;
+            const sliceSizeRatio = entry.value / total;
+            const radiusPixels = baseRadius - (sliceSizeRatio < 0.1 ? 20 : 0); // Move closer for very small slices
+            
             const centerX = 140;
             const centerY = 140;
             const x = centerX + Math.cos(angleRad) * radiusPixels;
