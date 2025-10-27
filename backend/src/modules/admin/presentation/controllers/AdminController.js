@@ -10,6 +10,7 @@ class AdminController {
     blockUserUseCase,
     unblockUserUseCase,
     blockServiceUseCase,
+    unblockServiceUseCase,
     deleteReviewUseCase,
     exportReportUseCase,
     getActivityLogsUseCase,
@@ -26,6 +27,7 @@ class AdminController {
     this.blockUserUseCase = blockUserUseCase;
     this.unblockUserUseCase = unblockUserUseCase;
     this.blockServiceUseCase = blockServiceUseCase;
+    this.unblockServiceUseCase = unblockServiceUseCase;
     this.deleteReviewUseCase = deleteReviewUseCase;
     this.exportReportUseCase = exportReportUseCase;
     this.getActivityLogsUseCase = getActivityLogsUseCase;
@@ -98,8 +100,14 @@ async blockUser(req, res) {
       });
     }
 
-    // Ambil adminId dari token yang sudah di-verify (bukan hardcoded)
-    const adminId = req.user.id;
+    const adminId = req.user?.userId; 
+    
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin ID not found. Please login again.'
+      });
+    }
     
     const ipAddress = req.ip || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';
@@ -139,7 +147,17 @@ async unblockUser(req, res) {
       });
     }
 
-    const adminId = req.user.id;
+    // ======== PASTIKAN PAKAI userId ========
+    const adminId = req.user?.userId;
+    
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin ID not found. Please login again.'
+      });
+    }
+    // =======================================
+
     const ipAddress = req.ip || 'unknown';
     const userAgent = req.get('user-agent') || 'unknown';
 
@@ -284,43 +302,99 @@ async unblockUser(req, res) {
     }
   }
 
-  async blockService(req, res) {
-    try {
-      const { id } = req.params;
-      const { reason } = req.body;
+async blockService(req, res) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
 
-      if (!reason) {
-        return res.status(400).json({
-          success: false,
-          error: 'reason is required'
-        });
-      }
-
-      const ipAddress = req.ip || 'unknown';
-      const userAgent = req.get('user-agent') || 'unknown';
-      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
-
-      const result = await this.blockServiceUseCase.execute(
-        adminId,
-        id,
-        reason,
-        ipAddress,
-        userAgent
-      );
-
-      res.json({
-        success: true,
-        message: 'Service blocked successfully',
-        data: result
-      });
-    } catch (error) {
-      console.error('Error in blockService:', error);
-      res.status(400).json({
+    if (!reason) {
+      return res.status(400).json({
         success: false,
-        error: error.message
+        error: 'reason is required'
       });
     }
+
+    // ======== UBAH INI ========
+    const adminId = req.user?.userId; // ← Ambil dari token JWT
+    
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin ID not found. Please login again.'
+      });
+    }
+    // ==========================
+
+    const ipAddress = req.ip || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    const result = await this.blockServiceUseCase.execute(
+      adminId,
+      id,
+      reason,
+      ipAddress,
+      userAgent
+    );
+
+    res.json({
+      success: true,
+      message: 'Service blocked successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in blockService:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
   }
+}
+
+async unblockService(req, res) {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({
+        success: false,
+        error: 'reason is required'
+      });
+    }
+
+    const adminId = req.user?.userId;
+    
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin ID not found. Please login again.'
+      });
+    }
+
+    const ipAddress = req.ip || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    const result = await this.unblockServiceUseCase.execute(
+      adminId,
+      id,
+      reason,
+      ipAddress,
+      userAgent
+    );
+
+    res.json({
+      success: true,
+      message: 'Service unblocked successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('Error in unblockService:', error);
+    res.status(400).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
 
   async deleteReview(req, res) {
     try {

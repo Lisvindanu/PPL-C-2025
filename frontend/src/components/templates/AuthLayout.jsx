@@ -1,13 +1,14 @@
 export default function AuthLayout({ children, bottom, title, showCorner = true }) {
   return (
-    <div className="min-h-screen bg-[#cdd5ae] flex flex-col">
+    <div className="min-h-screen bg-[#D8E3F3] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <div className="w-4 h-4 bg-[#cdd5ae] rounded-full"></div>
-          </div>
-          <span className="text-[#1B1B1B] text-lg font-medium font-title">Skill Connect</span>
+          <img
+            src="/LogoSkillConnect.png"
+            alt="Skill Connect Logo"
+            className="h-10 object-contain"
+          />
         </div>
       </div>
 

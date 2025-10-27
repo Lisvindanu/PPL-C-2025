@@ -1,6 +1,4 @@
-const AdminActivityLog = require('../../domain/entities/AdminActivityLog');
-
-class BlockService {
+class UnblockService {
   constructor(serviceRepository, adminLogRepository) {
     this.serviceRepository = serviceRepository;
     this.adminLogRepository = adminLogRepository;
@@ -16,19 +14,23 @@ class BlockService {
       throw new Error('Service ID is required');
     }
 
+    // Cek apakah service exists
     const service = await this.serviceRepository.findByPk(serviceId);
     if (!service) {
       throw new Error('Layanan tidak ditemukan');
     }
 
+    // Update status jadi aktif
     await this.serviceRepository.update(
-      { status: 'nonaktif' },
+      { status: 'aktif' },
       { where: { id: serviceId } }
     );
-    
+
+
+    // Save log
     await this.adminLogRepository.save({
-      admin_id: adminId,      
-      aksi: 'block_service',
+      admin_id: adminId,
+      aksi: 'unblock_service',
       target_type: 'layanan',
       target_id: serviceId,
       detail: { reason },
@@ -36,8 +38,9 @@ class BlockService {
       user_agent: userAgent
     });
 
+
     return service;
   }
 }
 
-module.exports = BlockService;
+module.exports = UnblockService;
