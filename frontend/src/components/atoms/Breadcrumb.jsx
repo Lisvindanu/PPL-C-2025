@@ -1,6 +1,6 @@
 export default function Breadcrumb({ items }) {
   return (
-    <nav className="text-sm text-neutral-600" aria-label="Breadcrumb">
+    <nav className="text-sm text-secondary" aria-label="Breadcrumb">
       <ol className="flex min-w-0 items-center gap-2">
         {items.map((it, idx) => (
           <li key={idx} className="flex items-center gap-2">
@@ -15,7 +15,7 @@ export default function Breadcrumb({ items }) {
               </a>
             ) : (
               <span
-                className="max-w-[14rem] truncate text-neutral-900"
+                className="max-w-[14rem] truncate text-black"
                 title={it.label}
               >
                 {it.label}
