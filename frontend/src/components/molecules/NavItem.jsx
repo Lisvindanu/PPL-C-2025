@@ -6,10 +6,12 @@ export const NavItem = ({ icon, label, active = false, onClick }) => (
   <button 
     onClick={onClick}
     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-      active ? 'bg-skill-tertiary shadow-sm' : 'hover:bg-skill-secondary'
+      active 
+        ? 'bg-[#4782BE] shadow-sm' 
+        : 'hover:bg-[#4782BE] hover:bg-opacity-50'
     }`}
   >
-    <Icon>{icon}</Icon>
-    <Text className="font-medium text-gray-800">{label}</Text>
+    <div className="text-white">{icon}</div>
+    <Text className={`font-medium ${active ? 'text-white' : 'text-gray-200'}`}>{label}</Text>
   </button>
 );

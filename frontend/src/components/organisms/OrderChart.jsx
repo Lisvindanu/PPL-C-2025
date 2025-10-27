@@ -1,24 +1,40 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { Text } from '../atoms/Text';
 
 export const OrderChart = ({ data }) => {
-  // Helper function to format month labels
+  // Helper function to format month labels to full form
   const formatMonthLabel = (monthStr) => {
     if (!monthStr) return 'Unknown';
     
-    // If it's already in Indonesian format, return as is
-    const indonesianMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-                             'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    if (indonesianMonths.some(month => monthStr.includes(month))) {
-      return monthStr;
+    const monthMapping = {
+      'Januari': 'Januari', 'January': 'Januari', 'Jan': 'Januari',
+      'Februari': 'Februari', 'February': 'Februari', 'Feb': 'Februari',
+      'Maret': 'Maret', 'March': 'Maret', 'Mar': 'Maret',
+      'April': 'April', 'Apr': 'April',
+      'Mei': 'Mei', 'May': 'Mei',
+      'Juni': 'Juni', 'June': 'Juni', 'Jun': 'Juni',
+      'Juli': 'Juli', 'July': 'Juli', 'Jul': 'Juli',
+      'Agustus': 'Agustus', 'August': 'Agustus', 'Agu': 'Agustus', 'Aug': 'Agustus',
+      'September': 'September', 'Sep': 'September', 'Sept': 'September',
+      'Oktober': 'Oktober', 'October': 'Oktober', 'Okt': 'Oktober', 'Oct': 'Oktober',
+      'November': 'November', 'Nov': 'November',
+      'Desember': 'Desember', 'December': 'Desember', 'Des': 'Desember', 'Dec': 'Desember'
+    };
+    
+    // Check if monthStr contains any of the month names
+    for (const [key, value] of Object.entries(monthMapping)) {
+      if (monthStr.includes(key)) {
+        return value;
+      }
     }
     
-    // If it's in YYYY-MM format, convert to Indonesian format
+    // If it's in YYYY-MM format, convert to full Indonesian format
     if (monthStr.includes('-')) {
       const [year, month] = monthStr.split('-');
       const monthIndex = parseInt(month) - 1;
-      return indonesianMonths[monthIndex] || monthStr;
+      const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                     'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+      return months[monthIndex] || monthStr;
     }
     
     return monthStr;
@@ -28,7 +44,9 @@ export const OrderChart = ({ data }) => {
   const getMonthOrder = (monthStr) => {
     const indonesianMonths = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
                              'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-    const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+    const englishMonths = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
     
     // Check Indonesian month names
     for (let i = 0; i < indonesianMonths.length; i++) {
@@ -38,6 +56,11 @@ export const OrderChart = ({ data }) => {
     // Check short month names
     for (let i = 0; i < shortMonths.length; i++) {
       if (monthStr.includes(shortMonths[i])) return i;
+    }
+    
+    // Check English month names
+    for (let i = 0; i < englishMonths.length; i++) {
+      if (monthStr.toLowerCase().includes(englishMonths[i].toLowerCase())) return i;
     }
     
     return 0;
@@ -76,12 +99,18 @@ export const OrderChart = ({ data }) => {
     // Default fallback data
     else {
       processedData = [
-        { month: 'Jan', orders: 0, monthOrder: 0 },
-        { month: 'Feb', orders: 0, monthOrder: 1 },
-        { month: 'Mar', orders: 0, monthOrder: 2 },
-        { month: 'Apr', orders: 0, monthOrder: 3 },
+        { month: 'Januari', orders: 0, monthOrder: 0 },
+        { month: 'Februari', orders: 0, monthOrder: 1 },
+        { month: 'Maret', orders: 0, monthOrder: 2 },
+        { month: 'April', orders: 0, monthOrder: 3 },
         { month: 'Mei', orders: 0, monthOrder: 4 },
-        { month: 'Jun', orders: 0, monthOrder: 5 }
+        { month: 'Juni', orders: 0, monthOrder: 5 },
+        { month: 'Juli', orders: 0, monthOrder: 6 },
+        { month: 'Agustus', orders: 0, monthOrder: 7 },
+        { month: 'September', orders: 0, monthOrder: 8 },
+        { month: 'Oktober', orders: 2, monthOrder: 9 },
+        { month: 'November', orders: 0, monthOrder: 10 },
+        { month: 'Desember', orders: 0, monthOrder: 11 }
       ];
     }
     
@@ -90,22 +119,26 @@ export const OrderChart = ({ data }) => {
   }, [data]);
 
   return (
-    <div className="bg-skill-secondary rounded-3xl p-6 h-full shadow-sm hover:shadow-md transition-shadow">
-      <Text variant="h2" className="mb-1 text-gray-900">Total Pesanan</Text>
-      <Text variant="caption" className="mb-6 text-gray-600">Total pesanan client 1 tahun terakhir</Text>
+    <div className="bg-white rounded-3xl p-6 h-full shadow-sm hover:shadow-md transition-shadow border border-gray-200">
+      <h2 className="text-xl font-semibold mb-1 text-gray-900">Total Pesanan</h2>
+      <p className="text-sm mb-6 text-gray-600">Total pesanan client 1 tahun terakhir</p>
       
-      <ResponsiveContainer width="100%" height={280}>
-        <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="0" stroke="#c8d5c8" vertical={false} />
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart data={chartData} margin={{ top: 20, right: 20, left: -20, bottom: 40 }}>
+          <CartesianGrid strokeDasharray="0" stroke="#D8E3F3" vertical={false} />
           <XAxis 
             dataKey="month" 
-            tick={{ fontSize: 11, fill: '#666' }}
-            axisLine={{ stroke: '#c8d5c8' }}
+            tick={{ fontSize: 10, fill: '#666' }}
+            axisLine={{ stroke: '#D8E3F3' }}
             tickLine={false}
+            interval={0}
+            angle={-35}
+            textAnchor="end"
+            height={70}
           />
           <YAxis 
             tick={{ fontSize: 11, fill: '#666' }}
-            axisLine={{ stroke: '#c8d5c8' }}
+            axisLine={{ stroke: '#D8E3F3' }}
             tickLine={false}
             domain={[0, 'dataMax']}
             tickCount={6}
@@ -121,9 +154,10 @@ export const OrderChart = ({ data }) => {
           <Line 
             type="monotone" 
             dataKey="orders" 
-            stroke="#A8B88F" 
-            strokeWidth={2}
-            dot={{ fill: '#A8B88F', r: 3 }}
+            stroke="#4782BE" 
+            strokeWidth={2.5}
+            dot={{ fill: '#4782BE', r: 4 }}
+            activeDot={{ r: 6 }}
           />
         </LineChart>
       </ResponsiveContainer>

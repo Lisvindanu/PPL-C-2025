@@ -1,17 +1,27 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-import { Text } from '../atoms/Text';
+
+const Text = ({ variant, className = "", children, ...props }) => {
+  const variants = {
+    h2: "text-xl font-semibold",
+    caption: "text-sm text-gray-500"
+  };
+  
+  const variantClass = variant ? variants[variant] : "";
+  
+  return <div className={`${variantClass} ${className}`} {...props}>{children}</div>;
+};
 
 export const UserChart = ({ data }) => {
-  const COLORS = ['#A8B88F', '#C8D5B0', '#E0E5C8'];
+  // Only 2 colors for Aktif and Diblokir
+  const COLORS = ['#1D375B', '#9DBBDD'];
   
   // Handle different data formats and ensure we have an array
   const chartData = React.useMemo(() => {
     if (!data) {
       return [
-        { name: 'Aktif', value: 0 },
-        { name: 'Diblokir', value: 0 },
-        { name: 'Nonaktif', value: 0 }
+        { name: 'Aktif', value: 89782 },
+        { name: 'Diblokir', value: 11720 },
       ];
     }
     
@@ -43,8 +53,8 @@ export const UserChart = ({ data }) => {
       }));
     }
     
-    // Ensure we always have the 3 main categories
-    const categoryNames = ['Aktif', 'Diblokir', 'Nonaktif'];
+    // Only 2 categories: Aktif and Diblokir
+    const categoryNames = ['Aktif', 'Diblokir'];
     const completeData = categoryNames.map(categoryName => {
       const existing = processedData.find(item => 
         item.name.toLowerCase() === categoryName.toLowerCase()
@@ -58,7 +68,7 @@ export const UserChart = ({ data }) => {
   const total = chartData.reduce((sum, item) => sum + (item.value || 0), 0);
   
   return (
-    <div className="bg-skill-secondary rounded-3xl p-6 h-full shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-3xl p-6 h-full shadow-sm hover:shadow-md transition-shadow border border-gray-200">
       <Text variant="h2" className="mb-1 text-gray-900">Total Pengguna</Text>
       <Text variant="caption" className="mb-6 text-gray-600">Riwayat akun pengguna website SkillConnect</Text>
       
@@ -93,7 +103,7 @@ export const UserChart = ({ data }) => {
           
           {/* Labels positioned dynamically inside the donut ring */}
           {chartData.map((entry, index) => {
-            if (entry.value === 0) return null; // Don't show label for 0 values
+            if (entry.value === 0) return null; 
             
             const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(2) : '0.00';
             
@@ -106,15 +116,14 @@ export const UserChart = ({ data }) => {
             // Starting angle is 90 degrees (top), going clockwise
             const startAngle = 90 + (cumulativeValue / total) * 360;
             const sliceAngle = ((entry.value || 0) / total) * 360;
-            const midAngle = startAngle + sliceAngle / 2; // Middle of the slice
+            const midAngle = startAngle + sliceAngle / 2; 
             
             // Convert to radians for positioning
             const angleRad = (midAngle * Math.PI) / 180;
             
             // Position in the middle of the donut ring
-            // Chart is 280px, center at 140px, ring is between radius 80-120, so middle is at 100px from center
             const radiusPixels = 100;
-            const centerX = 140; // Half of 280px
+            const centerX = 140;
             const centerY = 140;
             const x = centerX + Math.cos(angleRad) * radiusPixels;
             const y = centerY + Math.sin(angleRad) * radiusPixels;
@@ -129,22 +138,28 @@ export const UserChart = ({ data }) => {
                   transform: 'translate(-50%, -50%)'
                 }}
               >
-                <Text className="text-xs text-gray-700 whitespace-nowrap text-center font-medium">{entry.name}</Text>
-                <Text className="text-xs font-bold text-gray-900 text-center">{percentage}%</Text>
+                <Text className="text-xs text-white whitespace-nowrap text-center font-medium drop-shadow">{entry.name}</Text>
+                <Text className="text-xs font-bold text-white text-center drop-shadow">{percentage}%</Text>
               </div>
             );
           })}
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-300">
+      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
         {chartData.map((entry, index) => (
           <div key={index} className="text-center">
-            <Text className="text-gray-700 mb-1 text-xs">{entry.name}</Text>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+              />
+              <Text className="text-gray-700 text-xs">{entry.name}</Text>
+            </div>
             <Text className="text-xl font-bold text-gray-900">{entry.value?.toLocaleString() || '0'}</Text>
           </div>
         ))}
       </div>
     </div>
   );
-};
+}
