@@ -37,6 +37,7 @@ router.put('/users/:id/unblock', (req, res) => adminController.unblockUser(req, 
   // Service Management
   // ================================
   router.put('/services/:id/block', (req, res) => adminController.blockService(req, res));
+  router.put('/services/:id/unblock', (req, res) => adminController.unblockService(req, res));
   router.get('/services', (req, res) => adminController.getServices(req, res));
 
   // ================================

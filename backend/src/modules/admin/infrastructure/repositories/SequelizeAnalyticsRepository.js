@@ -71,8 +71,8 @@ async countOrders(status = null) {
         SELECT 
           CASE 
             WHEN is_active = 1 THEN 'Aktif'
-            WHEN is_active = 0 THEN 'Nonaktif'
-            ELSE 'Nonaktif'
+            WHEN is_active = 0 THEN 'Diblokir'
+            ELSE 'Diblokir'
           END as name,
           COUNT(*) as value
         FROM users
@@ -143,7 +143,7 @@ async countOrders(status = null) {
       const result = await this.sequelize.query(`
         SELECT 
           DATE_FORMAT(dibayar_pada, '%Y-%m') as month,
-          SUM(total_bayar) as amount
+          SUM(biaya_platform) as amount
         FROM pembayaran
         WHERE status = "berhasil" 
           AND dibayar_pada >= ? 

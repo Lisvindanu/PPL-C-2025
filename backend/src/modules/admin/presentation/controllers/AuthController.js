@@ -28,12 +28,12 @@ class AuthController {
       });
     } catch (error) {
       console.error('Error in login:', error);
-
+      
       // Return 401 untuk auth error
-      const statusCode = error.message.includes('not found') ||
-                        error.message.includes('Invalid') ||
+      const statusCode = error.message.includes('not found') || 
+                        error.message.includes('Invalid') || 
                         error.message.includes('disabled') ? 401 : 500;
-
+      
       res.status(statusCode).json({
         success: false,
         error: error.message
