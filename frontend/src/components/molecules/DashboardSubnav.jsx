@@ -33,7 +33,6 @@ export default function DashboardSubnav({ active = "produk" }) {
         max-w-full
       "
     >
-      {/* fade kiri/kanan hanya untuk layar kecil saat overflow */}
       <div className="pointer-events-none absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-white to-transparent md:hidden" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-4 bg-gradient-to-l from-white to-transparent md:hidden" />
 
@@ -66,8 +65,8 @@ export default function DashboardSubnav({ active = "produk" }) {
                 className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition
                   ${
                     isActive
-                      ? "border-neutral-300 bg-neutral-100 text-neutral-900"
-                      : "border-transparent text-neutral-700 hover:border-neutral-200 hover:bg-neutral-50"
+                      ? "border-neutral-300 bg-neutral-100 text-[#1F5EFF]"
+                      : "border-transparent text-black hover:border-neutral-200 hover:bg-neutral-50"
                   }`}
                 aria-current={isActive ? "page" : undefined}
               >
