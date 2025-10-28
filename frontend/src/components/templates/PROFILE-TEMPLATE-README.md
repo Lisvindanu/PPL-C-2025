@@ -4,7 +4,35 @@ Template yang dibuat untuk ProfilePage menggunakan atomic design pattern.
 
 ## Komponen yang Dibuat
 
-### 1. ProfileLayout.jsx
+### 1. AuthLayout.jsx
+Template untuk halaman autentikasi (login/register).
+
+**Props:**
+- `children`: Content halaman
+- `title`: Judul halaman
+- `subtitle`: Subtitle halaman
+
+**Fitur:**
+- Background gradient
+- Card container dengan shadow
+- Logo dan branding
+- Responsive design
+
+### 2. DashboardLayout.jsx
+Template untuk halaman dashboard Admin dengan sidebar.
+
+**Props:**
+- `children`: Content halaman
+- `user`: Data user
+- `activeItem`: Item navigasi yang aktif
+
+**Fitur:**
+- Header dengan navigasi
+- Sidebar dengan menu
+- Main content area
+- Responsive design
+
+### 3. ProfileLayout.jsx
 Template utama untuk halaman profile yang menggabungkan semua organisms.
 
 **Props:**
@@ -34,6 +62,18 @@ ProfileLayout
 - Background dan spacing yang konsisten
 - Container dengan max-width untuk desktop
 - Loading overlay terpisah
+
+### 4. ProtectedRoute.jsx
+Template wrapper untuk route yang memerlukan autentikasi.
+
+**Props:**
+- `children`: Content yang dilindungi
+- `redirectTo`: Route redirect jika tidak authenticated
+
+**Fitur:**
+- Cek status autentikasi
+- Redirect ke login jika tidak authenticated
+- Loading state saat cek auth
 
 ## Struktur Atomic Design
 
