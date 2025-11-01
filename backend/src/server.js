@@ -3,13 +3,26 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
 const { connectDatabase } = require('./shared/database/connection');
+const swaggerSpec = require('./config/swagger');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ==================== MIDDLEWARE ====================
-app.use(helmet()); // Security headers
+// Security headers dengan konfigurasi untuk Swagger UI
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net"],
+      imgSrc: ["'self'", "data:", "https://validator.swagger.io"],
+      fontSrc: ["'self'", "data:"],
+    },
+  },
+}));
 
 // CORS configuration - allow multiple origins
 const allowedOrigins = [
@@ -31,13 +44,81 @@ app.use(morgan('dev')); // Logging
 // Serve static files (mock payment gateway)
 app.use('/mock-payment', express.static('public/mock-payment'));
 
+// ==================== API DOCUMENTATION ====================
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     tags: [Health]
+ *     summary: API root endpoint
+ *     description: Check if API is running
+ *     responses:
+ *       200:
+ *         description: API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: SkillConnect API is running
+ *                 version:
+ *                   type: string
+ *                   example: 1.0.0
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ */
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check endpoint
+ *     description: Check API and database health status
+ *     responses:
+ *       200:
+ *         description: System is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: healthy
+ *                 database:
+ *                   type: string
+ *                   example: connected
+ *                 uptime:
+ *                   type: number
+ *                   example: 3600.5
+ *       500:
+ *         description: System is unhealthy
+ */
+
+// Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'SkillConnect API Documentation',
+}));
+
+// Swagger JSON endpoint
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
 // ==================== ROUTES ====================
 // Health check
 app.get('/', (req, res) => {
   res.json({
     message: 'SkillConnect API is running',
     version: '1.0.0',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    documentation: '/api-docs'
   });
 });
 
@@ -131,6 +212,7 @@ connectDatabase().then(() => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
+    console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   });
 
   // Graceful shutdown
