@@ -199,10 +199,19 @@ const adminMiddleware = require('./shared/middleware/adminMiddleware');
 
 // Initialize admin dependencies
 const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
-const { adminController } = setupAdminDependencies(sequelize);
+const { adminController, adminLogController } = setupAdminDependencies(sequelize);
 
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
+
+const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
+app.use('/api/admin', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
+
+// Kategori routes (public)
+const KategoriController = require('./modules/kategori/presentation/controllers/KategoriController');
+const kategoriController = new KategoriController(sequelize);
+const kategoriRoutes = require('./modules/kategori/presentation/routes/kategoriRoutes');
+app.use('/api/kategori', kategoriRoutes(kategoriController));
 
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
 // app.use('/api/recommendations', recommendationRoutes);
