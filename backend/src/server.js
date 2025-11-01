@@ -139,6 +139,12 @@ const kategoriController = new KategoriController(sequelize);
 const kategoriRoutes = require('./modules/kategori/presentation/routes/kategoriRoutes');
 app.use('/api/kategori', kategoriRoutes(kategoriController));
 
+// Sub Kategori routes (public)
+const SubKategoriController = require('./modules/kategori/presentation/controllers/SubKategoriController');
+const subKategoriController = new SubKategoriController(sequelize);
+const subKategoriRoutes = require('./modules/kategori/presentation/routes/subKategoriRoutes');
+app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
+
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
 // app.use('/api/recommendations', recommendationRoutes);
 

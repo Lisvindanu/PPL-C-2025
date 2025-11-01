@@ -188,6 +188,137 @@ async function seedDatabase() {
     console.log('✓ Kategori seeded');
 
     // =============================
+    // SUB KATEGORI
+    // =============================
+    console.log('→ Seeding sub kategori...');
+    await queryInterface.bulkInsert('sub_kategori', [
+      // Sub kategori untuk Desain Grafis
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Logo Design',
+        slug: 'logo-design',
+        deskripsi: 'Pembuatan logo profesional untuk brand dan bisnis',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Branding & Identity',
+        slug: 'branding-identity',
+        deskripsi: 'Layanan branding lengkap termasuk logo, color palette, dan guidelines',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Social Media Design',
+        slug: 'social-media-design',
+        deskripsi: 'Desain konten untuk platform social media',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Illustration',
+        slug: 'illustration',
+        deskripsi: 'Ilustrasi digital dan hand-drawn untuk berbagai keperluan',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      // Sub kategori untuk Pengembangan Web
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Frontend Development',
+        slug: 'frontend-development',
+        deskripsi: 'Pembuatan tampilan website dengan React, Vue, atau Angular',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Backend Development',
+        slug: 'backend-development',
+        deskripsi: 'Pengembangan server-side dengan Node.js, PHP, atau Python',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Full-Stack Development',
+        slug: 'fullstack-development',
+        deskripsi: 'Pengembangan website lengkap frontend & backend',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'WordPress Development',
+        slug: 'wordpress-development',
+        deskripsi: 'Pembuatan dan customization website WordPress',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      // Sub kategori untuk Copywriting
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'SEO Content Writing',
+        slug: 'seo-content-writing',
+        deskripsi: 'Penulisan konten SEO-friendly untuk website dan blog',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Product Description',
+        slug: 'product-description',
+        deskripsi: 'Penulisan deskripsi produk yang menarik untuk e-commerce',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Social Media Copywriting',
+        slug: 'social-media-copywriting',
+        deskripsi: 'Pembuatan caption dan konten untuk social media',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Email Marketing Copy',
+        slug: 'email-marketing-copy',
+        deskripsi: 'Penulisan email marketing yang persuasif dan converting',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    ]);
+    console.log('✓ Sub Kategori seeded');
+
+    // =============================
     // LAYANAN
     // =============================
     console.log('→ Seeding layanan...');
