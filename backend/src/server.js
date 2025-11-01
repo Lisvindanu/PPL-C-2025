@@ -99,15 +99,23 @@ app.use('/mock-payment', express.static('public/mock-payment'));
  *         description: System is unhealthy
  */
 
-// Swagger UI
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+// Swagger UI with no-cache headers to prevent Cloudflare caching
+app.use('/api-docs', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'SkillConnect API Documentation',
 }));
 
-// Swagger JSON endpoint
+// Swagger JSON endpoint with no-cache headers
 app.get('/api-docs.json', (req, res) => {
   res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.send(swaggerSpec);
 });
 
