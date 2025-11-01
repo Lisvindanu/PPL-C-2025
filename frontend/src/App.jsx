@@ -8,6 +8,7 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
+import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
 
 export default function App() {
   return (
@@ -45,6 +46,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/freelance/service/new"
+        element={
+          <ProtectedRoute>
+            <ServiceCreatePage />
           </ProtectedRoute>
         }
       />
