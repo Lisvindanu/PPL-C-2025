@@ -1,57 +1,13 @@
 import { Link } from 'react-router-dom'
-import Button from '../components/atoms/Button'
-import { useAuth } from '../hooks/useAuth'
+import Navbar from '../components/organisms/Navbar'
 
 export default function DashboardPage() {
   const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null
-  const { logout } = useAuth()
-
-  const handleLogout = async () => {
-    try {
-      await logout()
-      window.location.href = '/login'
-    } catch (error) {
-      console.error('Logout error:', error)
-      // Fallback: clear localStorage anyway
-      localStorage.removeItem('token')
-      localStorage.removeItem('user')
-      window.location.href = '/login'
-    }
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-bold">SC</span>
-            </div>
-            <span className="font-semibold text-gray-900">Skill Connect</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Link 
-              to="/profile" 
-              className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <img 
-                src="https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face" 
-                alt="Profile" 
-                className="w-8 h-8 rounded-full object-cover"
-              />
-              <span className="text-sm font-medium">
-                {user ? `${user.nama_depan || 'User'}` : 'Profile'}
-              </span>
-            </Link>
-            
-            <Button variant="outline" onClick={handleLogout} className="text-sm">
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
+      <Navbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">

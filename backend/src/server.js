@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 const { connectDatabase } = require('./shared/database/connection');
 
 const app = express();
@@ -10,9 +12,19 @@ const PORT = process.env.PORT || 5000;
 
 // ==================== MIDDLEWARE ====================
 app.use(helmet()); // Security headers
+
+// CORS configuration - allow multiple origins
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://ppl.vinmedia.my.id',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -20,6 +32,32 @@ app.use(morgan('dev')); // Logging
 
 // Serve static files (mock payment gateway)
 app.use('/mock-payment', express.static('public/mock-payment'));
+
+// ==================== API DOCUMENTATION ====================
+// Serve spec with cache busting
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json(swaggerSpec);
+});
+
+const swaggerOptions = {
+  swaggerOptions: {
+    url: `/api-docs.json?v=${Date.now()}`, // Cache busting with timestamp
+    persistAuthorization: true,
+  },
+  customSiteTitle: 'SkillConnect API Documentation',
+};
+
+// Disable caching for swagger endpoints
+app.use('/api-docs', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 // ==================== ROUTES ====================
 // Health check
@@ -87,10 +125,24 @@ const adminMiddleware = require('./shared/middleware/adminMiddleware');
 
 // Initialize admin dependencies
 const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
-const { adminController } = setupAdminDependencies(sequelize);
+const { adminController, adminLogController } = setupAdminDependencies(sequelize);
 
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
+
+const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
+app.use('/api/admin', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
+
+// Service Module - Kategori & Sub-Kategori routes (public)
+const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
+const kategoriController = new KategoriController(sequelize);
+const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
+app.use('/api/kategori', kategoriRoutes(kategoriController));
+
+const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
+const subKategoriController = new SubKategoriController(sequelize);
+const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
+app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
 // app.use('/api/recommendations', recommendationRoutes);
@@ -121,6 +173,7 @@ connectDatabase().then(() => {
     console.log(`🚀 Server is running on http://localhost:${PORT}`);
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`);
     console.log(`📡 API Base URL: http://localhost:${PORT}/api`);
+    console.log(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   });
 
   // Graceful shutdown

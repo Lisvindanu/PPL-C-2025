@@ -5,7 +5,7 @@ const { sequelize } = require('../connection');
 
 async function seedDatabase() {
   const queryInterface = sequelize.getQueryInterface();
-  
+
   try {
     console.log('🌱 Starting database seed...');
 
@@ -23,6 +23,7 @@ async function seedDatabase() {
     const paketId1 = uuidv4();
     const paketId2 = uuidv4();
     const pesananId1 = uuidv4();
+    const pesananId2 = uuidv4();
 
     // Check if users already exist
     const [existingUsers] = await sequelize.query('SELECT COUNT(*) as count FROM users');
@@ -31,7 +32,9 @@ async function seedDatabase() {
       process.exit(0);
     }
 
-    // Seed Users
+    // =============================
+    // USERS
+    // =============================
     console.log('→ Seeding users...');
     await queryInterface.bulkInsert('users', [
       {
@@ -117,7 +120,9 @@ async function seedDatabase() {
     ]);
     console.log('✓ Users seeded');
 
-    // Seed Profil Freelancer
+    // =============================
+    // PROFIL FREELANCER
+    // =============================
     console.log('→ Seeding profil freelancer...');
     await queryInterface.bulkInsert('profil_freelancer', [
       {
@@ -147,7 +152,9 @@ async function seedDatabase() {
     ]);
     console.log('✓ Profil Freelancer seeded');
 
-    // Seed Kategori
+    // =============================
+    // KATEGORI
+    // =============================
     console.log('→ Seeding kategori...');
     await queryInterface.bulkInsert('kategori', [
       {
@@ -180,7 +187,140 @@ async function seedDatabase() {
     ]);
     console.log('✓ Kategori seeded');
 
-    // Seed Layanan
+    // =============================
+    // SUB KATEGORI
+    // =============================
+    console.log('→ Seeding sub kategori...');
+    await queryInterface.bulkInsert('sub_kategori', [
+      // Sub kategori untuk Desain Grafis
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Logo Design',
+        slug: 'logo-design',
+        deskripsi: 'Pembuatan logo profesional untuk brand dan bisnis',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Branding & Identity',
+        slug: 'branding-identity',
+        deskripsi: 'Layanan branding lengkap termasuk logo, color palette, dan guidelines',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Social Media Design',
+        slug: 'social-media-design',
+        deskripsi: 'Desain konten untuk platform social media',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId1,
+        nama: 'Illustration',
+        slug: 'illustration',
+        deskripsi: 'Ilustrasi digital dan hand-drawn untuk berbagai keperluan',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      // Sub kategori untuk Pengembangan Web
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Frontend Development',
+        slug: 'frontend-development',
+        deskripsi: 'Pembuatan tampilan website dengan React, Vue, atau Angular',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Backend Development',
+        slug: 'backend-development',
+        deskripsi: 'Pengembangan server-side dengan Node.js, PHP, atau Python',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'Full-Stack Development',
+        slug: 'fullstack-development',
+        deskripsi: 'Pengembangan website lengkap frontend & backend',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId2,
+        nama: 'WordPress Development',
+        slug: 'wordpress-development',
+        deskripsi: 'Pembuatan dan customization website WordPress',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      // Sub kategori untuk Copywriting
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'SEO Content Writing',
+        slug: 'seo-content-writing',
+        deskripsi: 'Penulisan konten SEO-friendly untuk website dan blog',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Product Description',
+        slug: 'product-description',
+        deskripsi: 'Penulisan deskripsi produk yang menarik untuk e-commerce',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Social Media Copywriting',
+        slug: 'social-media-copywriting',
+        deskripsi: 'Pembuatan caption dan konten untuk social media',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        id_kategori: kategoriId3,
+        nama: 'Email Marketing Copy',
+        slug: 'email-marketing-copy',
+        deskripsi: 'Penulisan email marketing yang persuasif dan converting',
+        is_active: true,
+        created_at: new Date(),
+        updated_at: new Date()
+      }
+    ]);
+    console.log('✓ Sub Kategori seeded');
+
+    // =============================
+    // LAYANAN
+    // =============================
     console.log('→ Seeding layanan...');
     await queryInterface.bulkInsert('layanan', [
       {
@@ -220,7 +360,9 @@ async function seedDatabase() {
     ]);
     console.log('✓ Layanan seeded');
 
-    // Seed Paket Layanan
+    // =============================
+    // PAKET LAYANAN
+    // =============================
     console.log('→ Seeding paket layanan...');
     await queryInterface.bulkInsert('paket_layanan', [
       {
@@ -238,21 +380,23 @@ async function seedDatabase() {
       },
       {
         id: paketId2,
-        layanan_id: layananId1,
+        layanan_id: layananId2,
         tipe: 'premium',
-        nama: 'Premium Logo Package',
-        deskripsi: 'Logo lengkap dengan brand guidelines',
-        harga: 500000,
-        waktu_pengerjaan: 5,
+        nama: 'Premium Web Package',
+        deskripsi: 'Website lengkap dengan backend & frontend',
+        harga: 5000000,
+        waktu_pengerjaan: 20,
         batas_revisi: 5,
-        fitur: JSON.stringify(['Logo File (AI, PNG, PDF)', 'Brand Guidelines', '5x Revisi', 'Social Media Kit']),
+        fitur: JSON.stringify(['React Frontend', 'Node.js API', 'Responsive Design', '5x Revisi']),
         created_at: new Date(),
         updated_at: new Date()
       }
     ]);
     console.log('✓ Paket Layanan seeded');
 
-    // Seed Pesanan
+    // =============================
+    // PESANAN
+    // =============================
     console.log('→ Seeding pesanan...');
     await queryInterface.bulkInsert('pesanan', [
       {
@@ -273,11 +417,32 @@ async function seedDatabase() {
         status: 'dibayar',
         created_at: new Date(),
         updated_at: new Date()
+      },
+      {
+        id: pesananId2,
+        nomor_pesanan: 'PES-2025-00002',
+        client_id: clientId2,
+        freelancer_id: freelancerId2,
+        layanan_id: layananId2,
+        paket_id: paketId2,
+        judul: 'Website Portofolio Pribadi',
+        deskripsi: 'Membuat website portofolio profesional untuk menampilkan karya dan profil.',
+        catatan_client: 'Gunakan warna biru navy dan layout minimalis.',
+        harga: 5000000,
+        biaya_platform: 500000,
+        total_bayar: 5500000,
+        waktu_pengerjaan: 14,
+        tenggat_waktu: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        status: 'dibayar',
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ]);
     console.log('✓ Pesanan seeded');
 
-    // Seed Pembayaran
+    // =============================
+    // PEMBAYARAN
+    // =============================
     console.log('→ Seeding pembayaran...');
     await queryInterface.bulkInsert('pembayaran', [
       {
@@ -287,7 +452,6 @@ async function seedDatabase() {
         transaction_id: 'TXN-' + Date.now(),
         jumlah: 250000,
         biaya_platform: 25000,
-        biaya_payment_gateway: 0,
         total_bayar: 275000,
         metode_pembayaran: 'transfer_bank',
         channel: 'bca_va',
@@ -297,11 +461,30 @@ async function seedDatabase() {
         dibayar_pada: new Date(),
         created_at: new Date(),
         updated_at: new Date()
+      },
+      {
+        id: uuidv4(),
+        pesanan_id: pesananId2,
+        user_id: clientId2,
+        transaction_id: 'TXN-' + (Date.now() + 1),
+        jumlah: 5000000,
+        biaya_platform: 500000,
+        total_bayar: 5500000,
+        metode_pembayaran: 'e_wallet',
+        channel: 'gopay',
+        payment_gateway: 'mock',
+        status: 'berhasil',
+        nomor_invoice: 'INV-2025-00002',
+        dibayar_pada: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ]);
     console.log('✓ Pembayaran seeded');
 
-    // Seed Metode Pembayaran
+    // =============================
+    // METODE PEMBAYARAN
+    // =============================
     console.log('→ Seeding metode pembayaran...');
     await queryInterface.bulkInsert('metode_pembayaran', [
       {
@@ -330,7 +513,9 @@ async function seedDatabase() {
     ]);
     console.log('✓ Metode Pembayaran seeded');
 
-    // Seed Preferensi User
+    // =============================
+    // PREFERENSI USER
+    // =============================
     console.log('→ Seeding preferensi user...');
     await queryInterface.bulkInsert('preferensi_user', [
       {
@@ -354,6 +539,9 @@ async function seedDatabase() {
     ]);
     console.log('✓ Preferensi User seeded');
 
+    // =============================
+    // DONE
+    // =============================
     console.log('\n✅ Database seeded successfully!');
     console.log('\n📝 Test Credentials:');
     console.log('   Admin: admin@skillconnect.com / Admin123!');
@@ -364,7 +552,7 @@ async function seedDatabase() {
     process.exit(0);
   } catch (error) {
     console.error('\n❌ Seed failed:', error.message);
-    console.error(error.stack);
+    console.error(error);
     await sequelize.close();
     process.exit(1);
   }
