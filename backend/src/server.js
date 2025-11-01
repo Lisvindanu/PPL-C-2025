@@ -88,52 +88,35 @@ app.get('/health', async (req, res) => {
 });
 
 // ==================== MODULE ROUTES ====================
-// Import routes
-const userRoutes = require('./modules/user/presentation/routes/userRoutes');
-
-// Register routes
-app.use('/api/users', userRoutes);
-
-// TODO: Tambahkan routes modul lain di sini
-// const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
-// app.use('/api/services', serviceRoutes);
-
-// const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
-// app.use('/api/orders', orderRoutes);
-
-const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
-app.use('/api/payments', paymentRoutes);
-
-// const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
-// app.use('/api/reviews', reviewRoutes);
-
-// const chatRoutes = require('./modules/chat/presentation/routes/chatRoutes');
-// app.use('/api/chat', chatRoutes);
-
 // Import sequelize for dependencies
 const { sequelize } = require('./shared/database/connection');
 
+// Middleware
+const authMiddleware = require('./shared/middleware/authMiddleware');
+const adminMiddleware = require('./shared/middleware/adminMiddleware');
+
+// ===== Modul 1: User Management =====
+const userRoutes = require('./modules/user/presentation/routes/userRoutes');
+app.use('/api/users', userRoutes);
+
+// ===== Modul 1: Admin & Authentication =====
 // Auth routes (public - untuk login)
 const setupAuthDependencies = require('./modules/admin/config/authDependencies');
 const { authController } = setupAuthDependencies(sequelize);
 const authRoutes = require('./modules/admin/presentation/routes/authRoutes');
 app.use('/api/auth', authRoutes(authController));
 
-// Admin routes
-const authMiddleware = require('./shared/middleware/authMiddleware');
-const adminMiddleware = require('./shared/middleware/adminMiddleware');
-
-// Initialize admin dependencies
+// Admin routes (protected)
 const setupAdminDependencies = require('./modules/admin/config/adminDependencies');
 const { adminController, adminLogController } = setupAdminDependencies(sequelize);
-
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
 
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
-app.use('/api/admin', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
+app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
 
-// Service Module - Kategori & Sub-Kategori routes (public)
+// ===== Modul 2: Service Listing & Search =====
+// Kategori & Sub-Kategori routes (public)
 const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
 const kategoriController = new KategoriController(sequelize);
 const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
@@ -144,8 +127,39 @@ const subKategoriController = new SubKategoriController(sequelize);
 const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
-// const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
-// app.use('/api/recommendations', recommendationRoutes);
+// Service CRUD routes (Dalam Pengembangan)
+const ServiceController = require('./modules/service/presentation/controllers/ServiceController');
+const serviceController = new ServiceController(sequelize);
+const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
+app.use('/api/services', serviceRoutes(serviceController));
+
+// ===== Modul 3: Order & Booking System (Dalam Pengembangan) =====
+const OrderController = require('./modules/order/presentation/controllers/OrderController');
+const orderController = new OrderController(sequelize);
+const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
+app.use('/api/orders', orderRoutes(orderController));
+
+// ===== Modul 4: Payment Gateway =====
+const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
+app.use('/api/payments', paymentRoutes);
+
+// ===== Modul 5: Review & Rating System (Dalam Pengembangan) =====
+const ReviewController = require('./modules/review/presentation/controllers/ReviewController');
+const reviewController = new ReviewController(sequelize);
+const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
+app.use('/api/reviews', reviewRoutes(reviewController));
+
+// ===== Modul 6: Chat & Notification (Dalam Pengembangan) =====
+const ChatController = require('./modules/chat/presentation/controllers/ChatController');
+const chatController = new ChatController(sequelize);
+const chatRoutes = require('./modules/chat/presentation/routes/chatRoutes');
+app.use('/api/chat', chatRoutes(chatController));
+
+// ===== Modul 8: Recommendation & Personalization (Dalam Pengembangan) =====
+const RecommendationController = require('./modules/recommendation/presentation/controllers/RecommendationController');
+const recommendationController = new RecommendationController(sequelize);
+const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
+app.use('/api/recommendations', recommendationRoutes(recommendationController));
 
 // ==================== ERROR HANDLING ====================
 // 404 Handler
