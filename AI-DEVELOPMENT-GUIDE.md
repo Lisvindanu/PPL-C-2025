@@ -77,10 +77,50 @@ Dokumentasi ini berisi best practices, tips, dan workflow untuk mengerjakan proj
 - **Pricing:** $20/month
 - **Link:** https://cursor.sh
 
+### 5. **Gemini CLI & Free AI Agents** - GRATIS! 🆓
+- **Best for:** Budget-friendly automation, CLI workflows, scripting
+- **Strengths:**
+  - Completely FREE (Google Gemini API)
+  - CLI-based (bisa di-integrate ke workflow)
+  - Cepat untuk quick tasks
+  - Bisa dipakai untuk automation scripts
+- **Pricing:** FREE (dengan rate limits)
+- **Setup:**
+  ```bash
+  # Install Gemini CLI
+  npm install -g @google/generative-ai-cli
+  # atau pakai Python
+  pip install google-generativeai
+
+  # Get API key (GRATIS) dari:
+  # https://makersuite.google.com/app/apikey
+
+  # Setup
+  export GEMINI_API_KEY="your-api-key"
+
+  # Usage
+  gemini "explain this code: $(cat myfile.js)"
+  ```
+
+- **Alternative Free AI Agents:**
+  - **Hugging Chat** - https://huggingface.co/chat (Free, no API key)
+  - **Perplexity AI** - https://perplexity.ai (Free tier with search)
+  - **Phind** - https://phind.com (Free, specialized for coding)
+  - **You.com** - https://you.com (Free AI chat with citations)
+
+- **Use Cases untuk Gemini CLI:**
+  - Quick code explanation
+  - Generate boilerplate code
+  - Documentation generation
+  - Code review automation
+  - Git commit message generation
+  - Debugging assistance
+
 **Recommendation untuk project ini:**
-- **Primary:** Claude (untuk feature development)
-- **Secondary:** Copilot (untuk coding assistance)
+- **Primary:** Claude (untuk feature development & complex logic)
+- **Secondary:** Copilot (untuk coding assistance in-editor)
 - **Tertiary:** ChatGPT (untuk quick questions)
+- **Budget Option:** Gemini CLI (FREE alternative untuk basic tasks)
 
 ---
 
