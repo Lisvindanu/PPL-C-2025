@@ -336,51 +336,47 @@ const options = {
       },
       {
         name: 'Users',
-        description: '👥 **Module 1: User Management** - User registration, login, profile management, role switching',
-      },
-      {
-        name: 'Authentication',
-        description: '🔐 **Module 2: Admin Authentication** - Admin login and authentication',
-      },
-      {
-        name: 'Admin',
-        description: '⚙️ **Module 2: Admin Panel** - Dashboard, analytics, user/service management, reports, fraud detection (requires admin role)',
-      },
-      {
-        name: 'Payments',
-        description: '💳 **Module 3: Payment System** - Payment creation, processing, and gateway integration',
-      },
-      {
-        name: 'Escrow',
-        description: '🔒 **Module 3: Payment System** - Escrow fund holding and release management',
-      },
-      {
-        name: 'Withdrawals',
-        description: '💰 **Module 3: Payment System** - Freelancer withdrawal requests and processing',
+        description: '👥 **Modul 1: User Management** - Registrasi, login, profil pengguna, role management (Client, Freelancer, Admin)',
       },
       {
         name: 'Services',
-        description: '🛠️ **Module 4: Service Management** - Service/Layanan listing, creation, and management (Coming Soon)',
+        description: '🛠️ **Modul 2: Service Listing & Search** - CRUD layanan, pencarian & filter, detail layanan, rekomendasi populer - 🚧 *Sedang dalam tahap proses pengembangan*',
       },
       {
         name: 'Orders',
-        description: '📦 **Module 5: Order Management** - Order creation, tracking, and fulfillment (Coming Soon)',
+        description: '📦 **Modul 3: Order & Booking System** - Buat order, accept/reject, tracking status, complete order - 🚧 *Sedang dalam tahap proses pengembangan*',
+      },
+      {
+        name: 'Payments',
+        description: '💳 **Modul 4: Payment Gateway** - Pembayaran digital, multiple payment methods, verifikasi webhook, invoice generation',
+      },
+      {
+        name: 'Escrow',
+        description: '🔒 **Modul 4: Payment Gateway** - Escrow fund management dan release system',
+      },
+      {
+        name: 'Withdrawals',
+        description: '💰 **Modul 4: Payment Gateway** - Dashboard penghasilan freelancer dan withdrawal requests',
       },
       {
         name: 'Reviews',
-        description: '⭐ **Module 6: Review System** - Service reviews and ratings (Coming Soon)',
+        description: '⭐ **Modul 5: Review & Rating System** - Rating layanan, display rating, report review, admin moderation - 🚧 *Sedang dalam tahap proses pengembangan*',
       },
       {
         name: 'Chat',
-        description: '💬 **Module 7: Chat & Messaging** - Real-time chat and messaging between users (Coming Soon)',
+        description: '💬 **Modul 6: Chat & Notification System** - Real-time chat (Socket.io), notifikasi order/payment, email notification - 🚧 *Sedang dalam tahap proses pengembangan*',
+      },
+      {
+        name: 'Authentication',
+        description: '🔐 **Modul 7: Admin Dashboard & Analytics** - Admin authentication dan login',
+      },
+      {
+        name: 'Admin',
+        description: '⚙️ **Modul 7: Admin Dashboard & Analytics** - Dashboard statistik, user management, transaction analytics, revenue reports, fraud detection',
       },
       {
         name: 'Recommendations',
-        description: '🎯 **Module 8: Recommendation Engine** - Service recommendations based on user preferences (Coming Soon)',
-      },
-      {
-        name: 'Categories',
-        description: '📁 **Module 9: Category Management** - Service categories and taxonomy (Coming Soon)',
+        description: '🎯 **Modul 8: Recommendation & Personalization** - Personalized recommendations, similar services, favorites, user preferences - 🚧 *Sedang dalam tahap proses pengembangan*',
       },
     ],
     'x-tagGroups': [
@@ -389,40 +385,36 @@ const options = {
         tags: ['Health'],
       },
       {
-        name: '👥 Module 1: User Management',
+        name: '👥 Modul 1: User Management',
         tags: ['Users'],
       },
       {
-        name: '⚙️ Module 2: Admin & Authentication',
-        tags: ['Authentication', 'Admin'],
-      },
-      {
-        name: '💳 Module 3: Payment System',
-        tags: ['Payments', 'Escrow', 'Withdrawals'],
-      },
-      {
-        name: '🛠️ Module 4: Service Management',
+        name: '🛠️ Modul 2: Service Listing & Search 🚧',
         tags: ['Services'],
       },
       {
-        name: '📦 Module 5: Order Management',
+        name: '📦 Modul 3: Order & Booking System 🚧',
         tags: ['Orders'],
       },
       {
-        name: '⭐ Module 6: Review System',
+        name: '💳 Modul 4: Payment Gateway',
+        tags: ['Payments', 'Escrow', 'Withdrawals'],
+      },
+      {
+        name: '⭐ Modul 5: Review & Rating System 🚧',
         tags: ['Reviews'],
       },
       {
-        name: '💬 Module 7: Chat & Messaging',
+        name: '💬 Modul 6: Chat & Notification System 🚧',
         tags: ['Chat'],
       },
       {
-        name: '🎯 Module 8: Recommendation Engine',
-        tags: ['Recommendations'],
+        name: '⚙️ Modul 7: Admin Dashboard & Analytics',
+        tags: ['Authentication', 'Admin'],
       },
       {
-        name: '📁 Module 9: Category Management',
-        tags: ['Categories'],
+        name: '🎯 Modul 8: Recommendation & Personalization 🚧',
+        tags: ['Recommendations'],
       },
     ],
   },
