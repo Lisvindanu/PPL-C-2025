@@ -48,7 +48,6 @@
 | 6. Chat & Notification | ❌ Belum Dimulai | 0% | Sprint 5 (80%) | 🟠 Sedang |
 | 7. Admin Dashboard | ✅ Lengkap | 90% | Sprint 6 (100%) | ✅ Selesai |
 | 8. Recommendation | ❌ Belum Dimulai | 0% | Sprint 6 (100%) | 🟢 Rendah |
-| 9. Kategori (Bonus) | ✅ Lengkap | 100% | - | ✅ Selesai |
 
 ---
 
@@ -687,55 +686,6 @@ modules/recommendation/
 **Estimasi Usaha:**
 - Basic (popularitas + favorit): 2-3 hari
 - Lanjutan (berbasis ML): 1-2 minggu
-
----
-
-## 📋 MODUL 9 - KATEGORI (BONUS)
-
-### ✅ Status: LENGKAP (100%)
-
-### 📊 Progress: 100%
-
-### 🗂️ Struktur Files
-```
-modules/kategori/
-└── ✅ presentation/
-    ├── controllers/
-    │   ├── KategoriController.js (Lengkap)
-    │   └── SubKategoriController.js (Lengkap)
-    └── routes/
-        ├── kategoriRoutes.js (Lengkap)
-        └── subKategoriRoutes.js (Lengkap)
-```
-
-### 🛣️ Endpoints
-
-| Method | Endpoint | Status | Deskripsi |
-|--------|----------|--------|-------------|
-| GET | /api/kategori | ✅ | Dapatkan semua kategori |
-| GET | /api/sub-kategori | ✅ | Dapatkan semua sub-kategori |
-| GET | /api/sub-kategori?id_kategori=X | ✅ | Filter berdasarkan kategori |
-| GET | /api/sub-kategori/:id | ✅ | Dapatkan detail sub-kategori |
-
-### ✅ Fitur yang Diimplementasikan
-- [x] Daftar semua kategori aktif
-- [x] Daftar semua sub-kategori
-- [x] Filter sub-kategori berdasarkan kategori induk
-- [x] Dapatkan detail sub-kategori
-- [x] Dokumentasi Swagger
-- [x] Optimisasi query JOIN
-
-### 💾 Database Schema
-- ✅ Table: `kategori` (id, nama, slug, deskripsi, icon, is_active)
-- ✅ Table: `sub_kategori` (id, id_kategori, nama, slug, deskripsi, icon, is_active)
-- ✅ Foreign key: sub_kategori.id_kategori → kategori.id
-- ✅ Indexes: slug (unique), id_kategori
-
-### 📝 Catatan
-- Implementasi sederhana tapi efektif
-- Fondasi yang baik untuk Service module
-- Terdokumentasi dengan baik di Swagger
-- Siap untuk penggunaan produksi
 
 ---
 
