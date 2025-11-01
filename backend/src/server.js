@@ -133,16 +133,15 @@ app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminControll
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
 app.use('/api/admin', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
 
-// Kategori routes (public)
-const KategoriController = require('./modules/kategori/presentation/controllers/KategoriController');
+// Service Module - Kategori & Sub-Kategori routes (public)
+const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
 const kategoriController = new KategoriController(sequelize);
-const kategoriRoutes = require('./modules/kategori/presentation/routes/kategoriRoutes');
+const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
 app.use('/api/kategori', kategoriRoutes(kategoriController));
 
-// Sub Kategori routes (public)
-const SubKategoriController = require('./modules/kategori/presentation/controllers/SubKategoriController');
+const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
 const subKategoriController = new SubKategoriController(sequelize);
-const subKategoriRoutes = require('./modules/kategori/presentation/routes/subKategoriRoutes');
+const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
 // const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');

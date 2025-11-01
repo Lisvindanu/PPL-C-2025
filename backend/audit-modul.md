@@ -10,16 +10,16 @@
 ### Kemajuan Keseluruhan
 - **Total Progress:** 22% (hanya 3 dari 8 modul yang functional)
 - **Modul Lengkap:** 3/8 (User, Admin, Kategori)
-- **Modul Parsial:** 1/8 (Payment - hanya mock)
-- **Modul Belum Dimulai:** 5/8 (Service, Order, Review, Chat, Recommendation)
+- **Modul Parsial:** 2/8 (Payment - hanya mock, Service - kategori saja)
+- **Modul Belum Dimulai:** 4/8 (Order, Review, Chat, Recommendation)
 
 ### Rincian Status
 
 | Kategori | Jumlah | Persentase |
 |----------|-------|------------|
 | ✅ Siap Produksi | 3 | 33% |
-| ⚠️ Parsial/Mock | 1 | 11% |
-| ❌ Belum Dimulai | 5 | 56% |
+| ⚠️ Parsial/Mock | 2 | 22% |
+| ❌ Belum Dimulai | 4 | 44% |
 
 ### Temuan Kritis
 
@@ -41,7 +41,7 @@
 | Modul | Status | Progress | Target Sprint | Prioritas |
 |-------|--------|----------|---------------|----------|
 | 1. User Management | ✅ Lengkap | 95% | Sprint 1 (25%) | ✅ Selesai |
-| 2. Service Listing | ❌ Belum Dimulai | 0% | Sprint 1-2 (25-55%) | 🔴 Kritis |
+| 2. Service Listing | ⚠️ Parsial | 15% | Sprint 1-2 (25-55%) | 🔴 Kritis |
 | 3. Order & Booking | ❌ Belum Dimulai | 0% | Sprint 3 (55%) | 🔴 Kritis |
 | 4. Payment Gateway | ⚠️ Hanya Mock | 60% | Sprint 4 (55-80%) | 🟡 Tinggi |
 | 5. Review & Rating | ❌ Belum Dimulai | 0% | Sprint 4 (80%) | 🟡 Tinggi |
@@ -121,25 +121,35 @@ modules/user/
 
 ## 📋 MODUL 2 - SERVICE LISTING & SEARCH
 
-### ❌ Status: BELUM DIMULAI (0%)
+### ⚠️ Status: PARSIAL (15%)
 
-### 📊 Progress: 0%
+### 📊 Progress: 15%
 
 ### 🗂️ Struktur Files
 ```
 modules/service/
-├── ❌ presentation/ (Kosong)
-├── ❌ application/ (Kosong)
+├── ⚠️ presentation/
+│   ├── controllers/
+│   │   ├── ✅ KategoriController.js (Lengkap)
+│   │   └── ✅ SubKategoriController.js (Lengkap)
+│   └── routes/
+│       ├── ✅ kategoriRoutes.js (Lengkap)
+│       └── ✅ subKategoriRoutes.js (Lengkap)
+├── ❌ application/ (Kosong - CRUD layanan belum ada)
 ├── ❌ domain/ (Kosong)
 └── ❌ infrastructure/ (Kosong)
 ```
 
 ### 🛣️ Endpoints
 
-**Endpoints yang Diharapkan (0/7 diimplementasikan):**
+**Endpoints yang Diharapkan (4/11 diimplementasikan):**
 
 | Method | Endpoint | Status | Auth | Deskripsi |
 |--------|----------|--------|------|-------------|
+| GET | /api/kategori | ✅ | Public | Daftar semua kategori |
+| GET | /api/kategori/:id | ✅ | Public | Detail kategori |
+| GET | /api/sub-kategori | ✅ | Public | Daftar sub-kategori (filter by kategori) |
+| GET | /api/sub-kategori/:id | ✅ | Public | Detail sub-kategori |
 | POST | /api/layanan | ❌ | Freelancer | Buat layanan baru |
 | GET | /api/layanan | ❌ | Public | Daftar semua layanan dengan filter |
 | GET | /api/layanan/populer | ❌ | Public | Dapatkan layanan populer |
@@ -148,7 +158,9 @@ modules/service/
 | PUT | /api/layanan/:id | ❌ | Freelancer | Update layanan |
 | DELETE | /api/layanan/:id | ❌ | Freelancer | Hapus layanan |
 
-### ❌ Fitur yang Hilang (100%)
+### ⚠️ Fitur yang Hilang (85%)
+- [x] Master data kategori layanan
+- [x] Master data sub-kategori layanan
 - [ ] CRUD layanan (create, read, update, delete)
 - [ ] Pencarian berdasarkan nama/kategori
 - [ ] Filter berdasarkan harga (min-max)
@@ -164,15 +176,18 @@ modules/service/
 - [ ] Pelacakan view count
 
 ### 💾 Database Schema
+- ✅ Table: `kategori` (id, nama, slug, deskripsi, icon, is_active)
+- ✅ Table: `sub_kategori` (id, id_kategori, nama, slug, deskripsi, icon, is_active)
 - ✅ Table: `layanan` (id, freelancer_id, kategori_id, judul, slug, deskripsi, harga, waktu_pengerjaan, batas_revisi, thumbnail, gambar[], rating_rata_rata, jumlah_rating, total_pesanan, jumlah_dilihat, status)
 - ✅ Table: `paket_layanan` (id, layanan_id, tipe, nama, deskripsi, harga, waktu_pengerjaan, batas_revisi, fitur[])
 - ✅ Indexes: slug (unique), freelancer_id, kategori_id, status, rating_rata_rata
 
 ### 📝 Catatan
-- **KRITIS:** Ini adalah blocker utama. Tanpa Service module, Order module tidak bisa jalan
+- **PROGRES:** Master data kategori & sub-kategori sudah lengkap dengan API endpoints
+- **KRITIS:** CRUD layanan masih blocker utama. Tanpa Service module, Order module tidak bisa jalan
 - Database schema sudah lengkap dan well-designed
-- Routes sudah di-comment di server.js (baris 98-99)
-- Target Sprint 1-2 belum tercapai
+- Routes kategori sudah registered di server.js
+- Target Sprint 1-2 masih belum tercapai untuk core functionality
 
 **Estimasi Usaha:** 3-4 hari (1 developer) untuk CRUD basic + search/filter
 
