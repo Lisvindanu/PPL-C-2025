@@ -392,7 +392,7 @@ router.post(
  * @swagger
  * /api/payments/analytics/summary:
  *   get:
- *     tags: [Analytics]
+ *     tags: [Payments]
  *     summary: Get payment analytics summary
  *     description: Retrieve payment statistics dan analytics
  *     security:
@@ -443,7 +443,7 @@ router.get(
  * @swagger
  * /api/payments/analytics/escrow:
  *   get:
- *     tags: [Analytics]
+ *     tags: [Payments]
  *     summary: Get escrow analytics
  *     description: Retrieve escrow statistics
  *     security:
@@ -465,7 +465,7 @@ router.get(
  * @swagger
  * /api/payments/analytics/withdrawals:
  *   get:
- *     tags: [Analytics]
+ *     tags: [Payments]
  *     summary: Get withdrawal analytics
  *     description: Retrieve withdrawal statistics
  *     security:
@@ -487,7 +487,7 @@ router.get(
  * @swagger
  * /api/payments/{id}/refund:
  *   post:
- *     tags: [Refunds]
+ *     tags: [Payments]
  *     summary: Request refund
  *     description: User request refund untuk payment
  *     security:
@@ -529,7 +529,7 @@ router.post(
  * @swagger
  * /api/payments/refund/{id}/process:
  *   put:
- *     tags: [Refunds]
+ *     tags: [Payments]
  *     summary: Process refund request (Admin)
  *     description: Admin approve atau reject refund request
  *     security:
@@ -570,7 +570,7 @@ router.put(
  * @swagger
  * /api/payments/refunds:
  *   get:
- *     tags: [Refunds]
+ *     tags: [Payments]
  *     summary: Get all refund requests (Admin)
  *     description: Retrieve semua refund requests dengan filter
  *     security:
