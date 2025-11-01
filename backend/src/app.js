@@ -21,7 +21,18 @@ const PORT = process.env.PORT || 5000;
 // ================================
 // 🧩 Middleware Global
 // ================================
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://ppl.vinmedia.my.id',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -46,6 +57,17 @@ const { adminController, adminLogController } = setupAdminDependencies(sequelize
 const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
+const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
+const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
+
+// ================================
+// 🚀 Initialize Service Module Controllers (Kategori & Sub-Kategori)
+// ================================
+const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
+const kategoriController = new KategoriController(sequelize);
+
+const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
+const subKategoriController = new SubKategoriController(sequelize);
 
 // ================================
 // 🛣️ Register Routes
@@ -53,6 +75,10 @@ const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRout
 
 // User routes (public & private)
 app.use('/api/users', userRoutes);
+
+// Service Module - Kategori & Sub-Kategori routes (public)
+app.use('/api/kategori', kategoriRoutes(kategoriController));
+app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
 // Protected admin routes (memerlukan auth + admin role)
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));

@@ -493,7 +493,7 @@ socket.emit('chat:send-message', {
 });
 ```
 
-**📘 Dokumentasi Lengkap:** [backend/FRONTEND-INTEGRATION-GUIDE.md](backend/FRONTEND-INTEGRATION-GUIDE.md)
+**📘 Dokumentasi Lengkap:** [backend/docs/guides/FRONTEND-INTEGRATION-GUIDE.md](backend/docs/guides/FRONTEND-INTEGRATION-GUIDE.md)
 
 ---
 
@@ -529,7 +529,7 @@ modules/[nama-modul]/
 - ❌ **GABOLEH** ada business logic di Controller
 - ✅ Business logic harus di Domain/Application layer
 
-**Dokumentasi Lengkap:** [backend/STRUCTURE-RULES.md](backend/STRUCTURE-RULES.md)
+**Dokumentasi Lengkap:** [backend/docs/guides/STRUCTURE-RULES.md](backend/docs/guides/STRUCTURE-RULES.md)
 
 ---
 
@@ -581,7 +581,7 @@ const Payment = sequelize.define('payments', {
 module.exports = Payment;
 ```
 
-**Dokumentasi MySQL:** [backend/MYSQL-SEQUELIZE-GUIDE.md](backend/MYSQL-SEQUELIZE-GUIDE.md)
+**Dokumentasi MySQL:** [backend/docs/guides/MYSQL-SEQUELIZE-GUIDE.md](backend/docs/guides/MYSQL-SEQUELIZE-GUIDE.md)
 
 ---
 
@@ -589,10 +589,23 @@ module.exports = Payment;
 
 ### Backend Documentation
 - [Backend README](backend/README.md) - Setup & overview backend
-- [Database Schema](backend/DATABASE-SCHEMA.md) - Complete database schema & relationships
-- [Structure Rules](backend/STRUCTURE-RULES.md) - Aturan struktur DDD
-- [MySQL Guide](backend/MYSQL-SEQUELIZE-GUIDE.md) - MySQL + Sequelize guide
-- [Frontend Integration Guide](backend/FRONTEND-INTEGRATION-GUIDE.md) - Cara FE consume API
+- [Database Schema](backend/docs/DATABASE-SCHEMA.md) - Complete database schema & relationships
+- [Module Audit](backend/docs/audit-modul.md) - Progress audit semua modul
+- [API Documentation](backend/docs/api/API_DOCUMENTATION.md) - REST API reference
+
+### Development Guides
+- [Structure Rules](backend/docs/guides/STRUCTURE-RULES.md) - Aturan struktur DDD
+- [MySQL Guide](backend/docs/guides/MYSQL-SEQUELIZE-GUIDE.md) - MySQL + Sequelize guide
+- [Frontend Integration Guide](backend/docs/guides/FRONTEND-INTEGRATION-GUIDE.md) - Cara FE consume API
+- [Testing Guide](backend/docs/guides/TESTING-GUIDE.md) - Unit & integration testing
+- [**Swagger Testing Guide**](backend/docs/guides/SWAGGER-TESTING-GUIDE.md) - **Test API di browser tanpa clone repo!** 🧪
+- [Payment Module Guide](backend/docs/guides/PANDUAN-ANIN-PAYMENT.md) - Payment gateway
+- [Database Team Guide](backend/docs/guides/PANDUAN-TIM-DATABASE.md) - Database collaboration
+- [AI Development Guide](AI-DEVELOPMENT-GUIDE.md) - Cara kerja dengan AI tools (Claude, ChatGPT, Gemini CLI)
+
+### Setup & Deployment
+- [Setup Node v20](backend/docs/setup/SETUP-NODE-V20.md) - Cara install Node.js 20
+- [Deployment Guide](backend/docs/setup/DEPLOYMENT.md) - Deploy ke production
 
 ### Module-Specific Documentation
 - [Payment Module SRS](SRS-Modul4-PaymentGateway.md) - Software Requirements Specification
