@@ -34,7 +34,30 @@ app.use(morgan('dev')); // Logging
 app.use('/mock-payment', express.static('public/mock-payment'));
 
 // ==================== API DOCUMENTATION ====================
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Serve spec with cache busting
+app.get('/api-docs.json', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.json(swaggerSpec);
+});
+
+const swaggerOptions = {
+  swaggerOptions: {
+    url: `/api-docs.json?v=${Date.now()}`, // Cache busting with timestamp
+    persistAuthorization: true,
+  },
+  customSiteTitle: 'SkillConnect API Documentation',
+};
+
+// Disable caching for swagger endpoints
+app.use('/api-docs', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
 
 // ==================== ROUTES ====================
 // Health check
