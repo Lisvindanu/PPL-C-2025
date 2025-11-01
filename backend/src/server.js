@@ -5,7 +5,13 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const swaggerUi = require('swagger-ui-express');
 const { connectDatabase } = require('./shared/database/connection');
-const swaggerSpec = require('./config/swagger');
+
+// Function to get fresh swagger spec (avoid require cache)
+function getSwaggerSpec() {
+  // Delete require cache to always get fresh spec
+  delete require.cache[require.resolve('./config/swagger')];
+  return require('./config/swagger');
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -105,18 +111,25 @@ app.use('/api-docs', (req, res, next) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   next();
-}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'SkillConnect API Documentation',
-}));
+}, swaggerUi.serve);
+
+// Setup swagger with fresh spec on each request
+app.get('/api-docs', (req, res, next) => {
+  const freshSpec = getSwaggerSpec();
+  swaggerUi.setup(freshSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'SkillConnect API Documentation',
+  })(req, res, next);
+});
 
 // Swagger JSON endpoint with no-cache headers
 app.get('/api-docs.json', (req, res) => {
+  const freshSpec = getSwaggerSpec();
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  res.send(swaggerSpec);
+  res.send(freshSpec);
 });
 
 // ==================== ROUTES ====================
