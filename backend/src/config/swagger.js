@@ -332,49 +332,97 @@ const options = {
     tags: [
       {
         name: 'Health',
-        description: '🏥 **[System Module]** - Health check and monitoring endpoints',
-      },
-      {
-        name: 'Authentication',
-        description: '🔐 **[Auth Module]** - Admin authentication endpoints',
+        description: '🏥 **System Core** - Health check and monitoring endpoints',
       },
       {
         name: 'Users',
-        description: '👥 **[User Module]** - User registration, login, profile management',
+        description: '👥 **Module 1: User Management** - User registration, login, profile management, role switching',
+      },
+      {
+        name: 'Authentication',
+        description: '🔐 **Module 2: Admin Authentication** - Admin login and authentication',
       },
       {
         name: 'Admin',
-        description: '⚙️ **[Admin Module]** - Admin panel, analytics, user/service management, reports (requires admin role)',
+        description: '⚙️ **Module 2: Admin Panel** - Dashboard, analytics, user/service management, reports, fraud detection (requires admin role)',
       },
       {
         name: 'Payments',
-        description: '💳 **[Payment Module]** - Payment processing and gateway integration',
+        description: '💳 **Module 3: Payment System** - Payment creation, processing, and gateway integration',
       },
       {
         name: 'Escrow',
-        description: '🔒 **[Payment Module]** - Escrow fund management and release',
+        description: '🔒 **Module 3: Payment System** - Escrow fund holding and release management',
       },
       {
         name: 'Withdrawals',
-        description: '💰 **[Payment Module]** - Freelancer withdrawal requests',
+        description: '💰 **Module 3: Payment System** - Freelancer withdrawal requests and processing',
+      },
+      {
+        name: 'Services',
+        description: '🛠️ **Module 4: Service Management** - Service/Layanan listing, creation, and management (Coming Soon)',
+      },
+      {
+        name: 'Orders',
+        description: '📦 **Module 5: Order Management** - Order creation, tracking, and fulfillment (Coming Soon)',
+      },
+      {
+        name: 'Reviews',
+        description: '⭐ **Module 6: Review System** - Service reviews and ratings (Coming Soon)',
+      },
+      {
+        name: 'Chat',
+        description: '💬 **Module 7: Chat & Messaging** - Real-time chat and messaging between users (Coming Soon)',
+      },
+      {
+        name: 'Recommendations',
+        description: '🎯 **Module 8: Recommendation Engine** - Service recommendations based on user preferences (Coming Soon)',
+      },
+      {
+        name: 'Categories',
+        description: '📁 **Module 9: Category Management** - Service categories and taxonomy (Coming Soon)',
       },
     ],
     'x-tagGroups': [
       {
-        name: '🏥 System',
+        name: '🏥 System Core',
         tags: ['Health'],
       },
       {
-        name: '🔐 Authentication & Users',
-        tags: ['Authentication', 'Users'],
+        name: '👥 Module 1: User Management',
+        tags: ['Users'],
       },
       {
-        name: '⚙️ Administration',
-        tags: ['Admin'],
+        name: '⚙️ Module 2: Admin & Authentication',
+        tags: ['Authentication', 'Admin'],
       },
       {
-        name: '💳 Payments & Finance',
+        name: '💳 Module 3: Payment System',
         tags: ['Payments', 'Escrow', 'Withdrawals'],
+      },
+      {
+        name: '🛠️ Module 4: Service Management',
+        tags: ['Services'],
+      },
+      {
+        name: '📦 Module 5: Order Management',
+        tags: ['Orders'],
+      },
+      {
+        name: '⭐ Module 6: Review System',
+        tags: ['Reviews'],
+      },
+      {
+        name: '💬 Module 7: Chat & Messaging',
+        tags: ['Chat'],
+      },
+      {
+        name: '🎯 Module 8: Recommendation Engine',
+        tags: ['Recommendations'],
+      },
+      {
+        name: '📁 Module 9: Category Management',
+        tags: ['Categories'],
       },
     ],
   },
