@@ -332,31 +332,49 @@ const options = {
     tags: [
       {
         name: 'Health',
-        description: 'System health check endpoints',
+        description: '🏥 **[System Module]** - Health check and monitoring endpoints',
       },
       {
         name: 'Authentication',
-        description: 'User authentication endpoints',
+        description: '🔐 **[Auth Module]** - Admin authentication endpoints',
       },
       {
         name: 'Users',
-        description: 'User management endpoints',
+        description: '👥 **[User Module]** - User registration, login, profile management',
       },
       {
         name: 'Admin',
-        description: 'Admin panel endpoints (requires admin role)',
+        description: '⚙️ **[Admin Module]** - Admin panel, analytics, user/service management, reports (requires admin role)',
       },
       {
         name: 'Payments',
-        description: 'Payment processing endpoints',
+        description: '💳 **[Payment Module]** - Payment processing and gateway integration',
       },
       {
         name: 'Escrow',
-        description: 'Escrow management endpoints',
+        description: '🔒 **[Payment Module]** - Escrow fund management and release',
       },
       {
         name: 'Withdrawals',
-        description: 'Withdrawal request endpoints',
+        description: '💰 **[Payment Module]** - Freelancer withdrawal requests',
+      },
+    ],
+    'x-tagGroups': [
+      {
+        name: '🏥 System',
+        tags: ['Health'],
+      },
+      {
+        name: '🔐 Authentication & Users',
+        tags: ['Authentication', 'Users'],
+      },
+      {
+        name: '⚙️ Administration',
+        tags: ['Admin'],
+      },
+      {
+        name: '💳 Payments & Finance',
+        tags: ['Payments', 'Escrow', 'Withdrawals'],
       },
     ],
   },
