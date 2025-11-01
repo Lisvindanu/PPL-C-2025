@@ -598,8 +598,10 @@ module.exports = Payment;
 - [MySQL Guide](backend/docs/guides/MYSQL-SEQUELIZE-GUIDE.md) - MySQL + Sequelize guide
 - [Frontend Integration Guide](backend/docs/guides/FRONTEND-INTEGRATION-GUIDE.md) - Cara FE consume API
 - [Testing Guide](backend/docs/guides/TESTING-GUIDE.md) - Unit & integration testing
+- [**Swagger Testing Guide**](backend/docs/guides/SWAGGER-TESTING-GUIDE.md) - **Test API di browser tanpa clone repo!** 🧪
 - [Payment Module Guide](backend/docs/guides/PANDUAN-ANIN-PAYMENT.md) - Payment gateway
 - [Database Team Guide](backend/docs/guides/PANDUAN-TIM-DATABASE.md) - Database collaboration
+- [AI Development Guide](AI-DEVELOPMENT-GUIDE.md) - Cara kerja dengan AI tools (Claude, ChatGPT, Gemini CLI)
 
 ### Setup & Deployment
 - [Setup Node v20](backend/docs/setup/SETUP-NODE-V20.md) - Cara install Node.js 20

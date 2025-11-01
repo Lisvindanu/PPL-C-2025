@@ -212,6 +212,7 @@ npm run seed
 - [MySQL & Sequelize Guide](docs/guides/MYSQL-SEQUELIZE-GUIDE.md) - Database guide
 - [Frontend Integration](docs/guides/FRONTEND-INTEGRATION-GUIDE.md) - Cara FE consume API
 - [Testing Guide](docs/guides/TESTING-GUIDE.md) - Unit & integration testing
+- [Swagger Testing Guide](docs/guides/SWAGGER-TESTING-GUIDE.md) - **Testing API tanpa clone repo!** 🧪
 - [Payment Module Guide](docs/guides/PANDUAN-ANIN-PAYMENT.md) - Payment gateway integration
 - [Database Team Guide](docs/guides/PANDUAN-TIM-DATABASE.md) - Database collaboration
 
