@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
 import ServiceCardItem from '../components/molecules/ServiceCardItem'
+import { useToast } from '../components/organisms/ToastProvider'
 
 // Data dari landing page - sama dengan ServiceListPage
 const categoriesWithServices = [
@@ -113,7 +114,9 @@ const categoriesWithServices = [
 
 const BookmarkPage = () => {
   const navigate = useNavigate()
+  const toast = useToast()
   const [bookmarkedServices, setBookmarkedServices] = useState([])
+  const previousCountRef = useRef(0)
 
   // Get all services (memoized to prevent unnecessary re-renders)
   const allServices = useMemo(() => 
@@ -123,37 +126,58 @@ const BookmarkPage = () => {
 
   // Load bookmarked services from localStorage
   useEffect(() => {
-    const loadBookmarks = () => {
+    const loadBookmarks = (checkForRemoval = false) => {
       const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
       const bookmarked = allServices.filter(service => bookmarks.includes(service.id))
+      const currentCount = bookmarked.length
+      const previousCount = previousCountRef.current
+      
+      // Show notification when bookmark is removed (count decreased)
+      if (checkForRemoval && previousCount > 0 && currentCount < previousCount) {
+        toast.show('Layanan berhasil dihapus dari bookmark', 'success')
+      }
+      
+      previousCountRef.current = currentCount
       setBookmarkedServices(bookmarked)
     }
 
-    loadBookmarks()
+    const initialBookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    const initialBookmarked = allServices.filter(service => initialBookmarks.includes(service.id))
+    previousCountRef.current = initialBookmarked.length
+    loadBookmarks(false)
 
     // Listen for storage changes (when bookmark is toggled in other tabs/components)
     const handleStorageChange = () => {
-      loadBookmarks()
+      loadBookmarks(true)
     }
 
     window.addEventListener('storage', handleStorageChange)
     
     // Also listen for custom events from same tab
-    const handleBookmarkChange = () => {
-      loadBookmarks()
+    const handleBookmarkChangeEvent = () => {
+      loadBookmarks(true)
     }
 
-    window.addEventListener('bookmarkChanged', handleBookmarkChange)
+    window.addEventListener('bookmarkChanged', handleBookmarkChangeEvent)
 
     return () => {
       window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('bookmarkChanged', handleBookmarkChange)
+      window.removeEventListener('bookmarkChanged', handleBookmarkChangeEvent)
     }
-  }, [allServices])
+  }, [allServices, toast])
 
   const handleBookmarkChange = () => {
     const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
     const bookmarked = allServices.filter(service => bookmarks.includes(service.id))
+    const currentCount = bookmarked.length
+    const previousCount = previousCountRef.current
+    
+    // Show notification when bookmark is removed (count decreased)
+    if (previousCount > 0 && currentCount < previousCount) {
+      toast.show('Layanan berhasil dihapus dari bookmark', 'success')
+    }
+    
+    previousCountRef.current = currentCount
     setBookmarkedServices(bookmarked)
     
     // Dispatch custom event for same-tab updates

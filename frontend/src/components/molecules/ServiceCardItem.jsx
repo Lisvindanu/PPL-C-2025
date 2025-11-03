@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { useToast } from "../organisms/ToastProvider";
 
 export default function ServiceCardItem({ service, onClick, onBookmarkChange }) {
   const [isLiked, setIsLiked] = useState(false);
+  const toast = useToast();
   
   // Load bookmark status from localStorage
   const getBookmarkStatus = () => {
@@ -25,6 +27,7 @@ export default function ServiceCardItem({ service, onClick, onBookmarkChange }) 
     e.stopPropagation();
     const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
     let newBookmarks;
+    const wasBookmarked = isBookmarked;
     
     if (isBookmarked) {
       newBookmarks = bookmarks.filter(id => id !== service.id);
@@ -34,6 +37,11 @@ export default function ServiceCardItem({ service, onClick, onBookmarkChange }) 
     
     localStorage.setItem('bookmarks', JSON.stringify(newBookmarks));
     setIsBookmarked(!isBookmarked);
+    
+    // Show notification when bookmark is added (not when removed - that's handled in BookmarkPage)
+    if (!wasBookmarked) {
+      toast.show('Layanan berhasil ditambahkan ke bookmark', 'success');
+    }
     
     // Dispatch custom event for cross-component updates
     window.dispatchEvent(new Event('bookmarkChanged'));
