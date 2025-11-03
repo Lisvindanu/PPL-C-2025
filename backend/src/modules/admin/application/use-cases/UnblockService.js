@@ -29,14 +29,14 @@ class UnblockService {
 
     // Save log
     await this.adminLogRepository.save({
-      admin_id: adminId,
-      aksi: 'unblock_service',
-      target_type: 'layanan',
-      target_id: serviceId,
-      detail: { reason },
-      ip_address: ipAddress,
-      user_agent: userAgent
-    });
+    adminId: adminId,          // camelCase sesuai repository
+    action: 'unblock_service', // harus sesuai
+    targetType: 'layanan',
+    targetId: serviceId,
+    detail: { reason },
+    ipAddress: ipAddress,
+    userAgent: userAgent
+  });
 
 
     return service;
