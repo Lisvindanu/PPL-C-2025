@@ -156,6 +156,11 @@ const ServiceDetailPage = () => {
     })
   }
 
+  const handleChatNow = () => {
+    // Placeholder: nanti diarahkan ke fitur chat
+    toast.show('Fitur chat segera tersedia. Anda dapat menghubungi freelancer dari sini.', 'info')
+  }
+
   const handleBookmarkClick = () => {
     if (!service) return
     
@@ -397,6 +402,16 @@ Setiap proyek dikerjakan dengan detail dan sesuai kebutuhan klien. Kami memastik
                   className="flex-1 py-4 bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
                 >
                   Pesan Sekarang
+                </button>
+              </div>
+
+              {/* Chat Button */}
+              <div className="mt-3">
+                <button
+                  onClick={handleChatNow}
+                  className="w-full py-4 border-2 border-[#4782BE] text-[#4782BE] rounded-xl hover:bg-[#4782BE]/10 transition-all duration-300 font-bold text-lg"
+                >
+                  Chat Sekarang
                 </button>
               </div>
 
