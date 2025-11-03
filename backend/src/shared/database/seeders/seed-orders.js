@@ -97,7 +97,7 @@ async function seedOrdersAndPayments() {
           freelancers[i].id,
           kategori[i % kategori.length].id,
           `Layanan Profesional ${i + 1}`,
-          `layanan-profesional-${i + 1}`,
+          `layanan-profesional-${layananId}`,
           `Deskripsi layanan profesional yang berkualitas tinggi`,
           harga,
           waktu,
@@ -161,7 +161,7 @@ async function seedOrdersAndPayments() {
       `, {
         replacements: [
           pesananId,
-          `PES-2025-${String(i + 1).padStart(5, '0')}`,
+          `PES-${new Date().getFullYear()}-${String(i + 1).padStart(5, '0')}-${pesananId.substring(0, 8)}`,
           client.id,
           freelancer.id,
           layananIds[layananIndex],
@@ -200,7 +200,7 @@ async function seedOrdersAndPayments() {
             ['transfer_bank', 'e_wallet', 'qris'][i % 3],
             ['bca_va', 'gopay', 'qris'][i % 3],
             'mock',
-            `INV-2025-${String(i + 1).padStart(5, '0')}`,
+            `INV-2025-${String(i + 1).padStart(5, '0')}-${pesananId.substring(0, 8)}`,
             createdAt,
             createdAt,
             createdAt
