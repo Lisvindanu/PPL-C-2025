@@ -394,6 +394,9 @@ npm run test:coverage  # Coverage report
 - [Component Library](./docs/components.md)
 - [API Integration](./docs/api-integration.md)
 - [State Management](./docs/state-management.md)
+- [**AI Integration Guide**](./AI-INTEGRATION-GUIDE.md) - **Panduan lengkap development frontend dengan AI!** 🤖
+- [Swagger Testing Guide](../backend/docs/guides/SWAGGER-TESTING-GUIDE.md) - Test API tanpa clone repo
+- [Backend API Docs](https://api-ppl.vinmedia.my.id/api-docs/#/) - Live Swagger documentation
 
 ## 🌐 Pages & Routes
 
