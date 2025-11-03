@@ -66,12 +66,13 @@ const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 // Register routes
 app.use('/api/users', userRoutes);
 
-// TODO: Tambahkan routes modul lain di sini
-// const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
-// app.use('/api/services', serviceRoutes);
+// Service routes (public)
+const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
+app.use('/api/services', serviceRoutes);
 
-// const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
-// app.use('/api/orders', orderRoutes);
+// Order routes (protected)
+const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
+app.use('/api/orders', orderRoutes);
 
 const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
