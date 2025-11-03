@@ -33,15 +33,15 @@ async execute(adminId, userId, reason, ipAddress, userAgent) {
     // =====================================
 
     // Log activity
-    await this.adminLogRepository.save({
-      admin_id: adminId,
-      aksi: 'block_user',
-      target_type: 'user',
-      target_id: userId,
-      detail: { reason },
-      ip_address: ipAddress,
-      user_agent: userAgent
-    });
+await this.adminLogRepository.save({
+  adminId: adminId,
+  action: 'block_user',
+  targetType: 'user',
+  targetId: userId,
+  detail: { reason },
+  ipAddress: ipAddress,
+  userAgent: userAgent
+});
 
     return {
       userId,

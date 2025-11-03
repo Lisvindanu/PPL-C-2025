@@ -1,105 +1,87 @@
-const { sequelize } = require('../../../../shared/database/connection');
 const { v4: uuidv4 } = require('uuid');
+
 class SequelizeAdminLogRepository {
   constructor(sequelize) {
     this.sequelize = sequelize;
   }
 
- // Install: npm install uuid
+  async save(log) {
+    try {
+      const logId = uuidv4();
+      
+      const result = await this.sequelize.query(`
+        INSERT INTO log_aktivitas_admin 
+        (id, admin_id, aksi, target_type, target_id, detail, ip_address, user_agent, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
+      `, {
+        replacements: [
+          logId,
+          log.adminId,        // camelCase
+          log.action,         // camelCase
+          log.targetType,     // camelCase
+          log.targetId,       // camelCase
+          JSON.stringify(log.detail || {}),
+          log.ipAddress,      // camelCase
+          log.userAgent       // camelCase
+        ],
+        type: this.sequelize.QueryTypes.INSERT
+      });
+      
+      return { ...log, id: logId };
+    } catch (error) {
+      console.error('Error saving admin log:', error);
+      throw new Error(`Failed to save log: ${error.message}`);
+    }
+  }
 
-async save(log) {
+async getLogs(filters = {}) {
   try {
-    const logId = uuidv4(); // Generate UUID di JavaScript
-    
-    const result = await this.sequelize.query(`
-      INSERT INTO log_aktivitas_admin 
-      (id, admin_id, aksi, target_type, target_id, detail, ip_address, user_agent, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-    `, {
-      replacements: [
-        logId,              // ← UUID dari JavaScript
-        log.admin_id,       
-        log.aksi,           
-        log.target_type,    
-        log.target_id,      
-        JSON.stringify(log.detail || {}),
-        log.ip_address,     
-        log.user_agent      
-      ]
+    const limit = filters.limit || 50;
+    const offset = filters.offset || 0;
+
+    let query = `
+      SELECT 
+        l.id,
+        l.admin_id,
+        l.aksi,
+        l.target_type,
+        l.target_id,
+        l.detail,
+        l.ip_address,
+        l.user_agent,
+        l.created_at,
+        u.email as admin_email,
+        u.nama_depan as admin_name
+      FROM log_aktivitas_admin l
+      LEFT JOIN users u ON l.admin_id = u.id
+    `;
+
+    const conditions = [];
+    const replacements = [];
+
+    if (filters.adminId) {
+      conditions.push('l.admin_id = ?');
+      replacements.push(filters.adminId);
+    }
+
+    const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
+    query += whereClause + ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
+    replacements.push(limit, offset);
+
+    const logs = await this.sequelize.query(query, {
+      replacements,
+      raw: true,
+      type: this.sequelize.QueryTypes.SELECT
     });
-    return result;
+
+    return logs;
   } catch (error) {
-    throw new Error(`Failed to save log: ${error.message}`);
+    console.error('❌ getLogs error:', error);
+    throw new Error(`Failed to get logs: ${error.message}`);
   }
 }
 
-  async getLogs(filters = {}) {
-    try {
-      const limit = filters.limit || 50;
-      const offset = filters.offset || 0;
 
-      let query = `
-        SELECT 
-          l.id,
-          l.admin_id,
-          l.aksi,
-          l.target_type,
-          l.target_id,
-          l.detail,
-          l.ip_address,
-          l.user_agent,
-          l.created_at,
-          u.email as admin_email
-        FROM log_aktivitas_admin l
-        LEFT JOIN users u ON l.admin_id = u.id
-      `;
-      const replacements = [];
-      const conditions = [];
-
-      if (filters.adminId) {
-        conditions.push('l.admin_id = ?');
-        replacements.push(filters.adminId);
-      }
-
-      if (filters.action) {
-        conditions.push('l.aksi = ?');
-        replacements.push(filters.action);
-      }
-
-      if (filters.targetType) {
-        conditions.push('l.target_type = ?');
-        replacements.push(filters.targetType);
-      }
-
-      if (conditions.length > 0) {
-        query += ' WHERE ' + conditions.join(' AND ');
-      }
-
-      query += ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
-      replacements.push(limit, offset);
-
-      const logs = await this.sequelize.query(query, {
-        replacements,
-        raw: true,
-        type: this.sequelize.QueryTypes.SELECT
-      });
-
-      const countResult = await this.sequelize.query(
-        'SELECT COUNT(*) as total FROM log_aktivitas_admin',
-        { raw: true, type: this.sequelize.QueryTypes.SELECT }
-      );
-
-      return {
-        data: logs || [],
-        limit,
-        offset,
-        total: countResult[0]?.total || 0
-      };
-    } catch (error) {
-      console.error('getLogs error:', error);
-      throw new Error(`Failed to get logs: ${error.message}`);
-    }
-  }
 
   async findWithFilters(filters = {}) {
     try {
@@ -225,6 +207,42 @@ async save(log) {
       throw new Error(`Failed to get logs by admin: ${error.message}`);
     }
   }
+
+  async findAll() {
+  try {
+    const logs = await this.sequelize.query(`
+      SELECT 
+        l.id,
+        l.admin_id,
+        l.aksi,
+        l.target_type,
+        l.target_id,
+        l.detail,
+        l.ip_address,
+        l.user_agent,
+        l.created_at,
+        u.email as admin_email,
+        u.nama_depan as admin_name
+      FROM log_aktivitas_admin l
+      LEFT JOIN users u ON l.admin_id = u.id
+      ORDER BY l.created_at DESC
+    `, {
+      raw: true,
+      type: this.sequelize.QueryTypes.SELECT
+    });
+
+    return logs;
+  } catch (error) {
+    console.error('❌ findAll error:', error);
+    throw new Error(`Failed to get all logs: ${error.message}`);
+  }
+}
+
+  async findByAdminId(adminId) {
+  const [rows] = await db.query('SELECT * FROM log_aktivitas_admin WHERE admin_id = ?', [adminId]);
+  return rows;
+}
+
 }
 
 module.exports = SequelizeAdminLogRepository;
