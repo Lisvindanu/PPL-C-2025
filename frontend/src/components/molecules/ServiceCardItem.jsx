@@ -1,9 +1,20 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function ServiceCardItem({ service, onClick }) {
+export default function ServiceCardItem({ service, onClick, onBookmarkChange }) {
   const [isLiked, setIsLiked] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  
+  // Load bookmark status from localStorage
+  const getBookmarkStatus = () => {
+    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+    return bookmarks.includes(service.id);
+  };
+
+  const [isBookmarked, setIsBookmarked] = useState(getBookmarkStatus);
+
+  useEffect(() => {
+    setIsBookmarked(getBookmarkStatus());
+  }, [service.id]);
 
   const handleLikeClick = (e) => {
     e.stopPropagation();
@@ -12,7 +23,25 @@ export default function ServiceCardItem({ service, onClick }) {
 
   const handleBookmarkClick = (e) => {
     e.stopPropagation();
+    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]');
+    let newBookmarks;
+    
+    if (isBookmarked) {
+      newBookmarks = bookmarks.filter(id => id !== service.id);
+    } else {
+      newBookmarks = [...bookmarks, service.id];
+    }
+    
+    localStorage.setItem('bookmarks', JSON.stringify(newBookmarks));
     setIsBookmarked(!isBookmarked);
+    
+    // Dispatch custom event for cross-component updates
+    window.dispatchEvent(new Event('bookmarkChanged'));
+    
+    // Notify parent component if callback provided
+    if (onBookmarkChange) {
+      onBookmarkChange();
+    }
   };
 
   return (

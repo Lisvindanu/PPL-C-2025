@@ -13,6 +13,7 @@ import OrderListPage from "./pages/OrderListPage";
 import ServiceListPage from "./pages/ServiceListPage";
 import ServiceDetailPage from "./pages/ServiceDetailPage";
 import CreateOrderPage from "./pages/CreateOrderPage";
+import BookmarkPage from "./pages/BookmarkPage";
 
 export default function App() {
   return (
@@ -90,6 +91,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bookmarks"
+        element={
+          <ProtectedRoute>
+            <BookmarkPage />
           </ProtectedRoute>
         }
       />
