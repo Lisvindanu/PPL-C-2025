@@ -1,11 +1,13 @@
 const SequelizeUserRepository = require('../../infrastructure/repositories/SequelizeUserRepository');
 const HashService = require('../../infrastructure/services/HashService');
 const JwtService = require('../../infrastructure/services/JwtService');
+const EmailService = require('../../infrastructure/services/EmailService');
 const RegisterUser = require('../../application/use-cases/RegisterUser');
 const LoginUser = require('../../application/use-cases/LoginUser');
 const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
+const VerifyEmail = require('../../application/use-cases/VerifyEmail');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
 
 class UserController {
@@ -13,12 +15,14 @@ class UserController {
     const userRepository = new SequelizeUserRepository();
     const hashService = new HashService();
     const jwtService = new JwtService();
+    const emailService = new EmailService();
 
-    this.registerUser = new RegisterUser({ userRepository, hashService });
+    this.registerUser = new RegisterUser({ userRepository, hashService, emailService });
     this.loginUser = new LoginUser({ userRepository, hashService, jwtService });
     this.updateProfileUseCase = new UpdateProfile({ userRepository });
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
+    this.verifyEmailUseCase = new VerifyEmail({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
   }
 
@@ -101,6 +105,16 @@ class UserController {
   resetPassword = async (req, res, next) => {
     try {
   const result = await this.resetPasswordUseCase.execute(req.body);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  verifyEmail = async (req, res, next) => {
+    try {
+      const { token } = req.query;
+      const result = await this.verifyEmailUseCase.execute({ token });
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

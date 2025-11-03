@@ -8,7 +8,7 @@ const swaggerSpec = require('./config/swagger');
 const { connectDatabase } = require('./shared/database/connection');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // ==================== MIDDLEWARE ====================
 app.use(helmet()); // Security headers
