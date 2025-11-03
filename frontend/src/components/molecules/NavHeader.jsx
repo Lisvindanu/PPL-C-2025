@@ -5,7 +5,7 @@ import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
 
-function ProfileDropdown({ name, email, avatarUrl, onProfile, onDashboard, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, onProfile, onDashboard, onBookmark, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -70,6 +70,15 @@ function ProfileDropdown({ name, email, avatarUrl, onProfile, onDashboard, onLog
           >
             Dashboard
           </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={onBookmark}
+            className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center gap-2"
+          >
+            <i className="fas fa-bookmark text-[#4782BE] text-xs"></i>
+            Bookmark
+          </button>
           <div className="my-1 h-px bg-neutral-200" />
           <button
             type="button"
@@ -99,6 +108,7 @@ export default function NavHeader() {
   const handleLogin = () => navigate("/login");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
+  const handleBookmark = () => navigate("/bookmarks");
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -136,6 +146,7 @@ export default function NavHeader() {
               avatarUrl={avatarUrl}
               onProfile={handleProfile}
               onDashboard={handleDashboard}
+              onBookmark={handleBookmark}
               onLogout={handleLogout}
             />
           ) : (

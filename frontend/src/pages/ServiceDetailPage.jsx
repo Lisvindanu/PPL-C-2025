@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
+import { useToast } from '../components/organisms/ToastProvider'
 
 // Data dari landing page - sama dengan ServiceListPage
 const categoriesWithServices = [
@@ -113,12 +114,23 @@ const categoriesWithServices = [
 const ServiceDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const toast = useToast()
   
   // Flatten all services dan cari berdasarkan ID
   const allServices = categoriesWithServices.flatMap(cat => cat.services)
   const service = allServices.find(s => s.id === parseInt(id))
 
   const [selectedTab, setSelectedTab] = useState('description')
+  
+  // Bookmark state
+  const [isBookmarked, setIsBookmarked] = useState(false)
+
+  useEffect(() => {
+    if (service) {
+      const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+      setIsBookmarked(bookmarks.includes(service.id))
+    }
+  }, [service])
 
   if (!service) {
     return (
@@ -142,6 +154,28 @@ const ServiceDetailPage = () => {
         service: service
       }
     })
+  }
+
+  const handleBookmarkClick = () => {
+    if (!service) return
+    
+    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
+    let newBookmarks
+    const wasBookmarked = isBookmarked
+    
+    if (isBookmarked) {
+      newBookmarks = bookmarks.filter(bookmarkId => bookmarkId !== service.id)
+      toast.show('Layanan berhasil dihapus dari bookmark', 'success')
+    } else {
+      newBookmarks = [...bookmarks, service.id]
+      toast.show('Layanan berhasil ditambahkan ke bookmark', 'success')
+    }
+    
+    localStorage.setItem('bookmarks', JSON.stringify(newBookmarks))
+    setIsBookmarked(!isBookmarked)
+    
+    // Dispatch custom event for cross-component updates
+    window.dispatchEvent(new Event('bookmarkChanged'))
   }
 
   // Generate deskripsi detail layanan
@@ -345,13 +379,26 @@ Setiap proyek dikerjakan dengan detail dan sesuai kebutuhan klien. Kami memastik
                 </div>
               </div>
 
-              {/* CTA Button */}
-              <button
-                onClick={handleOrderNow}
-                className="w-full py-4 bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
-              >
-                Pesan Sekarang
-              </button>
+              {/* CTA Buttons */}
+              <div className="flex gap-3">
+                <button
+                  onClick={handleBookmarkClick}
+                  className={`flex-shrink-0 px-4 py-4 border-2 rounded-xl hover:shadow-lg transition-all duration-300 ${
+                    isBookmarked
+                      ? 'border-[#4782BE] bg-[#4782BE]/10 text-[#4782BE]'
+                      : 'border-[#4782BE] text-[#4782BE] hover:bg-[#4782BE]/10'
+                  }`}
+                  aria-label="Bookmark"
+                >
+                  <i className={`${isBookmarked ? 'fas' : 'far'} fa-bookmark text-lg`} />
+                </button>
+                <button
+                  onClick={handleOrderNow}
+                  className="flex-1 py-4 bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
+                >
+                  Pesan Sekarang
+                </button>
+              </div>
 
               {/* Info */}
               <div className="mt-6 space-y-2">
