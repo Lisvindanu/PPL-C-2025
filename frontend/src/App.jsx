@@ -43,18 +43,18 @@ export default function App() {
         }
       />
       <Route
-        path="/profile"
-        element={
-          <ProtectedRoute>
-            <ProfilePage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/freelance/service/new"
         element={
           <ProtectedRoute>
             <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />
