@@ -11,7 +11,25 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // ==================== MIDDLEWARE ====================
-app.use(helmet()); // Security headers
+// Helmet security headers - with custom CSP for mock-payment
+app.use((req, res, next) => {
+  if (req.path.startsWith('/mock-payment')) {
+    // Relaxed CSP for mock payment page (allows inline scripts)
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrcAttr: ["'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+        }
+      }
+    })(req, res, next);
+  } else {
+    // Strict CSP for other routes
+    helmet()(req, res, next);
+  }
+});
 
 // CORS configuration - allow multiple origins
 const allowedOrigins = [
