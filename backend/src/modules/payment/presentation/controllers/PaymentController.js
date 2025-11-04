@@ -114,6 +114,73 @@ class PaymentController {
   }
 
   /**
+   * GET /api/payments/check-status/:transactionId
+   * Check payment status and return appropriate redirect URL
+   */
+  async checkPaymentStatus(req, res) {
+    try {
+      const { transactionId } = req.params;
+
+      const payment = await PaymentModel.findOne({
+        where: { transaction_id: transactionId }
+      });
+
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: 'Payment not found'
+        });
+      }
+
+      // Determine redirect URL based on status
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      let redirectUrl = '';
+
+      switch (payment.status) {
+        case 'berhasil':
+        case 'paid':
+        case 'success':
+        case 'settlement':
+          redirectUrl = `${frontendUrl}/payment/success?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'menunggu':
+        case 'pending':
+          redirectUrl = `${frontendUrl}/payment/pending?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'kadaluarsa':
+        case 'expired':
+          redirectUrl = `${frontendUrl}/payment/expired?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'gagal':
+        case 'failed':
+        case 'deny':
+        case 'cancel':
+        default:
+          redirectUrl = `${frontendUrl}/payment/error?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}&message=${encodeURIComponent(payment.keterangan || 'Payment failed')}`;
+          break;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          payment_id: payment.id,
+          transaction_id: payment.transaction_id,
+          status: payment.status,
+          redirect_url: redirectUrl,
+          amount: payment.jumlah,
+          created_at: payment.created_at
+        }
+      });
+    } catch (error) {
+      console.error('[PAYMENT CONTROLLER] Check payment status error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * GET /api/payments/order/:orderId
    * Get payment by order ID
    */
