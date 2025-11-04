@@ -6,11 +6,14 @@
 const PaymentModel = require('../../infrastructure/models/PaymentModel');
 const EscrowService = require('../../infrastructure/services/EscrowService');
 const MockPaymentGatewayService = require('../../infrastructure/services/MockPaymentGatewayService');
+const MidtransService = require('../../infrastructure/services/MidtransService');
 
 class VerifyPayment {
   constructor() {
-    this.paymentGateway = new MockPaymentGatewayService();
     this.escrowService = new EscrowService();
+    // Keep both services for different gateways
+    this.mockGateway = new MockPaymentGatewayService();
+    this.midtransGateway = new MidtransService();
   }
 
   /**
@@ -29,14 +32,7 @@ class VerifyPayment {
     console.log(`[PAYMENT WEBHOOK] Received webhook for ${transaction_id}`);
     console.log(`[PAYMENT WEBHOOK] Status: ${transaction_status}, Amount: ${gross_amount}`);
 
-    // 1. Verify signature (security check)
-    const isValidSignature = this.paymentGateway.verifyWebhookSignature(webhookData);
-    if (!isValidSignature) {
-      console.error(`[PAYMENT WEBHOOK] Invalid signature for ${transaction_id}`);
-      throw new Error('Invalid webhook signature');
-    }
-
-    // 2. Get payment record
+    // 1. Get payment record first to determine gateway type
     const payment = await PaymentModel.findOne({
       where: { transaction_id }
     });
@@ -44,6 +40,17 @@ class VerifyPayment {
     if (!payment) {
       console.error(`[PAYMENT WEBHOOK] Payment not found: ${transaction_id}`);
       throw new Error('Payment not found');
+    }
+
+    // 2. Verify signature based on gateway type
+    const paymentGateway = payment.payment_gateway === 'midtrans'
+      ? this.midtransGateway
+      : this.mockGateway;
+
+    const isValidSignature = await paymentGateway.verifyWebhookSignature(webhookData);
+    if (!isValidSignature) {
+      console.error(`[PAYMENT WEBHOOK] Invalid signature for ${transaction_id}`);
+      throw new Error('Invalid webhook signature');
     }
 
     // 3. Map status dari payment gateway
