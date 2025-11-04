@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
 
 export default function App() {
   return (
@@ -54,6 +55,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs/:slug"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
           </ProtectedRoute>
         }
       />
