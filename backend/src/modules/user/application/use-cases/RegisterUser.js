@@ -1,10 +1,14 @@
 const Email = require('../../domain/value-objects/Email');
 const Password = require('../../domain/value-objects/Password');
+const { v4: uuidv4 } = require('uuid');
+const UserTokenModel = require('../../../user/infrastructure/models/UserTokenModel');
 
 class RegisterUser {
-  constructor({ userRepository, hashService }) {
+  constructor({ userRepository, hashService, emailService }) {
     this.userRepository = userRepository;
     this.hashService = hashService;
+    this.emailService = emailService;
+    this.userTokenModel = UserTokenModel;
   }
 
   async execute({ email, password, firstName, lastName, role = 'client' }) {
@@ -28,10 +32,25 @@ class RegisterUser {
       nama_belakang: lastName || null
     });
 
+    // Generate email verification token (valid 24h)
+    const token = uuidv4();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await this.userTokenModel.create({
+      user_id: created.id,
+      token,
+      type: 'email_verification',
+      expires_at: expiresAt
+    });
+
+    if (this.emailService && typeof this.emailService.sendVerificationEmail === 'function') {
+      await this.emailService.sendVerificationEmail(created.email, token);
+    }
+
     return {
       id: created.id,
       email: created.email,
-      role: created.role
+      role: created.role,
+      message: 'Registration successful. Please verify your email.'
     };
   }
 }

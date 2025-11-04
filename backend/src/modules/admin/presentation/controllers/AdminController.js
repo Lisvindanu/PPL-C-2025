@@ -434,53 +434,69 @@ async unblockService(req, res) {
     }
   }
 
-  async exportReport(req, res) {
-    try {
-      const { reportType, format, filters } = req.body;
+async exportReport(req, res) {
+  try {
+    const { reportType, format, filters } = req.body;
 
-      if (!reportType || !format) {
-        return res.status(400).json({
-          success: false,
-          error: 'reportType and format are required'
-        });
-      }
-
-      const ipAddress = req.ip || 'unknown';
-      const userAgent = req.get('user-agent') || 'unknown';
-      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
-
-      const report = await this.exportReportUseCase.execute(
-        adminId,
-        reportType,
-        format,
-        filters || {},
-        ipAddress,
-        userAgent
-      );
-
-      if (format === 'csv' || format === 'excel') {
-        res.download(report.filename);
-      } else if (format === 'pdf') {
-        res.json({
-          success: true,
-          message: 'Report generation in progress',
-          data: report
-        });
-      } else {
-        res.json({
-          success: true,
-          message: 'Report exported successfully',
-          data: report
-        });
-      }
-    } catch (error) {
-      console.error('Error in exportReport:', error);
-      res.status(400).json({
+    if (!reportType || !format) {
+      return res.status(400).json({
         success: false,
-        error: error.message
+        error: 'reportType and format are required'
       });
     }
+
+    // ✅ AMBIL DARI JWT TOKEN
+    const adminId = req.user?.userId;
+    
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Admin ID not found. Please login again.'
+      });
+    }
+
+    const ipAddress = req.ip || req.connection?.remoteAddress || 'unknown';
+    const userAgent = req.get('user-agent') || 'unknown';
+
+    const report = await this.exportReportUseCase.execute(
+      adminId,
+      reportType,
+      format,
+      filters || {},
+      ipAddress,
+      userAgent
+    );
+
+    if (format === 'csv' || format === 'excel') {
+      if (report && report.filepath) {
+        return res.download(report.filepath, report.filename || 'report.csv');
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: 'Report file not generated'
+        });
+      }
+    } else if (format === 'pdf') {
+      return res.json({
+        success: true,
+        message: 'PDF report generation in progress',
+        data: report
+      });
+    } else {
+      return res.json({
+        success: true,
+        message: 'Report exported successfully',
+        data: report
+      });
+    }
+  } catch (error) {
+    console.error('Error in exportReport:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
+}
 
   async checkFraud(req, res) {
     try {
@@ -500,96 +516,108 @@ async unblockService(req, res) {
     }
   }
 
-  async getActivityLogs(req, res) {
-    try {
-      const { adminId, action, limit = 50, offset = 0 } = req.query;
+async getActivityLogs(req, res) {
+  try {
+    const { adminId, limit, offset } = req.query;
 
-      const filters = {
-        adminId: adminId || null,
-        action: action || null,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
-      };
+    const filters = {};
+    if (adminId) filters.adminId = adminId;
+    if (limit) filters.limit = parseInt(limit, 10);
+    if (offset) filters.offset = parseInt(offset, 10);
 
-      const logs = await this.getActivityLogsUseCase.execute(filters);
+    const logs = await this.adminLogService.getLogs(filters);
 
-      res.json({
-        success: true,
-        message: 'Activity logs retrieved',
-        data: logs.data,
-        pagination: {
-          limit: logs.limit,
-          offset: logs.offset,
-          total: logs.total
-        }
-      });
-    } catch (error) {
-      console.error('Error in getActivityLogs:', error);
-      res.status(500).json({
+    if (!logs || logs.length === 0) {
+      return res.status(404).json({
         success: false,
-        error: error.message
+        message: 'No logs found'
       });
     }
+
+    res.json({
+      success: true,
+      message: 'Logs retrieved successfully',
+      data: logs
+    });
+  } catch (error) {
+    console.error('❌ Error in getActivityLogs:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
   }
+}
 
-  async getActivityLogDetail(req, res) {
-    try {
-      const { id } = req.params;
 
-      const log = await this.adminLogService.getLogDetail(id);
 
-      if (!log) {
-        return res.status(404).json({
-          success: false,
-          error: 'Log not found'
-        });
+async getActivityLogDetail(req, res) {
+  try {
+    const { id } = req.query; // ambil dari query param
+
+    const log = await this.adminLogService.getLogDetail(id);
+
+    if (!log) {
+      return res.status(404).json({
+        success: false,
+        error: 'Log not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Activity log detail retrieved',
+      data: log
+    });
+  } catch (error) {
+    console.error('Error in getActivityLogDetail:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+
+async getActivityLogsByAdmin(req, res) {
+  try {
+    const { adminId } = req.params; // ✅ ambil dari params
+    const { limit = 50, offset = 0 } = req.query;
+
+    console.log('🎯 Controller: getActivityLogsByAdmin called');
+    console.log('📋 Params:', { adminId });
+    console.log('📋 Query:', { limit, offset });
+
+    const filters = {
+      adminId,
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    };
+
+    const logs = await this.getActivityLogsUseCase.execute(filters);
+
+    if (!logs.data || logs.data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'No logs found for this admin'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Admin activity logs retrieved',
+      data: logs.data,
+      pagination: {
+        limit: logs.limit,
+        offset: logs.offset,
+        total: logs.total
       }
-
-      res.json({
-        success: true,
-        message: 'Activity log detail retrieved',
-        data: log
-      });
-    } catch (error) {
-      console.error('Error in getActivityLogDetail:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
+}
 
-  async getActivityLogsByAdmin(req, res) {
-    try {
-      const { adminId } = req.params;
-      const { limit = 50, offset = 0 } = req.query;
 
-      const filters = {
-        adminId,
-        limit: parseInt(limit),
-        offset: parseInt(offset)
-      };
-
-      const logs = await this.getActivityLogsUseCase.execute(filters);
-
-      res.json({
-        success: true,
-        message: 'Admin activity logs retrieved',
-        data: logs.data,
-        pagination: {
-          limit: logs.limit,
-          offset: logs.offset,
-          total: logs.total
-        }
-      });
-    } catch (error) {
-      console.error('Error in getActivityLogsByAdmin:', error);
-      res.status(500).json({
-        success: false,
-        error: error.message
-      });
-    }
-  }
 
   async getServices(req, res) {
     try {

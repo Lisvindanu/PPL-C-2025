@@ -57,14 +57,17 @@ const { adminController, adminLogController } = setupAdminDependencies(sequelize
 const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
-const kategoriRoutes = require('./modules/kategori/presentation/routes/kategoriRoutes');
-const favoriteRoutes = require('./modules/favorite/presentation/routes/favoriteRoutes');
+const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
+const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 
 // ================================
-// 🚀 Initialize Kategori Controller
+// 🚀 Initialize Service Module Controllers (Kategori & Sub-Kategori)
 // ================================
-const KategoriController = require('./modules/kategori/presentation/controllers/KategoriController');
+const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
 const kategoriController = new KategoriController(sequelize);
+
+const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
+const subKategoriController = new SubKategoriController(sequelize);
 
 // ================================
 // 🛣️ Register Routes
@@ -73,11 +76,9 @@ const kategoriController = new KategoriController(sequelize);
 // User routes (public & private)
 app.use('/api/users', userRoutes);
 
-// Kategori routes (public)
+// Service Module - Kategori & Sub-Kategori routes (public)
 app.use('/api/kategori', kategoriRoutes(kategoriController));
-
-// Favorite routes (private - client only)
-app.use('/api/favorites', favoriteRoutes);
+app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
 // Protected admin routes (memerlukan auth + admin role)
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
@@ -132,7 +133,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════╗
-║     SkillConnect Server Started     ║
+║     SkillConnect Server Started    ║
 ╠════════════════════════════════════╣
 ║  Port: ${PORT}
 ║  Environment: ${process.env.NODE_ENV}

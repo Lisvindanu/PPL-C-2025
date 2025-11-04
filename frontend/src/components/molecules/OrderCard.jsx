@@ -1,80 +1,79 @@
-import { motion } from "framer-motion";
+import StarRating from "../atoms/StarRating";
+import Button from "../atoms/Button";
+import { Clock, RotateCcw, ShieldCheck, Headset } from "lucide-react";
 
-export default function OrderCard({ order, onRate }) {
-  const hasRating = order.rated && order.rating;
-
+function Row({ icon: IconCmp, label, value }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white border border-neutral-300 rounded-3xl p-6 mb-4 shadow-sm hover:shadow-md transition-shadow"
-    >
-      <div className="flex gap-6">
-        {/* Image */}
-        <div className="flex-shrink-0 w-48 h-36 bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] rounded-2xl overflow-hidden">
-          <img
-            src={order.serviceImage || "/asset/layanan/Layanan.png"}
-            alt={order.serviceName}
-            className="w-full h-full object-cover"
-          />
+    <div className="flex items-center justify-between text-sm text-neutral-700">
+      <div className="flex items-center gap-2">
+        <IconCmp className="w-4 h-4 text-neutral-500" />
+        <span>{label}</span>
+      </div>
+      <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+export default function OrderCard({
+  price,
+  rating = 0,
+  reviewCount = 0,
+  completed = 0,
+  waktu_pengerjaan,
+  batas_revisi,
+  onOrder,
+  onContact,
+}) {
+  return (
+    <aside className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm">
+      <div className="mb-3">
+        <p className="text-xs uppercase text-[#242633]">Harga</p>
+        <p className="text-2xl font-semibold text-[#1f5eff]">
+          Rp. {Number(price || 0).toLocaleString("id-ID")}
+        </p>
+      </div>
+
+      <div className="mb-3 flex items-center gap-2 text-sm text-[#585859]">
+        <StarRating value={rating} />
+        <span>{rating.toFixed(1)}</span>
+        <span>•</span>
+        <span>{reviewCount} reviews</span>
+        <span>•</span>
+        <span>{completed} selesai</span>
+      </div>
+
+      <div className="space-y-2">
+        <Row icon={Clock} label="Waktu Pengerjaan" value={waktu_pengerjaan} />
+        <Row icon={RotateCcw} label="Batas Revisi" value={batas_revisi} />
+      </div>
+
+      {/* Info proteksi & support */}
+      <div className="mt-3 space-y-2 rounded-lg bg-neutral-50 p-3 border border-neutral-200">
+        <div className="flex items-center gap-2 text-sm text-neutral-700">
+          <ShieldCheck className="w-4 h-4 text-[#16a34a]" />
+          <span>Pembayaran dilindungi platform</span>
         </div>
-
-        {/* Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Title and Freelancer */}
-          <h3 className="text-xl font-bold text-neutral-900 mb-1">
-            {order.serviceName}
-          </h3>
-          <p className="text-neutral-600 mb-3">{order.freelancerName}</p>
-
-          {/* Details */}
-          <div className="flex items-center gap-4 mb-3 text-sm text-neutral-600">
-            <div className="flex items-center gap-2">
-              <i className="far fa-calendar text-neutral-500" />
-              <span>Tanggal Selesai: {order.deadline}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <i className="fas fa-folder text-neutral-500" />
-              <span>Kategori: {order.category}</span>
-            </div>
-          </div>
-
-          {/* Bottom Section: Price and Rating/Button */}
-          <div className="mt-auto flex items-center justify-between">
-            <div>
-              <div className="text-sm text-neutral-600">Harga</div>
-              <div className="text-2xl font-bold text-[#4782BE]">
-                Rp {order.price.toLocaleString("id-ID")}
-              </div>
-            </div>
-
-            {hasRating ? (
-              /* Rating Display */
-              <div className="text-right">
-                <div className="text-sm text-neutral-600 mb-1">Rating telah tersimpan</div>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <i
-                      key={star}
-                      className={`fas fa-star text-lg ${
-                        star <= order.rating ? "text-yellow-400" : "text-neutral-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Rate Button */
-              <button
-                onClick={() => onRate(order)}
-                className="bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white font-semibold px-6 py-3 rounded-full hover:shadow-lg transition-all duration-300"
-              >
-                Beri Rating
-              </button>
-            )}
-          </div>
+        <div className="flex items-center gap-2 text-sm text-neutral-700">
+          <Headset className="w-4 h-4 text-[#3B82F6]" />
+          <span>Dukungan customer service 24/7</span>
         </div>
       </div>
-    </motion.div>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <Button
+          className="bg-[#1f5eff] hover:opacity-95 text-white"
+          onClick={onOrder}
+        >
+          Pesan Sekarang
+        </Button>
+        <Button
+          variant="outline"
+          className="border-[#1f5eff] text-[#3B82F6] hover:bg-[#3B82F6]/5"
+          onClick={onContact}
+        >
+          Hubungi Freelancer
+        </Button>
+      </div>
+    </aside>
   );
 }

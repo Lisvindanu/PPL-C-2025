@@ -1,6 +1,7 @@
 const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
+const path = require('path');
 
 class ReportGenerator {
   constructor(sequelize) {
@@ -8,6 +9,12 @@ class ReportGenerator {
       throw new Error('sequelize is required in ReportGenerator');
     }
     this.sequelize = sequelize;
+    
+    // Setup reports directory
+    this.reportsDir = path.join(__dirname, '../../../exports/reports');
+    if (!fs.existsSync(this.reportsDir)) {
+      fs.mkdirSync(this.reportsDir, { recursive: true });
+    }
   }
 
   async generate(reportType, format, filters) {
@@ -143,9 +150,16 @@ class ReportGenerator {
       });
 
       const filename = `report_${reportType}_${Date.now()}.csv`;
-      fs.writeFileSync(filename, csv);
+      const filepath = path.join(this.reportsDir, filename);
+      
+      fs.writeFileSync(filepath, csv);
 
-      return { filename, success: true, rowCount: data.length };
+      return { 
+        filename, 
+        filepath,  // ✅ TAMBAHKAN INI
+        success: true, 
+        rowCount: data.length 
+      };
     } catch (error) {
       console.error('Error in generateCSV:', error);
       throw error;
@@ -169,9 +183,16 @@ class ReportGenerator {
       data.forEach(row => worksheet.addRow(row));
 
       const filename = `report_${reportType}_${Date.now()}.xlsx`;
-      await workbook.xlsx.writeFile(filename);
+      const filepath = path.join(this.reportsDir, filename);
+      
+      await workbook.xlsx.writeFile(filepath);
 
-      return { filename, success: true, rowCount: data.length };
+      return { 
+        filename, 
+        filepath,  // ✅ TAMBAHKAN INI
+        success: true, 
+        rowCount: data.length 
+      };
     } catch (error) {
       console.error('Error in generateExcel:', error);
       throw error;
@@ -183,7 +204,8 @@ class ReportGenerator {
       try {
         const doc = new PDFDocument();
         const filename = `report_${reportType}_${Date.now()}.pdf`;
-        const stream = fs.createWriteStream(filename);
+        const filepath = path.join(this.reportsDir, filename);
+        const stream = fs.createWriteStream(filepath);
 
         doc.on('error', reject);
         stream.on('error', reject);
@@ -205,7 +227,12 @@ class ReportGenerator {
 
         doc.end();
         stream.on('finish', () => {
-          resolve({ filename, success: true, rowCount: data.length });
+          resolve({ 
+            filename, 
+            filepath,  // ✅ TAMBAHKAN INI
+            success: true, 
+            rowCount: data.length 
+          });
         });
       } catch (error) {
         console.error('Error in generatePDF:', error);
