@@ -76,6 +76,9 @@ app.use('/api/users', userRoutes);
 const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
 
+const favoriteRoutes = require('./modules/favorite/presentation/routes/favoriteRoutes');
+app.use('/api/favorites', favoriteRoutes);
+
 // const reviewRoutes = require('./modules/review/presentation/routes/reviewRoutes');
 // app.use('/api/reviews', reviewRoutes);
 

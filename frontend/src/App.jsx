@@ -8,6 +8,10 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
+import ServiceDetailPage from "./pages/ServiceDetailPage";
+import FavoritePage from "./pages/FavoritePage";
+import SavedPage from "./pages/SavedPage";
+import RiwayatPesananPage from "./pages/RiwayatPesananPage";
 
 export default function App() {
   return (
@@ -16,6 +20,31 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
+      <Route path="/layanan/:id" element={<ServiceDetailPage />} />
+      <Route
+        path="/favorit"
+        element={
+          <ProtectedRoute>
+            <FavoritePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/disimpan"
+        element={
+          <ProtectedRoute>
+            <SavedPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/riwayat-pesanan"
+        element={
+          <ProtectedRoute>
+            <RiwayatPesananPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/dashboard"
         element={

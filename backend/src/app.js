@@ -58,6 +58,7 @@ const userRoutes = require('./modules/user/presentation/routes/userRoutes');
 const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
 const kategoriRoutes = require('./modules/kategori/presentation/routes/kategoriRoutes');
+const favoriteRoutes = require('./modules/favorite/presentation/routes/favoriteRoutes');
 
 // ================================
 // 🚀 Initialize Kategori Controller
@@ -74,6 +75,9 @@ app.use('/api/users', userRoutes);
 
 // Kategori routes (public)
 app.use('/api/kategori', kategoriRoutes(kategoriController));
+
+// Favorite routes (private - client only)
+app.use('/api/favorites', favoriteRoutes);
 
 // Protected admin routes (memerlukan auth + admin role)
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
