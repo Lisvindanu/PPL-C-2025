@@ -9,7 +9,7 @@ const categoriesWithServices = [
     slug: "pengembangan-website",
     services: [
       {
-        id: 1,
+        id: "a1111111-1111-1111-1111-111111111111",
         title: "Pembuatan Website Company Profile Modern & Responsif",
         category: "Website",
         freelancer: "Ahmad Rizki",
@@ -18,7 +18,7 @@ const categoriesWithServices = [
         price: 2500000,
       },
       {
-        id: 2,
+        id: "a2222222-2222-2222-2222-222222222222",
         title: "Jasa Pembuatan Website E-Commerce Full Fitur",
         category: "Website",
         freelancer: "Siti Nurhaliza",
@@ -27,7 +27,7 @@ const categoriesWithServices = [
         price: 5000000,
       },
       {
-        id: 3,
+        id: "a3333333-3333-3333-3333-333333333333",
         title: "Website Landing Page untuk Bisnis & Produk",
         category: "Website",
         freelancer: "Budi Santoso",
@@ -36,7 +36,7 @@ const categoriesWithServices = [
         price: 1500000,
       },
       {
-        id: 4,
+        id: "a4444444-4444-4444-4444-444444444444",
         title: "Pengembangan Website Portal Berita & Blog",
         category: "Website",
         freelancer: "Diana Putri",
@@ -45,7 +45,7 @@ const categoriesWithServices = [
         price: 3000000,
       },
       {
-        id: 101,
+        id: "a5555555-5555-5555-5555-555555555555",
         title: "Website Toko Online UMKM Lengkap & Mudah",
         category: "Website",
         freelancer: "Rudi Hartono",
@@ -54,7 +54,7 @@ const categoriesWithServices = [
         price: 3500000,
       },
       {
-        id: 102,
+        id: "a6666666-6666-6666-6666-666666666666",
         title: "Jasa Redesign Website Modern & SEO Friendly",
         category: "Website",
         freelancer: "Linda Kusuma",
@@ -63,7 +63,7 @@ const categoriesWithServices = [
         price: 2000000,
       },
       {
-        id: 103,
+        id: "a7777777-7777-7777-7777-777777777777",
         title: "Website Booking & Reservasi Online",
         category: "Website",
         freelancer: "Andi Wijaya",
@@ -72,7 +72,7 @@ const categoriesWithServices = [
         price: 4000000,
       },
       {
-        id: 104,
+        id: "a8888888-8888-8888-8888-888888888888",
         title: "Website Membership & Learning Management",
         category: "Website",
         freelancer: "Dian Permata",
@@ -81,7 +81,7 @@ const categoriesWithServices = [
         price: 4500000,
       },
       {
-        id: 105,
+        id: "a9999999-9999-9999-9999-999999999999",
         title: "Website Marketplace Multi Vendor",
         category: "Website",
         freelancer: "Hendra Gunawan",
@@ -90,7 +90,7 @@ const categoriesWithServices = [
         price: 8000000,
       },
       {
-        id: 106,
+        id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
         title: "Website Portfolio Kreatif & Interaktif",
         category: "Website",
         freelancer: "Sari Indah",
@@ -106,7 +106,7 @@ const categoriesWithServices = [
     slug: "pengembangan-aplikasi-mobile",
     services: [
       {
-        id: 5,
+        id: "b1111111-1111-1111-1111-111111111111",
         title: "Aplikasi Mobile iOS & Android Native",
         category: "Mobile",
         freelancer: "Eko Prasetyo",
@@ -115,7 +115,7 @@ const categoriesWithServices = [
         price: 8000000,
       },
       {
-        id: 6,
+        id: "b2222222-2222-2222-2222-222222222222",
         title: "Jasa Pembuatan Aplikasi E-Commerce Mobile",
         category: "Mobile",
         freelancer: "Rina Wijaya",
@@ -124,7 +124,7 @@ const categoriesWithServices = [
         price: 10000000,
       },
       {
-        id: 7,
+        id: "b3333333-3333-3333-3333-333333333333",
         title: "Aplikasi Mobile untuk Startup & UMKM",
         category: "Mobile",
         freelancer: "Faisal Rahman",
@@ -133,7 +133,7 @@ const categoriesWithServices = [
         price: 6000000,
       },
       {
-        id: 8,
+        id: "b4444444-4444-4444-4444-444444444444",
         title: "Pengembangan Aplikasi Hybrid React Native",
         category: "Mobile",
         freelancer: "Maya Sari",
@@ -142,7 +142,7 @@ const categoriesWithServices = [
         price: 7000000,
       },
       {
-        id: 201,
+        id: "b5555555-5555-5555-5555-555555555555",
         title: "Aplikasi Mobile Food Delivery & Ojek Online",
         category: "Mobile",
         freelancer: "Rizky Pratama",
@@ -151,7 +151,7 @@ const categoriesWithServices = [
         price: 12000000,
       },
       {
-        id: 202,
+        id: "b6666666-6666-6666-6666-666666666666",
         title: "Aplikasi Mobile Kesehatan & Telemedicine",
         category: "Mobile",
         freelancer: "Sinta Dewi",
@@ -160,7 +160,7 @@ const categoriesWithServices = [
         price: 9000000,
       },
       {
-        id: 203,
+        id: "b7777777-7777-7777-7777-777777777777",
         title: "Aplikasi Mobile Point of Sale (POS)",
         category: "Mobile",
         freelancer: "Agung Nugroho",
@@ -169,7 +169,7 @@ const categoriesWithServices = [
         price: 7500000,
       },
       {
-        id: 204,
+        id: "b8888888-8888-8888-8888-888888888888",
         title: "Aplikasi Mobile Booking & Tiket Online",
         category: "Mobile",
         freelancer: "Mega Putri",
@@ -178,7 +178,7 @@ const categoriesWithServices = [
         price: 8500000,
       },
       {
-        id: 205,
+        id: "b9999999-9999-9999-9999-999999999999",
         title: "Aplikasi Mobile Edukasi & E-Learning",
         category: "Mobile",
         freelancer: "Bayu Saputra",
@@ -187,7 +187,7 @@ const categoriesWithServices = [
         price: 8000000,
       },
       {
-        id: 206,
+        id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
         title: "Aplikasi Mobile Fintech & Digital Wallet",
         category: "Mobile",
         freelancer: "Kartika Sari",
@@ -203,7 +203,7 @@ const categoriesWithServices = [
     slug: "ui-ux-design",
     services: [
       {
-        id: 9,
+        id: "c1111111-1111-1111-1111-111111111111",
         title: "Desain UI/UX untuk Website & Mobile App",
         category: "UI/UX",
         freelancer: "Dinda Permata",
@@ -212,7 +212,7 @@ const categoriesWithServices = [
         price: 3500000,
       },
       {
-        id: 10,
+        id: "c2222222-2222-2222-2222-222222222222",
         title: "Jasa Redesign UI/UX Aplikasi Modern",
         category: "UI/UX",
         freelancer: "Andi Wijaya",
@@ -221,7 +221,7 @@ const categoriesWithServices = [
         price: 2500000,
       },
       {
-        id: 11,
+        id: "c3333333-3333-3333-3333-333333333333",
         title: "Prototyping & Wireframing untuk Produk Digital",
         category: "UI/UX",
         freelancer: "Lina Kartika",
@@ -230,7 +230,7 @@ const categoriesWithServices = [
         price: 2000000,
       },
       {
-        id: 12,
+        id: "c4444444-4444-4444-4444-444444444444",
         title: "Design System & Component Library",
         category: "UI/UX",
         freelancer: "Reza Firmansyah",
@@ -239,7 +239,7 @@ const categoriesWithServices = [
         price: 4000000,
       },
       {
-        id: 301,
+        id: "c5555555-5555-5555-5555-555555555555",
         title: "UI/UX Design untuk E-Commerce & Marketplace",
         category: "UI/UX",
         freelancer: "Anisa Rahma",
@@ -248,7 +248,7 @@ const categoriesWithServices = [
         price: 3800000,
       },
       {
-        id: 302,
+        id: "c6666666-6666-6666-6666-666666666666",
         title: "User Research & Usability Testing",
         category: "UI/UX",
         freelancer: "Farhan Alamsyah",
@@ -257,7 +257,7 @@ const categoriesWithServices = [
         price: 3000000,
       },
       {
-        id: 303,
+        id: "c7777777-7777-7777-7777-777777777777",
         title: "UI/UX Design Dashboard & Admin Panel",
         category: "UI/UX",
         freelancer: "Wulan Sari",
@@ -266,7 +266,7 @@ const categoriesWithServices = [
         price: 3200000,
       },
       {
-        id: 304,
+        id: "c8888888-8888-8888-8888-888888888888",
         title: "Mobile App UI Design iOS & Android",
         category: "UI/UX",
         freelancer: "Galih Pratama",
@@ -275,7 +275,7 @@ const categoriesWithServices = [
         price: 2800000,
       },
       {
-        id: 305,
+        id: "c9999999-9999-9999-9999-999999999999",
         title: "Landing Page UI Design High Converting",
         category: "UI/UX",
         freelancer: "Tari Kusuma",
@@ -284,7 +284,7 @@ const categoriesWithServices = [
         price: 2200000,
       },
       {
-        id: 306,
+        id: "cccccccc-cccc-cccc-cccc-cccccccccccc",
         title: "Branding & Visual Identity Design",
         category: "UI/UX",
         freelancer: "Kevin Wijaya",
@@ -300,7 +300,7 @@ const categoriesWithServices = [
     slug: "data-science-machine-learning",
     services: [
       {
-        id: 13,
+        id: "d1111111-1111-1111-1111-111111111111",
         title: "Analisis Data & Visualisasi Dashboard",
         category: "Data Science",
         freelancer: "Dr. Bambang Sudiro",
@@ -309,7 +309,7 @@ const categoriesWithServices = [
         price: 5000000,
       },
       {
-        id: 14,
+        id: "d2222222-2222-2222-2222-222222222222",
         title: "Pengembangan Model Machine Learning",
         category: "Data Science",
         freelancer: "Putri Maharani",
@@ -318,7 +318,7 @@ const categoriesWithServices = [
         price: 8000000,
       },
       {
-        id: 15,
+        id: "d3333333-3333-3333-3333-333333333333",
         title: "Predictive Analytics untuk Bisnis",
         category: "Data Science",
         freelancer: "Hendra Gunawan",
@@ -327,7 +327,7 @@ const categoriesWithServices = [
         price: 6000000,
       },
       {
-        id: 16,
+        id: "d4444444-4444-4444-4444-444444444444",
         title: "Natural Language Processing (NLP) Solutions",
         category: "Data Science",
         freelancer: "Fitri Nurjanah",
@@ -336,7 +336,7 @@ const categoriesWithServices = [
         price: 9000000,
       },
       {
-        id: 401,
+        id: "d5555555-5555-5555-5555-555555555555",
         title: "Deep Learning & Neural Network Development",
         category: "Data Science",
         freelancer: "Dr. Andi Prasetyo",
@@ -345,7 +345,7 @@ const categoriesWithServices = [
         price: 10000000,
       },
       {
-        id: 402,
+        id: "d6666666-6666-6666-6666-666666666666",
         title: "Big Data Processing & Analytics",
         category: "Data Science",
         freelancer: "Sari Wulandari",
@@ -354,7 +354,7 @@ const categoriesWithServices = [
         price: 7000000,
       },
       {
-        id: 403,
+        id: "d7777777-7777-7777-7777-777777777777",
         title: "Computer Vision & Image Recognition",
         category: "Data Science",
         freelancer: "Rudi Hartono",
@@ -363,7 +363,7 @@ const categoriesWithServices = [
         price: 8500000,
       },
       {
-        id: 404,
+        id: "d8888888-8888-8888-8888-888888888888",
         title: "Recommender System Development",
         category: "Data Science",
         freelancer: "Indah Permatasari",
@@ -372,7 +372,7 @@ const categoriesWithServices = [
         price: 6500000,
       },
       {
-        id: 405,
+        id: "d9999999-9999-9999-9999-999999999999",
         title: "Time Series Forecasting & Analysis",
         category: "Data Science",
         freelancer: "Ahmad Fauzi",
@@ -381,7 +381,7 @@ const categoriesWithServices = [
         price: 5500000,
       },
       {
-        id: 406,
+        id: "dddddddd-dddd-dddd-dddd-dddddddddddd",
         title: "AI Chatbot & Conversational AI",
         category: "Data Science",
         freelancer: "Novi Andriani",
@@ -397,7 +397,7 @@ const categoriesWithServices = [
     slug: "cybersecurity-testing",
     services: [
       {
-        id: 17,
+        id: "e1111111-1111-1111-1111-111111111111",
         title: "Penetration Testing & Security Audit",
         category: "Security",
         freelancer: "Agus Setiawan",
@@ -406,7 +406,7 @@ const categoriesWithServices = [
         price: 7000000,
       },
       {
-        id: 18,
+        id: "e2222222-2222-2222-2222-222222222222",
         title: "Vulnerability Assessment Website & Aplikasi",
         category: "Security",
         freelancer: "Desi Ratnasari",
@@ -415,7 +415,7 @@ const categoriesWithServices = [
         price: 4000000,
       },
       {
-        id: 19,
+        id: "e3333333-3333-3333-3333-333333333333",
         title: "QA Testing & Automation Testing",
         category: "Security",
         freelancer: "Irfan Hakim",
@@ -424,7 +424,7 @@ const categoriesWithServices = [
         price: 3000000,
       },
       {
-        id: 20,
+        id: "e4444444-4444-4444-4444-444444444444",
         title: "Security Monitoring & Incident Response",
         category: "Security",
         freelancer: "Nurul Hidayah",
@@ -433,7 +433,7 @@ const categoriesWithServices = [
         price: 6000000,
       },
       {
-        id: 501,
+        id: "e5555555-5555-5555-5555-555555555555",
         title: "Web Application Security Testing (OWASP)",
         category: "Security",
         freelancer: "Budi Santoso",
@@ -442,7 +442,7 @@ const categoriesWithServices = [
         price: 5000000,
       },
       {
-        id: 502,
+        id: "e6666666-6666-6666-6666-666666666666",
         title: "Mobile App Security Assessment",
         category: "Security",
         freelancer: "Dewi Anggraini",
@@ -451,7 +451,7 @@ const categoriesWithServices = [
         price: 5500000,
       },
       {
-        id: 503,
+        id: "e7777777-7777-7777-7777-777777777777",
         title: "Network Security & Firewall Configuration",
         category: "Security",
         freelancer: "Yoga Pratama",
@@ -460,7 +460,7 @@ const categoriesWithServices = [
         price: 4500000,
       },
       {
-        id: 504,
+        id: "e8888888-8888-8888-8888-888888888888",
         title: "Secure Code Review & Analysis",
         category: "Security",
         freelancer: "Rina Kusuma",
@@ -469,7 +469,7 @@ const categoriesWithServices = [
         price: 3500000,
       },
       {
-        id: 505,
+        id: "e9999999-9999-9999-9999-999999999999",
         title: "API Security Testing & Documentation",
         category: "Security",
         freelancer: "Farhan Ahmad",
@@ -478,7 +478,7 @@ const categoriesWithServices = [
         price: 4000000,
       },
       {
-        id: 506,
+        id: "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
         title: "Cloud Security Assessment (AWS/Azure/GCP)",
         category: "Security",
         freelancer: "Siti Rahayu",
@@ -494,7 +494,7 @@ const categoriesWithServices = [
     slug: "copy-writing",
     services: [
       {
-        id: 21,
+        id: "f1111111-1111-1111-1111-111111111111",
         title: "Penulisan Konten Website & Blog SEO Friendly",
         category: "Writing",
         freelancer: "Dewi Lestari",
@@ -503,7 +503,7 @@ const categoriesWithServices = [
         price: 500000,
       },
       {
-        id: 22,
+        id: "f2222222-2222-2222-2222-222222222222",
         title: "Copywriting untuk Iklan & Marketing Campaign",
         category: "Writing",
         freelancer: "Tono Sugiarto",
@@ -512,7 +512,7 @@ const categoriesWithServices = [
         price: 750000,
       },
       {
-        id: 23,
+        id: "f3333333-3333-3333-3333-333333333333",
         title: "Content Writing untuk Social Media",
         category: "Writing",
         freelancer: "Ayu Lestari",
@@ -521,7 +521,7 @@ const categoriesWithServices = [
         price: 400000,
       },
       {
-        id: 24,
+        id: "f4444444-4444-4444-4444-444444444444",
         title: "Technical Writing & Documentation",
         category: "Writing",
         freelancer: "Fahmi Hidayat",
@@ -530,7 +530,7 @@ const categoriesWithServices = [
         price: 1000000,
       },
       {
-        id: 601,
+        id: "f5555555-5555-5555-5555-555555555555",
         title: "Email Marketing Copywriting & Campaign",
         category: "Writing",
         freelancer: "Rina Anggraini",
@@ -539,7 +539,7 @@ const categoriesWithServices = [
         price: 650000,
       },
       {
-        id: 602,
+        id: "f6666666-6666-6666-6666-666666666666",
         title: "Product Description & E-Commerce Content",
         category: "Writing",
         freelancer: "Joko Widodo",
@@ -548,7 +548,7 @@ const categoriesWithServices = [
         price: 450000,
       },
       {
-        id: 603,
+        id: "f7777777-7777-7777-7777-777777777777",
         title: "Landing Page Copywriting High Converting",
         category: "Writing",
         freelancer: "Nina Kusuma",
@@ -557,7 +557,7 @@ const categoriesWithServices = [
         price: 800000,
       },
       {
-        id: 604,
+        id: "f8888888-8888-8888-8888-888888888888",
         title: "Press Release & Media Relations Writing",
         category: "Writing",
         freelancer: "Andi Setiawan",
@@ -566,7 +566,7 @@ const categoriesWithServices = [
         price: 700000,
       },
       {
-        id: 605,
+        id: "f9999999-9999-9999-9999-999999999999",
         title: "Script Writing untuk Video & Podcast",
         category: "Writing",
         freelancer: "Putri Maharani",
@@ -575,7 +575,7 @@ const categoriesWithServices = [
         price: 600000,
       },
       {
-        id: 606,
+        id: "ffffffff-ffff-ffff-ffff-ffffffffffff",
         title: "Brand Storytelling & Company Profile",
         category: "Writing",
         freelancer: "Hendra Gunawan",
@@ -587,7 +587,12 @@ const categoriesWithServices = [
   },
 ];
 
-export default function ServicesGrid({ onServiceClick, onCategoryClick }) {
+export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFilter }) {
+  // Filter categories based on activeFilter
+  const filteredCategories = activeFilter
+    ? categoriesWithServices.filter((cat) => cat.slug === activeFilter)
+    : categoriesWithServices;
+
   return (
     <section className="py-20 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
@@ -601,24 +606,33 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick }) {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             <span className="bg-gradient-to-r from-[#4782BE] to-[#1D375B] bg-clip-text text-transparent">
-              Layanan Terpopuler
+              {activeFilter ? "Layanan yang Difilter" : "Layanan Terpopuler"}
             </span>
           </h2>
           <p className="text-neutral-600 text-lg max-w-2xl mx-auto">
-            Jelajahi berbagai layanan profesional dari freelancer terbaik
+            {activeFilter
+              ? `Menampilkan layanan ${filteredCategories[0]?.title || ""}`
+              : "Jelajahi berbagai layanan profesional dari freelancer terbaik"}
           </p>
         </motion.div>
 
         {/* Categories with Services */}
-        {categoriesWithServices.map((category) => (
-          <CategoryServiceSection
-            key={category.id}
-            category={category}
-            services={category.services}
-            onServiceClick={onServiceClick}
-            onCategoryClick={onCategoryClick}
-          />
-        ))}
+        {filteredCategories.length > 0 ? (
+          filteredCategories.map((category) => (
+            <CategoryServiceSection
+              key={category.id}
+              category={category}
+              services={category.services}
+              onServiceClick={onServiceClick}
+              onCategoryClick={onCategoryClick}
+            />
+          ))
+        ) : (
+          <div className="text-center py-12">
+            <i className="fas fa-inbox text-6xl text-neutral-300 mb-4" />
+            <p className="text-neutral-600 text-lg">Tidak ada layanan ditemukan</p>
+          </div>
+        )}
       </div>
     </section>
   );

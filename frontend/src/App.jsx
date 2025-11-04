@@ -9,6 +9,11 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
+import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
+import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
+import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
+import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 
 export default function App() {
   return (
@@ -42,6 +47,14 @@ export default function App() {
         }
       />
       <Route
+        path="/freelance/service/new"
+        element={
+          <ProtectedRoute>
+            <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>
@@ -50,13 +63,17 @@ export default function App() {
         }
       />
       <Route
-        path="/freelance/service/new"
+        path="/jobs/:slug"
         element={
           <ProtectedRoute>
-            <ServiceCreatePage />
+            <ServiceDetailPage />
           </ProtectedRoute>
         }
       />
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/pending" element={<PaymentPendingPage />} />
+      <Route path="/payment/error" element={<PaymentErrorPage />} />
+      <Route path="/payment/expired" element={<PaymentExpiredPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -133,7 +133,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════╗
-║     SkillConnect Server Started     ║
+║     SkillConnect Server Started    ║
 ╠════════════════════════════════════╣
 ║  Port: ${PORT}
 ║  Environment: ${process.env.NODE_ENV}

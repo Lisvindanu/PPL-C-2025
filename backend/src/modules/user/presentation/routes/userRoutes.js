@@ -41,6 +41,31 @@ router.post('/register', userController.register);
 
 /**
  * @swagger
+ * /api/users/verify-email:
+ *   get:
+ *     tags: [Users]
+ *     summary: Verify email address
+ *     description: Verify user email using token sent to email
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *       400:
+ *         description: Invalid or expired token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/verify-email', userController.verifyEmail);
+
+/**
+ * @swagger
  * /api/users/login:
  *   post:
  *     tags: [Users]
