@@ -157,9 +157,11 @@ app.use('/api/chat', chatRoutes(chatController));
 
 // ===== Modul 8: Recommendation & Personalization (Dalam Pengembangan) =====
 const RecommendationController = require('./modules/recommendation/presentation/controllers/RecommendationController');
+const FavoriteController = require('./modules/recommendation/presentation/controllers/FavoriteController');
 const recommendationController = new RecommendationController(sequelize);
+const favoriteController = new FavoriteController(sequelize);
 const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
-app.use('/api/recommendations', recommendationRoutes(recommendationController));
+app.use('/api/recommendations', recommendationRoutes(recommendationController, favoriteController));
 
 // ==================== ERROR HANDLING ====================
 // 404 Handler
