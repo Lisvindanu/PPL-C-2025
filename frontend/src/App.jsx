@@ -14,6 +14,7 @@ import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
 import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
 import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
+import BookmarkPage from "./pages/BookmarkPage";
 
 export default function App() {
   return (
@@ -35,6 +36,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/saved"
+        element={
+          <ProtectedRoute>
+            <BookmarkPage />
           </ProtectedRoute>
         }
       />

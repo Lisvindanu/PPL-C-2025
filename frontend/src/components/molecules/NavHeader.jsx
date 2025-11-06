@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
@@ -138,7 +139,7 @@ export default function NavHeader() {
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
   const handleFavorites = () => navigate("/favorit");
-  const handleSaved = () => navigate("/disimpan");
+  const handleSaved = () => navigate("/saved");
   const handleOrders = () => navigate("/riwayat-pesanan");
   const handleLogout = () => {
     localStorage.removeItem("token");
