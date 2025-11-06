@@ -1,306 +1,209 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
-import Navbar from '../components/organisms/Navbar'
-import Footer from '../components/organisms/Footer'
-import { useToast } from '../components/organisms/ToastProvider'
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { authService } from "../services/authService";
+import { favoriteService } from "../services/favoriteService";
+import { getServiceById } from "../utils/servicesData";
+import Navbar from "../components/organisms/Navbar";
+import Footer from "../components/organisms/Footer";
+import OrderConfirmModal from "../components/molecules/OrderConfirmModal";
+import SuccessModal from "../components/molecules/SuccessModal";
+import FavoriteToast from "../components/molecules/FavoriteToast";
 
-// Data dari landing page - sama dengan ServiceListPage
-const categoriesWithServices = [
-  {
-    id: 1,
-    title: "Pengembangan Website",
-    slug: "pengembangan-website",
-    services: [
-      { id: 1, title: "Pembuatan Website Company Profile Modern & Responsif", category: "Website", freelancer: "Ahmad Rizki", rating: 4.9, reviews: 127, price: 2500000 },
-      { id: 2, title: "Jasa Pembuatan Website E-Commerce Full Fitur", category: "Website", freelancer: "Siti Nurhaliza", rating: 5.0, reviews: 89, price: 5000000 },
-      { id: 3, title: "Website Landing Page untuk Bisnis & Produk", category: "Website", freelancer: "Budi Santoso", rating: 4.8, reviews: 156, price: 1500000 },
-      { id: 4, title: "Pengembangan Website Portal Berita & Blog", category: "Website", freelancer: "Diana Putri", rating: 4.7, reviews: 92, price: 3000000 },
-      { id: 101, title: "Website Toko Online UMKM Lengkap & Mudah", category: "Website", freelancer: "Rudi Hartono", rating: 4.9, reviews: 84, price: 3500000 },
-      { id: 102, title: "Jasa Redesign Website Modern & SEO Friendly", category: "Website", freelancer: "Linda Kusuma", rating: 4.8, reviews: 71, price: 2000000 },
-      { id: 103, title: "Website Booking & Reservasi Online", category: "Website", freelancer: "Andi Wijaya", rating: 5.0, reviews: 63, price: 4000000 },
-      { id: 104, title: "Website Membership & Learning Management", category: "Website", freelancer: "Dian Permata", rating: 4.7, reviews: 58, price: 4500000 },
-      { id: 105, title: "Website Marketplace Multi Vendor", category: "Website", freelancer: "Hendra Gunawan", rating: 5.0, reviews: 47, price: 8000000 },
-      { id: 106, title: "Website Portfolio Kreatif & Interaktif", category: "Website", freelancer: "Sari Indah", rating: 4.9, reviews: 94, price: 1800000 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Pengembangan Aplikasi Mobile",
-    slug: "pengembangan-aplikasi-mobile",
-    services: [
-      { id: 5, title: "Aplikasi Mobile iOS & Android Native", category: "Mobile", freelancer: "Eko Prasetyo", rating: 4.9, reviews: 73, price: 8000000 },
-      { id: 6, title: "Jasa Pembuatan Aplikasi E-Commerce Mobile", category: "Mobile", freelancer: "Rina Wijaya", rating: 5.0, reviews: 45, price: 10000000 },
-      { id: 7, title: "Aplikasi Mobile untuk Startup & UMKM", category: "Mobile", freelancer: "Faisal Rahman", rating: 4.8, reviews: 68, price: 6000000 },
-      { id: 8, title: "Pengembangan Aplikasi Hybrid React Native", category: "Mobile", freelancer: "Maya Sari", rating: 4.9, reviews: 51, price: 7000000 },
-      { id: 201, title: "Aplikasi Mobile Food Delivery & Ojek Online", category: "Mobile", freelancer: "Rizky Pratama", rating: 5.0, reviews: 62, price: 12000000 },
-      { id: 202, title: "Aplikasi Mobile Kesehatan & Telemedicine", category: "Mobile", freelancer: "Sinta Dewi", rating: 4.8, reviews: 48, price: 9000000 },
-      { id: 203, title: "Aplikasi Mobile Point of Sale (POS)", category: "Mobile", freelancer: "Agung Nugroho", rating: 4.9, reviews: 55, price: 7500000 },
-      { id: 204, title: "Aplikasi Mobile Booking & Tiket Online", category: "Mobile", freelancer: "Mega Putri", rating: 5.0, reviews: 39, price: 8500000 },
-      { id: 205, title: "Aplikasi Mobile Edukasi & E-Learning", category: "Mobile", freelancer: "Bayu Saputra", rating: 4.7, reviews: 71, price: 8000000 },
-      { id: 206, title: "Aplikasi Mobile Fintech & Digital Wallet", category: "Mobile", freelancer: "Kartika Sari", rating: 5.0, reviews: 44, price: 15000000 },
-    ],
-  },
-  {
-    id: 3,
-    title: "UI/UX Design",
-    slug: "ui-ux-design",
-    services: [
-      { id: 9, title: "Desain UI/UX untuk Website & Mobile App", category: "UI/UX", freelancer: "Dinda Permata", rating: 5.0, reviews: 142, price: 3500000 },
-      { id: 10, title: "Jasa Redesign UI/UX Aplikasi Modern", category: "UI/UX", freelancer: "Andi Wijaya", rating: 4.9, reviews: 98, price: 2500000 },
-      { id: 11, title: "Prototyping & Wireframing untuk Produk Digital", category: "UI/UX", freelancer: "Lina Kartika", rating: 4.8, reviews: 76, price: 2000000 },
-      { id: 12, title: "Design System & Component Library", category: "UI/UX", freelancer: "Reza Firmansyah", rating: 5.0, reviews: 54, price: 4000000 },
-      { id: 301, title: "UI/UX Design untuk E-Commerce & Marketplace", category: "UI/UX", freelancer: "Anisa Rahma", rating: 4.9, reviews: 87, price: 3800000 },
-      { id: 302, title: "User Research & Usability Testing", category: "UI/UX", freelancer: "Farhan Alamsyah", rating: 5.0, reviews: 65, price: 3000000 },
-      { id: 303, title: "UI/UX Design Dashboard & Admin Panel", category: "UI/UX", freelancer: "Wulan Sari", rating: 4.8, reviews: 92, price: 3200000 },
-      { id: 304, title: "Mobile App UI Design iOS & Android", category: "UI/UX", freelancer: "Galih Pratama", rating: 4.9, reviews: 73, price: 2800000 },
-      { id: 305, title: "Landing Page UI Design High Converting", category: "UI/UX", freelancer: "Tari Kusuma", rating: 5.0, reviews: 104, price: 2200000 },
-      { id: 306, title: "Branding & Visual Identity Design", category: "UI/UX", freelancer: "Kevin Wijaya", rating: 4.7, reviews: 81, price: 4500000 },
-    ],
-  },
-  {
-    id: 4,
-    title: "Data Science & Machine Learning",
-    slug: "data-science-machine-learning",
-    services: [
-      { id: 13, title: "Analisis Data & Visualisasi Dashboard", category: "Data Science", freelancer: "Dr. Bambang Sudiro", rating: 5.0, reviews: 67, price: 5000000 },
-      { id: 14, title: "Pengembangan Model Machine Learning", category: "Data Science", freelancer: "Putri Maharani", rating: 4.9, reviews: 43, price: 8000000 },
-      { id: 15, title: "Predictive Analytics untuk Bisnis", category: "Data Science", freelancer: "Hendra Gunawan", rating: 4.8, reviews: 38, price: 6000000 },
-      { id: 16, title: "Natural Language Processing (NLP) Solutions", category: "Data Science", freelancer: "Fitri Nurjanah", rating: 5.0, reviews: 29, price: 9000000 },
-      { id: 401, title: "Deep Learning & Neural Network Development", category: "Data Science", freelancer: "Dr. Andi Prasetyo", rating: 5.0, reviews: 34, price: 10000000 },
-      { id: 402, title: "Big Data Processing & Analytics", category: "Data Science", freelancer: "Sari Wulandari", rating: 4.9, reviews: 46, price: 7000000 },
-      { id: 403, title: "Computer Vision & Image Recognition", category: "Data Science", freelancer: "Rudi Hartono", rating: 4.8, reviews: 31, price: 8500000 },
-      { id: 404, title: "Recommender System Development", category: "Data Science", freelancer: "Indah Permatasari", rating: 5.0, reviews: 28, price: 6500000 },
-      { id: 405, title: "Time Series Forecasting & Analysis", category: "Data Science", freelancer: "Ahmad Fauzi", rating: 4.9, reviews: 52, price: 5500000 },
-      { id: 406, title: "AI Chatbot & Conversational AI", category: "Data Science", freelancer: "Novi Andriani", rating: 4.7, reviews: 67, price: 7500000 },
-    ],
-  },
-  {
-    id: 5,
-    title: "Cybersecurity & Testing",
-    slug: "cybersecurity-testing",
-    services: [
-      { id: 17, title: "Penetration Testing & Security Audit", category: "Security", freelancer: "Agus Setiawan", rating: 5.0, reviews: 52, price: 7000000 },
-      { id: 18, title: "Vulnerability Assessment Website & Aplikasi", category: "Security", freelancer: "Desi Ratnasari", rating: 4.9, reviews: 41, price: 4000000 },
-      { id: 19, title: "QA Testing & Automation Testing", category: "Security", freelancer: "Irfan Hakim", rating: 4.8, reviews: 63, price: 3000000 },
-      { id: 20, title: "Security Monitoring & Incident Response", category: "Security", freelancer: "Nurul Hidayah", rating: 5.0, reviews: 35, price: 6000000 },
-      { id: 501, title: "Web Application Security Testing (OWASP)", category: "Security", freelancer: "Budi Santoso", rating: 4.9, reviews: 48, price: 5000000 },
-      { id: 502, title: "Mobile App Security Assessment", category: "Security", freelancer: "Dewi Anggraini", rating: 5.0, reviews: 37, price: 5500000 },
-      { id: 503, title: "Network Security & Firewall Configuration", category: "Security", freelancer: "Yoga Pratama", rating: 4.8, reviews: 44, price: 4500000 },
-      { id: 504, title: "Secure Code Review & Analysis", category: "Security", freelancer: "Rina Kusuma", rating: 4.9, reviews: 56, price: 3500000 },
-      { id: 505, title: "API Security Testing & Documentation", category: "Security", freelancer: "Farhan Ahmad", rating: 5.0, reviews: 42, price: 4000000 },
-      { id: 506, title: "Cloud Security Assessment (AWS/Azure/GCP)", category: "Security", freelancer: "Siti Rahayu", rating: 4.7, reviews: 33, price: 6500000 },
-    ],
-  },
-  {
-    id: 6,
-    title: "Copy Writing",
-    slug: "copy-writing",
-    services: [
-      { id: 21, title: "Penulisan Konten Website & Blog SEO Friendly", category: "Writing", freelancer: "Dewi Lestari", rating: 5.0, reviews: 186, price: 500000 },
-      { id: 22, title: "Copywriting untuk Iklan & Marketing Campaign", category: "Writing", freelancer: "Tono Sugiarto", rating: 4.9, reviews: 142, price: 750000 },
-      { id: 23, title: "Content Writing untuk Social Media", category: "Writing", freelancer: "Ayu Lestari", rating: 4.8, reviews: 203, price: 400000 },
-      { id: 24, title: "Technical Writing & Documentation", category: "Writing", freelancer: "Fahmi Hidayat", rating: 5.0, reviews: 78, price: 1000000 },
-      { id: 601, title: "Email Marketing Copywriting & Campaign", category: "Writing", freelancer: "Rina Anggraini", rating: 4.9, reviews: 124, price: 650000 },
-      { id: 602, title: "Product Description & E-Commerce Content", category: "Writing", freelancer: "Joko Widodo", rating: 4.8, reviews: 167, price: 450000 },
-      { id: 603, title: "Landing Page Copywriting High Converting", category: "Writing", freelancer: "Nina Kusuma", rating: 5.0, reviews: 95, price: 800000 },
-      { id: 604, title: "Press Release & Media Relations Writing", category: "Writing", freelancer: "Andi Setiawan", rating: 4.9, reviews: 82, price: 700000 },
-      { id: 605, title: "Script Writing untuk Video & Podcast", category: "Writing", freelancer: "Putri Maharani", rating: 4.7, reviews: 139, price: 600000 },
-      { id: 606, title: "Brand Storytelling & Company Profile", category: "Writing", freelancer: "Hendra Gunawan", rating: 5.0, reviews: 101, price: 900000 },
-    ],
-  },
-]
+export default function ServiceDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [service, setService] = useState(null);
+  const [activeTab, setActiveTab] = useState("deskripsi");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [orderData, setOrderData] = useState(null);
 
-const ServiceDetailPage = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const toast = useToast()
-  
-  // Flatten all services dan cari berdasarkan ID
-  const allServices = categoriesWithServices.flatMap(cat => cat.services)
-  const service = allServices.find(s => s.id === parseInt(id))
-
-  const [selectedTab, setSelectedTab] = useState('description')
-  
-  // Bookmark state
-  const [isBookmarked, setIsBookmarked] = useState(false)
+  const user = authService.getCurrentUser();
+  const isClient = user?.role === "client";
 
   useEffect(() => {
-    if (service) {
-      const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
-      setIsBookmarked(bookmarks.includes(service.id))
+    // Load service from centralized data
+    const serviceData = getServiceById(id);
+    if (serviceData) {
+      setService(serviceData);
+    } else {
+      navigate("/");
     }
-  }, [service])
+
+    // Check favorite status from localStorage
+    if (user && isClient) {
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      setIsFavorite(favorites.includes(id));
+    }
+  }, [id, navigate, user, isClient]);
+
+  const handleFavoriteToggle = async () => {
+    if (!user || !isClient) return;
+
+    setFavoriteLoading(true);
+    const newStatus = !isFavorite;
+
+    try {
+      // Update localStorage
+      const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      if (newStatus) {
+        if (!favorites.includes(id)) {
+          favorites.push(id);
+        }
+      } else {
+        const index = favorites.indexOf(id);
+        if (index > -1) {
+          favorites.splice(index, 1);
+        }
+      }
+      localStorage.setItem('favorites', JSON.stringify(favorites));
+
+      setIsFavorite(newStatus);
+      setShowToast(true);
+
+      // Sync to backend (optional)
+      favoriteService.toggleFavorite(id, newStatus).catch(err => {
+        console.log("Backend sync failed:", err);
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setFavoriteLoading(false);
+    }
+  };
+
+  const handleOrder = () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
+    if (!isClient) {
+      return;
+    }
+
+    const newOrderData = {
+      id: Date.now(),
+      serviceName: service.title,
+      freelancerName: service.freelancer,
+      freelancerTitle: "Freelancer Profesional",
+      deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      }),
+      category: service.category,
+      price: service.price,
+      serviceImage: "/asset/layanan/Layanan.png",
+      rated: false,
+      rating: null,
+      package: "Standard",
+    };
+
+    setOrderData(newOrderData);
+    setIsOrderModalOpen(true);
+  };
+
+  const handleConfirmOrder = () => {
+    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    existingOrders.push(orderData);
+    localStorage.setItem('orders', JSON.stringify(existingOrders));
+
+    setIsOrderModalOpen(false);
+    setIsSuccessModalOpen(true);
+  };
+
+  const handleSuccessClose = () => {
+    setIsSuccessModalOpen(false);
+    navigate("/riwayat-pesanan");
+  };
 
   if (!service) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-2">Layanan tidak ditemukan</h2>
-          <button
-            onClick={() => navigate('/services')}
-            className="text-[#4782BE] hover:underline"
-          >
-            Kembali ke daftar layanan
-          </button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center">
+        <i className="fas fa-spinner fa-spin text-4xl text-[#4782BE]"></i>
       </div>
-    )
+    );
   }
-
-  const handleOrderNow = () => {
-    navigate('/orders/create', {
-      state: {
-        service: service
-      }
-    })
-  }
-
-  const handleChatNow = () => {
-    // Placeholder: nanti diarahkan ke fitur chat
-    toast.show('Fitur chat segera tersedia. Anda dapat menghubungi freelancer dari sini.', 'info')
-  }
-
-  const handleBookmarkClick = () => {
-    if (!service) return
-    
-    const bookmarks = JSON.parse(localStorage.getItem('bookmarks') || '[]')
-    let newBookmarks
-    const wasBookmarked = isBookmarked
-    
-    if (isBookmarked) {
-      newBookmarks = bookmarks.filter(bookmarkId => bookmarkId !== service.id)
-      toast.show('Layanan berhasil dihapus dari bookmark', 'success')
-    } else {
-      newBookmarks = [...bookmarks, service.id]
-      toast.show('Layanan berhasil ditambahkan ke bookmark', 'success')
-    }
-    
-    localStorage.setItem('bookmarks', JSON.stringify(newBookmarks))
-    setIsBookmarked(!isBookmarked)
-    
-    // Dispatch custom event for cross-component updates
-    window.dispatchEvent(new Event('bookmarkChanged'))
-  }
-
-  // Generate deskripsi detail layanan
-  const serviceDescription = `Layanan ${service.title.toLowerCase()} yang profesional dan berkualitas tinggi. 
-
-Dikerjakan oleh ${service.freelancer} dengan rating ${service.rating} dari ${service.reviews} reviews. 
-
-Setiap proyek dikerjakan dengan detail dan sesuai kebutuhan klien. Kami memastikan hasil terbaik untuk bisnis Anda.`
-
-  const features = [
-    "Konsultasi gratis sebelum project dimulai",
-    "Revisi hingga hasil sesuai keinginan",
-    "Source code & dokumentasi lengkap",
-    "Support after sales",
-    "Garansi bug fixing 30 hari",
-    "Training & panduan penggunaan"
-  ]
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gray-50">
       <Navbar />
-      
-      {/* Breadcrumb */}
-      <div className="bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <button
-            onClick={() => navigate('/services')}
-            className="text-[#1D375B] hover:text-[#4782BE] flex items-center gap-2 mb-4 font-medium transition-colors"
-          >
-            <i className="fas fa-arrow-left"></i>
-            Kembali ke daftar layanan
-          </button>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="mb-3">
-              <span className="px-4 py-1.5 bg-white/90 backdrop-blur-sm rounded-full text-sm font-semibold text-[#1D375B]">
-                {service.category}
-              </span>
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-3">
-              {service.title}
-            </h1>
-          </motion.div>
-        </div>
-      </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-12">
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Back Link */}
+        <button
+          onClick={() => navigate("/")}
+          className="text-[#4782BE] hover:text-[#1D375B] mb-6 flex items-center gap-2 font-medium"
+        >
+          <i className="fas fa-arrow-left"></i>
+          Kembali ke daftar layanan
+        </button>
+
+        {/* Category Badge */}
+        <div className="mb-3">
+          <span className="px-4 py-1 bg-white rounded-full text-sm font-semibold text-[#1D375B] border border-neutral-200">
+            {service.category}
+          </span>
+        </div>
+
+        {/* Service Title */}
+        <h1 className="text-3xl font-bold text-neutral-900 mb-8">
+          {service.title}
+        </h1>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Service Info */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Thumbnail */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden"
-            >
-              <div className="relative h-80 bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD]">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Image with Freelancer Info */}
+            <div className="bg-white rounded-2xl overflow-hidden shadow-md mb-6">
+              {/* Image Area */}
+              <div className="relative h-80 bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] flex items-center justify-center">
                 <img
                   src="/asset/layanan/Layanan.png"
                   alt={service.title}
                   className="w-full h-full object-cover"
                 />
               </div>
-            </motion.div>
 
-            {/* Freelancer Info */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-2xl shadow-lg p-6"
-            >
-              <h2 className="text-xl font-bold text-neutral-900 mb-4">Tentang Freelancer</h2>
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#4782BE] to-[#1D375B] flex items-center justify-center text-white text-xl font-bold">
-                  {service.freelancer[0]}
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-lg text-neutral-900">{service.freelancer}</p>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-neutral-600">
+              {/* Tentang Freelancer */}
+              <div className="bg-[#4782BE] p-6">
+                <h3 className="text-white text-lg font-semibold mb-4">Tentang Freelancer</h3>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-white"></div>
+                  <div>
+                    <h4 className="text-white font-bold text-lg">{service.freelancer}</h4>
                     <div className="flex items-center gap-1">
-                      <i className="fas fa-star text-yellow-400"></i>
-                      <span className="font-semibold text-neutral-900">{service.rating}</span>
-                      <span>({service.reviews} reviews)</span>
+                      <i className="fas fa-star text-yellow-400 text-sm"></i>
+                      <span className="text-white font-semibold">{service.rating} ({service.reviews})</span>
                     </div>
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Tabs */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg overflow-hidden"
-            >
-              {/* Tab Headers */}
-              <div className="flex border-b">
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+              <div className="flex border-b border-neutral-200">
                 <button
-                  onClick={() => setSelectedTab('description')}
-                  className={`flex-1 px-6 py-4 font-semibold transition-colors ${
-                    selectedTab === 'description'
-                      ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white'
-                      : 'text-neutral-600 hover:bg-[#D8E3F3]'
+                  onClick={() => setActiveTab("deskripsi")}
+                  className={`flex-1 py-4 px-6 font-semibold transition-colors ${
+                    activeTab === "deskripsi"
+                      ? "bg-[#4782BE] text-white"
+                      : "bg-white text-neutral-600 hover:bg-neutral-50"
                   }`}
                 >
                   Deskripsi
                 </button>
                 <button
-                  onClick={() => setSelectedTab('features')}
-                  className={`flex-1 px-6 py-4 font-semibold transition-colors ${
-                    selectedTab === 'features'
-                      ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white'
-                      : 'text-neutral-600 hover:bg-[#D8E3F3]'
+                  onClick={() => setActiveTab("fitur")}
+                  className={`flex-1 py-4 px-6 font-semibold transition-colors ${
+                    activeTab === "fitur"
+                      ? "bg-[#4782BE] text-white"
+                      : "bg-white text-neutral-600 hover:bg-neutral-50"
                   }`}
                 >
                   Fitur
@@ -309,132 +212,119 @@ Setiap proyek dikerjakan dengan detail dan sesuai kebutuhan klien. Kami memastik
 
               {/* Tab Content */}
               <div className="p-6">
-                {selectedTab === 'description' && (
-                  <div className="space-y-4">
-                    <p className="text-neutral-700 leading-relaxed whitespace-pre-line">
-                      {serviceDescription}
-                    </p>
+                {activeTab === "deskripsi" && (
+                  <div className="text-neutral-700 leading-relaxed">
+                    {service.description}
                   </div>
                 )}
 
-                {selectedTab === 'features' && (
-                  <div>
-                    <ul className="space-y-3">
-                      {features.map((feature, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4782BE] to-[#1D375B] flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <i className="fas fa-check text-white text-xs"></i>
-                          </div>
-                          <span className="text-neutral-700">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+                {activeTab === "fitur" && (
+                  <div className="space-y-3">
+                    {service.features.map((feature, index) => (
+                      <label key={index} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked
+                          readOnly
+                          className="w-5 h-5 rounded border-neutral-300 text-[#4782BE] focus:ring-[#4782BE]"
+                        />
+                        <span className="text-neutral-700">{feature}</span>
+                      </label>
+                    ))}
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           </div>
 
-          {/* Right Column - Order Card */}
+          {/* Sidebar */}
           <div className="lg:col-span-1">
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              className="bg-white rounded-2xl shadow-xl p-6 sticky top-4"
-            >
+            <div className="bg-white rounded-2xl shadow-md p-6 sticky top-6">
+              {/* Favorite Icon */}
+              <div className="flex justify-end mb-4">
+                {isClient && (
+                  <button
+                    onClick={handleFavoriteToggle}
+                    disabled={favoriteLoading}
+                    className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center hover:bg-neutral-200 transition-all disabled:opacity-50"
+                  >
+                    {favoriteLoading ? (
+                      <i className="fas fa-spinner fa-spin text-neutral-600" />
+                    ) : (
+                      <i className={`${isFavorite ? 'fas' : 'far'} fa-heart ${isFavorite ? 'text-red-500' : 'text-neutral-600'} text-lg`} />
+                    )}
+                  </button>
+                )}
+              </div>
+
               {/* Price */}
-              <div className="mb-6">
-                <p className="text-sm text-neutral-600 mb-1">Mulai dari</p>
-                <p className="text-4xl font-bold bg-gradient-to-r from-[#4782BE] to-[#1D375B] bg-clip-text text-transparent">
+              <div className="mb-4">
+                <div className="text-sm text-neutral-600 mb-1">Mulai dari</div>
+                <div className="text-3xl font-bold text-[#4782BE]">
                   Rp {service.price.toLocaleString('id-ID')}
-                </p>
+                </div>
               </div>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 gap-4 mb-6 pb-6 border-b">
+              <div className="flex items-center gap-1 mb-2">
+                <i className="fas fa-star text-yellow-400"></i>
+                <span className="font-semibold text-neutral-900">{service.rating}</span>
+              </div>
+              <div className="text-sm text-neutral-600 mb-3">{service.reviews} reviews</div>
+              <div className="text-sm text-neutral-600 mb-4">{service.orders} pesanan</div>
+
+              {/* Details */}
+              <div className="space-y-3 mb-6 pb-6 border-b border-neutral-200">
                 <div>
-                  <div className="flex items-center gap-1 mb-1">
-                    <i className="fas fa-star text-yellow-400"></i>
-                    <span className="text-lg font-bold text-neutral-900">{service.rating}</span>
-                  </div>
-                  <p className="text-sm text-neutral-600">{service.reviews} reviews</p>
+                  <div className="text-sm text-neutral-600">Estimasi pengerjaan</div>
+                  <div className="font-semibold text-neutral-900">{service.estimasi}</div>
                 </div>
                 <div>
-                  <p className="text-lg font-bold text-neutral-900">{service.reviews}</p>
-                  <p className="text-sm text-neutral-600">pesanan selesai</p>
+                  <div className="text-sm text-neutral-600">{service.revisi}</div>
                 </div>
               </div>
 
-              {/* Quick Info */}
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-600 flex items-center gap-2">
-                    <i className="fas fa-clock text-[#4782BE]"></i>
-                    Estimasi pengerjaan
-                  </span>
-                  <span className="font-semibold text-neutral-900">7-14 hari</span>
-                </div>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-neutral-600 flex items-center gap-2">
-                    <i className="fas fa-sync-alt text-[#4782BE]"></i>
-                    Revisi
-                  </span>
-                  <span className="font-semibold text-neutral-900">3x</span>
-                </div>
-              </div>
+              {/* Order Button */}
+              <button
+                onClick={handleOrder}
+                className="w-full bg-[#4782BE] text-white py-3 rounded-full font-semibold hover:bg-[#1D375B] transition-all hover:shadow-lg mb-3"
+              >
+                Pesan Sekarang
+              </button>
 
-              {/* CTA Buttons */}
-              <div className="flex gap-3">
-                <button
-                  onClick={handleBookmarkClick}
-                  className={`flex-shrink-0 px-4 py-4 border-2 rounded-xl hover:shadow-lg transition-all duration-300 ${
-                    isBookmarked
-                      ? 'border-[#4782BE] bg-[#4782BE]/10 text-[#4782BE]'
-                      : 'border-[#4782BE] text-[#4782BE] hover:bg-[#4782BE]/10'
-                  }`}
-                  aria-label="Bookmark"
-                >
-                  <i className={`${isBookmarked ? 'fas' : 'far'} fa-bookmark text-lg`} />
-                </button>
-                <button
-                  onClick={handleOrderNow}
-                  className="flex-1 py-4 bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
-                >
-                  Pesan Sekarang
-                </button>
+              {/* Additional Info */}
+              <div className="text-xs text-neutral-500 text-center">
+                Pembayaran dilakukan platform
               </div>
-
-              {/* Chat Button */}
-              <div className="mt-3">
-                <button
-                  onClick={handleChatNow}
-                  className="w-full py-4 border-2 border-[#4782BE] text-[#4782BE] rounded-xl hover:bg-[#4782BE]/10 transition-all duration-300 font-bold text-lg"
-                >
-                  Chat Sekarang
-                </button>
+              <div className="text-xs text-neutral-500 text-center">
+                Garansi customer service 24/7
               </div>
-
-              {/* Info */}
-              <div className="mt-6 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <i className="fas fa-shield-alt text-[#4782BE]"></i>
-                  <span>Pembayaran dilindungi platform</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-neutral-600">
-                  <i className="fas fa-headset text-[#4782BE]"></i>
-                  <span>Dukungan customer service 24/7</span>
-                </div>
-              </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
-      
-      {/* Footer */}
-      <Footer />
-    </div>
-  )
-}
 
-export default ServiceDetailPage
+      <Footer />
+
+      {/* Modals */}
+      <OrderConfirmModal
+        isOpen={isOrderModalOpen}
+        onClose={() => setIsOrderModalOpen(false)}
+        onConfirm={handleConfirmOrder}
+        orderData={orderData}
+      />
+
+      <SuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={handleSuccessClose}
+        message="Pesanan Anda akan segera diproses!"
+      />
+
+      <FavoriteToast
+        isOpen={showToast}
+        onClose={() => setShowToast(false)}
+        isFavorite={isFavorite}
+      />
+    </div>
+  );
+}

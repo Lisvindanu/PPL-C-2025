@@ -5,7 +5,7 @@ import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
 
-function ProfileDropdown({ name, email, avatarUrl, onProfile, onDashboard, onBookmark, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onSaved, onOrders, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -70,15 +70,34 @@ function ProfileDropdown({ name, email, avatarUrl, onProfile, onDashboard, onBoo
           >
             Dashboard
           </button>
-          <button
-            type="button"
-            role="menuitem"
-            onClick={onBookmark}
-            className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50 flex items-center gap-2"
-          >
-            <i className="fas fa-bookmark text-[#4782BE] text-xs"></i>
-            Bookmark
-          </button>
+          {role === 'client' && (
+            <>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={onFavorites}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50"
+              >
+                Favorit Anda
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={onSaved}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50"
+              >
+                Disimpan
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={onOrders}
+                className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50"
+              >
+                Riwayat Pesanan
+              </button>
+            </>
+          )}
           <div className="my-1 h-px bg-neutral-200" />
           <button
             type="button"
@@ -98,17 +117,29 @@ export default function NavHeader() {
   const navigate = useNavigate();
   const { loading, fullName, email, avatarUrl } = useUserIdentity();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const user = localStorage.getItem("user");
     setIsLoggedIn(!!token);
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserRole(userData.role);
+      } catch (e) {
+        console.error("Failed to parse user data", e);
+      }
+    }
   }, []);
 
   const handleLogin = () => navigate("/login");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
-  const handleBookmark = () => navigate("/bookmarks");
+  const handleFavorites = () => navigate("/favorit");
+  const handleSaved = () => navigate("/disimpan");
+  const handleOrders = () => navigate("/riwayat-pesanan");
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -144,9 +175,12 @@ export default function NavHeader() {
               name={fullName}
               email={email}
               avatarUrl={avatarUrl}
+              role={userRole}
               onProfile={handleProfile}
               onDashboard={handleDashboard}
-              onBookmark={handleBookmark}
+              onFavorites={handleFavorites}
+              onSaved={handleSaved}
+              onOrders={handleOrders}
               onLogout={handleLogout}
             />
           ) : (

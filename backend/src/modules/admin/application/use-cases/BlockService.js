@@ -26,15 +26,16 @@ class BlockService {
       { where: { id: serviceId } }
     );
     
-    await this.adminLogRepository.save({
-      admin_id: adminId,      
-      aksi: 'block_service',
-      target_type: 'layanan',
-      target_id: serviceId,
-      detail: { reason },
-      ip_address: ipAddress,
-      user_agent: userAgent
-    });
+await this.adminLogRepository.save({
+  adminId: adminId,          // camelCase
+  action: 'block_service',   // sesuai repository
+  targetType: 'layanan',
+  targetId: serviceId,
+  detail: { reason },
+  ipAddress: ipAddress,
+  userAgent: userAgent
+});
+
 
     return service;
   }

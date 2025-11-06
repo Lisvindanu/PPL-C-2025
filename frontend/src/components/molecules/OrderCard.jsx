@@ -1,64 +1,79 @@
-import StatusBadge from '../atoms/StatusBadge'
-import PriceText from '../atoms/PriceText'
+import StarRating from "../atoms/StarRating";
+import Button from "../atoms/Button";
+import { Clock, RotateCcw, ShieldCheck, Headset } from "lucide-react";
 
-const OrderCard = ({ order, onClick }) => {
+function Row({ icon: IconCmp, label, value }) {
   return (
-    <div 
-      className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer border border-gray-200 p-6"
-      onClick={() => onClick(order.id)}
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">{order.judul}</h3>
-          <p className="text-sm text-gray-600">Order #{order.nomor_pesanan}</p>
-        </div>
-        <StatusBadge status={order.status} />
+    <div className="flex items-center justify-between text-sm text-neutral-700">
+      <div className="flex items-center gap-2">
+        <IconCmp className="w-4 h-4 text-neutral-500" />
+        <span>{label}</span>
       </div>
-
-      <div className="space-y-2 mb-4">
-        {order.freelancer && (
-          <div className="flex items-center text-sm text-gray-700">
-            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-            <span>Freelancer: {order.freelancer.nama_depan} {order.freelancer.nama_belakang}</span>
-          </div>
-        )}
-        
-        <div className="flex items-center text-sm text-gray-700">
-          <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span>Waktu pengerjaan: {order.waktu_pengerjaan} hari</span>
-        </div>
-
-        {order.tenggat_waktu && (
-          <div className="flex items-center text-sm text-gray-700">
-            <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>Deadline: {new Date(order.tenggat_waktu).toLocaleDateString('id-ID')}</span>
-          </div>
-        )}
-      </div>
-
-      <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-        <div>
-          <p className="text-xs text-gray-600 mb-1">Total Pembayaran</p>
-          <PriceText amount={order.total_bayar} size="lg" />
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-500">
-            {new Date(order.created_at).toLocaleDateString('id-ID', {
-              day: 'numeric',
-              month: 'long',
-              year: 'numeric'
-            })}
-          </p>
-        </div>
-      </div>
+      <span className="font-medium">{value}</span>
     </div>
-  )
+  );
 }
 
-export default OrderCard
+export default function OrderCard({
+  price,
+  rating = 0,
+  reviewCount = 0,
+  completed = 0,
+  waktu_pengerjaan,
+  batas_revisi,
+  onOrder,
+  onContact,
+}) {
+  return (
+    <aside className="rounded-xl border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm">
+      <div className="mb-3">
+        <p className="text-xs uppercase text-[#242633]">Harga</p>
+        <p className="text-2xl font-semibold text-[#1f5eff]">
+          Rp. {Number(price || 0).toLocaleString("id-ID")}
+        </p>
+      </div>
+
+      <div className="mb-3 flex items-center gap-2 text-sm text-[#585859]">
+        <StarRating value={rating} />
+        <span>{rating.toFixed(1)}</span>
+        <span>•</span>
+        <span>{reviewCount} reviews</span>
+        <span>•</span>
+        <span>{completed} selesai</span>
+      </div>
+
+      <div className="space-y-2">
+        <Row icon={Clock} label="Waktu Pengerjaan" value={waktu_pengerjaan} />
+        <Row icon={RotateCcw} label="Batas Revisi" value={batas_revisi} />
+      </div>
+
+      {/* Info proteksi & support */}
+      <div className="mt-3 space-y-2 rounded-lg bg-neutral-50 p-3 border border-neutral-200">
+        <div className="flex items-center gap-2 text-sm text-neutral-700">
+          <ShieldCheck className="w-4 h-4 text-[#16a34a]" />
+          <span>Pembayaran dilindungi platform</span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-neutral-700">
+          <Headset className="w-4 h-4 text-[#3B82F6]" />
+          <span>Dukungan customer service 24/7</span>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col gap-2">
+        <Button
+          className="bg-[#1f5eff] hover:opacity-95 text-white"
+          onClick={onOrder}
+        >
+          Pesan Sekarang
+        </Button>
+        <Button
+          variant="outline"
+          className="border-[#1f5eff] text-[#3B82F6] hover:bg-[#3B82F6]/5"
+          onClick={onContact}
+        >
+          Hubungi Freelancer
+        </Button>
+      </div>
+    </aside>
+  );
+}

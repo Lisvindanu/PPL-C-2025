@@ -27,15 +27,16 @@ class UnblockUser {
     // ======================================================
 
     // Save log
-    await this.adminLogRepository.save({
-      admin_id: adminId,
-      aksi: 'unblock_user',
-      target_type: 'user',
-      target_id: userId,
-      detail: { reason },
-      ip_address: ipAddress,
-      user_agent: userAgent
-    });
+await this.adminLogRepository.save({
+  adminId: adminId,           // <- harus camelCase sesuai repository
+  action: 'unblock_user',     // <- repository expects `action`
+  targetType: 'user',
+  targetId: userId,
+  detail: { reason },
+  ipAddress: ipAddress,
+  userAgent: userAgent
+});
+
 
     return {
       userId,

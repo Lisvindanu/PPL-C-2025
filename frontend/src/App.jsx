@@ -8,12 +8,12 @@ import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
-import OrderDetailPage from "./pages/OrderDetailPage";
-import OrderListPage from "./pages/OrderListPage";
-import ServiceListPage from "./pages/ServiceListPage";
-import ServiceDetailPage from "./pages/ServiceDetailPage";
-import CreateOrderPage from "./pages/CreateOrderPage";
-import BookmarkPage from "./pages/BookmarkPage";
+import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
+import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
+import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
+import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
+import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 
 export default function App() {
   return (
@@ -47,6 +47,14 @@ export default function App() {
         }
       />
       <Route
+        path="/freelance/service/new"
+        element={
+          <ProtectedRoute>
+            <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/profile"
         element={
           <ProtectedRoute>
@@ -55,53 +63,17 @@ export default function App() {
         }
       />
       <Route
-        path="/orders/:id"
-        element={
-          <ProtectedRoute>
-            <OrderDetailPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute>
-            <OrderListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders/create"
-        element={
-          <ProtectedRoute>
-            <CreateOrderPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/services"
-        element={
-          <ProtectedRoute>
-            <ServiceListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/services/:id"
+        path="/jobs/:slug"
         element={
           <ProtectedRoute>
             <ServiceDetailPage />
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/bookmarks"
-        element={
-          <ProtectedRoute>
-            <BookmarkPage />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/pending" element={<PaymentPendingPage />} />
+      <Route path="/payment/error" element={<PaymentErrorPage />} />
+      <Route path="/payment/expired" element={<PaymentExpiredPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
