@@ -120,6 +120,47 @@ class RecommendationService {
     }
 
     /**
+     * Filter recommendations by excluded service IDs
+     */
+    filterRecommendations(recommendations, excludeServiceIds = []) {
+        if (!excludeServiceIds || excludeServiceIds.length === 0) {
+            return recommendations;
+        }
+        return recommendations.filter(rec => !excludeServiceIds.includes(rec.serviceId));
+    }
+
+    /**
+     * Diversify recommendations by source/category
+     */
+    diversifyRecommendations(recommendations) {
+        // Simple diversification: alternate between different sources
+        const bySource = {};
+        recommendations.forEach(rec => {
+            const source = rec.source || 'popular';
+            if (!bySource[source]) {
+                bySource[source] = [];
+            }
+            bySource[source].push(rec);
+        });
+
+        const diversified = [];
+        const sources = Object.keys(bySource);
+        let index = 0;
+
+        while (diversified.length < recommendations.length) {
+            for (const source of sources) {
+                if (bySource[source][index]) {
+                    diversified.push(bySource[source][index]);
+                }
+                if (diversified.length >= recommendations.length) break;
+            }
+            index++;
+        }
+
+        return diversified;
+    }
+
+    /**
      * Content-based filtering
      */
     contentBasedFiltering(targetService, allServices) {

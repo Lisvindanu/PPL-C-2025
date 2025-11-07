@@ -1,9 +1,23 @@
 class Favorite {
-    constructor({ id, userId, serviceId, createdAt }) {
+    constructor({ id, userId, serviceId, notes, addedAt, createdAt }) {
         this.id = id;
         this.userId = userId;
         this.serviceId = serviceId;
+        this.notes = notes || '';
+        this.addedAt = addedAt || createdAt || new Date();
         this.createdAt = createdAt || new Date();
+    }
+
+    // Convert to JSON
+    toJSON() {
+        return {
+            id: this.id,
+            userId: this.userId,
+            serviceId: this.serviceId,
+            notes: this.notes,
+            addedAt: this.addedAt,
+            createdAt: this.createdAt
+        };
     }
 
     // Validasi
@@ -14,8 +28,8 @@ class Favorite {
     }
 
     // Factory method
-    static create(userId, serviceId) {
-        const data = { userId, serviceId };
+    static create(userId, serviceId, notes = '') {
+        const data = { userId, serviceId, notes };
         this.validate(data);
         return new Favorite(data);
     }

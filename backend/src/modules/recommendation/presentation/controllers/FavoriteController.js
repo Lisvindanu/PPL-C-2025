@@ -16,8 +16,8 @@ class FavoriteController {
     constructor(sequelize) {
         // Initialize dependencies
         this.sequelize = sequelize;
-        this.favoriteRepository = new FavoriteRepositoryImpl();
-        this.recommendationRepository = new RecommendationRepositoryImpl();
+        this.favoriteRepository = new FavoriteRepositoryImpl(sequelize);
+        this.recommendationRepository = new RecommendationRepositoryImpl(sequelize);
 
         // Initialize use case
         this.manageFavoritesUseCase = new ManageFavoritesUseCase(

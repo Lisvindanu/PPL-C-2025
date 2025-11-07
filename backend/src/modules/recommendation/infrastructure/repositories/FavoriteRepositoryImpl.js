@@ -59,14 +59,7 @@ class FavoriteRepositoryImpl extends IFavoriteRepository {
         try {
             const favorites = await this.FavoriteModel.findAll({
                 where: { user_id: userId },
-                order: [['created_at', 'DESC']],
-                include: [
-                    {
-                        model: this.sequelize.models.Layanan,
-                        as: 'layanan',
-                        attributes: ['id', 'nama_layanan', 'deskripsi', 'harga', 'kategori_id', 'sub_kategori_id']
-                    }
-                ]
+                order: [['created_at', 'DESC']]
             });
 
             return favorites.map(fav => new Favorite({

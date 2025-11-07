@@ -22,18 +22,18 @@ class RecommendationRepositoryImpl extends IRecommendationRepository {
 
             // Get layanan populer berdasarkan aktivitas
             const popularLayanan = await this.sequelize.query(`
-        SELECT 
+        SELECT
           l.id as layanan_id,
-          l.nama_layanan,
+          l.judul as nama_layanan,
           l.kategori_id,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'lihat_layanan' THEN au.id END) as views,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'tambah_favorit' THEN au.id END) as favorites,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'buat_pesanan' THEN au.id END) as orders,
-          COALESCE(AVG(r.rating), 0) as avg_rating
+          COALESCE(AVG(u.rating), 0) as avg_rating
         FROM layanan l
         LEFT JOIN aktivitas_user au ON l.id = au.layanan_id
-        LEFT JOIN reviews r ON l.id = r.layanan_id
-        GROUP BY l.id, l.nama_layanan, l.kategori_id
+        LEFT JOIN ulasan u ON l.id = u.layanan_id
+        GROUP BY l.id, l.judul, l.kategori_id
         ORDER BY orders DESC, favorites DESC, views DESC
         LIMIT :limit
       `, {
@@ -89,7 +89,7 @@ class RecommendationRepositoryImpl extends IRecommendationRepository {
         try {
             // Get target service
             const targetService = await this.sequelize.query(`
-        SELECT id, nama_layanan, kategori_id, sub_kategori_id
+        SELECT id, judul as nama_layanan, kategori_id
         FROM layanan
         WHERE id = :serviceId
       `, {
@@ -103,28 +103,25 @@ class RecommendationRepositoryImpl extends IRecommendationRepository {
 
             // Get similar services berdasarkan kategori
             const similarServices = await this.sequelize.query(`
-        SELECT 
+        SELECT
           l.id as layanan_id,
-          l.nama_layanan,
+          l.judul as nama_layanan,
           l.kategori_id,
-          l.sub_kategori_id,
           COUNT(DISTINCT au.id) as activity_count,
-          CASE 
-            WHEN l.kategori_id = :kategoriId AND l.sub_kategori_id = :subKategoriId THEN 90
-            WHEN l.kategori_id = :kategoriId THEN 70
-            ELSE 40
+          CASE
+            WHEN l.kategori_id = :kategoriId THEN 90
+            ELSE 50
           END as similarity_score
         FROM layanan l
         LEFT JOIN aktivitas_user au ON l.id = au.layanan_id
-        WHERE l.id != :serviceId
-        GROUP BY l.id, l.nama_layanan, l.kategori_id, l.sub_kategori_id
+        WHERE l.id != :serviceId AND l.status = 'aktif'
+        GROUP BY l.id, l.judul, l.kategori_id
         ORDER BY similarity_score DESC, activity_count DESC
         LIMIT :limit
       `, {
                 replacements: {
                     serviceId,
                     kategoriId: target.kategori_id,
-                    subKategoriId: target.sub_kategori_id,
                     limit
                 },
                 type: this.sequelize.QueryTypes.SELECT
@@ -167,19 +164,19 @@ class RecommendationRepositoryImpl extends IRecommendationRepository {
             }
 
             const popularServices = await this.sequelize.query(`
-        SELECT 
+        SELECT
           l.id as layanan_id,
-          l.nama_layanan,
+          l.judul as nama_layanan,
           l.kategori_id,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'lihat_layanan' THEN au.id END) as views,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'tambah_favorit' THEN au.id END) as favorites,
           COUNT(DISTINCT CASE WHEN au.tipe_aktivitas = 'buat_pesanan' THEN au.id END) as orders,
-          COALESCE(AVG(r.rating), 0) as avg_rating
+          COALESCE(AVG(u.rating), 0) as avg_rating
         FROM layanan l
         LEFT JOIN aktivitas_user au ON l.id = au.layanan_id AND au.created_at >= :dateFrom
-        LEFT JOIN reviews r ON l.id = r.layanan_id
-        WHERE 1=1 ${categoryFilter}
-        GROUP BY l.id, l.nama_layanan, l.kategori_id
+        LEFT JOIN ulasan u ON l.id = u.layanan_id
+        WHERE l.status = 'aktif' ${categoryFilter}
+        GROUP BY l.id, l.judul, l.kategori_id
         ORDER BY orders DESC, favorites DESC, views DESC
         LIMIT :limit
       `, {
