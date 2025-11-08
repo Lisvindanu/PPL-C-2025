@@ -10,9 +10,18 @@ const UserInteraction = require('../../domain/entities/UserInteraction');
 class RecommendationRepositoryImpl extends IRecommendationRepository {
     constructor(sequelize) {
         super();
+        console.log('[RecommendationRepositoryImpl] Initializing with sequelize:', !!sequelize);
         this.sequelize = sequelize;
         this.UserInteractionModel = require('../models/UserInteraction');
         this.RecommendationModel = require('../models/Recommendation');
+        console.log('[RecommendationRepositoryImpl] After init, this.sequelize:', !!this.sequelize);
+
+        // Bind methods to preserve 'this' context
+        this.getPersonalizedRecommendations = this.getPersonalizedRecommendations.bind(this);
+        this.getSimilarServices = this.getSimilarServices.bind(this);
+        this.getPopularServices = this.getPopularServices.bind(this);
+        this.trackInteraction = this.trackInteraction.bind(this);
+        this.getUserInteractions = this.getUserInteractions.bind(this);
     }
 
     async getPersonalizedRecommendations(userId, limit = 10) {

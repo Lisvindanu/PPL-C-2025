@@ -19,6 +19,7 @@ const {
 class RecommendationController {
   constructor(sequelize) {
     // Initialize dependencies
+    console.log('[RecommendationController] Initializing with sequelize:', !!sequelize);
     this.sequelize = sequelize;
     this.recommendationRepository = new RecommendationRepositoryImpl(sequelize);
     this.recommendationService = new RecommendationService();
@@ -50,7 +51,7 @@ class RecommendationController {
    */
   async getRecommendations(req, res) {
     try {
-      const userId = req.user?.user_id || req.query.userId;
+      const userId = req.user?.userId || req.query.userId;
 
       const dto = new GetRecommendationsDTO({
         userId,
@@ -179,7 +180,7 @@ class RecommendationController {
    */
   async trackInteraction(req, res) {
     try {
-      const userId = req.user?.user_id || req.body.userId;
+      const userId = req.user?.userId || req.body.userId;
 
       const dto = new TrackInteractionDTO({
         userId,
@@ -225,7 +226,7 @@ class RecommendationController {
    */
   async getInteractionHistory(req, res) {
     try {
-      const userId = req.user?.user_id || req.query.userId;
+      const userId = req.user?.userId || req.query.userId;
       const serviceId = req.query.serviceId || null;
       const limit = parseInt(req.query.limit) || 50;
 
