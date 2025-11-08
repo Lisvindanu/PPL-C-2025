@@ -19,6 +19,7 @@ const {
 class RecommendationController {
   constructor(sequelize) {
     // Initialize dependencies
+    console.log('[RecommendationController] Initializing with sequelize:', !!sequelize);
     this.sequelize = sequelize;
     this.recommendationRepository = new RecommendationRepositoryImpl(sequelize);
     this.recommendationService = new RecommendationService();
