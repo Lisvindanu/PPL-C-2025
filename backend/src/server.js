@@ -152,6 +152,12 @@ const orderController = new OrderController(sequelize);
 const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 app.use('/api/orders', orderRoutes(orderController));
 
+// Modul 3: Bookmark (menggunakan storage favorites)
+const BookmarkController = require('./modules/order/presentation/controllers/BookmarkController');
+const bookmarkController = new BookmarkController();
+const bookmarkRoutes = require('./modules/order/presentation/routes/bookmarkRoutes');
+app.use('/api/bookmarks', bookmarkRoutes(bookmarkController));
+
 // ===== Modul 4: Payment Gateway =====
 const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
 app.use('/api/payments', paymentRoutes);
