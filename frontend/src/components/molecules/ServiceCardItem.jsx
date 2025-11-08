@@ -2,37 +2,34 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { authService } from "../../services/authService";
 import { favoriteService } from "../../services/favoriteService";
+import { bookmarkService } from "../../services/bookmarkService";
 import FavoriteToast from "./FavoriteToast";
 import SavedToast from "./SavedToast";
 import UnfavoriteConfirmModal from "./UnfavoriteConfirmModal";
 import UnsaveConfirmModal from "./UnsaveConfirmModal";
 
-export default function ServiceCardItem({ service, onClick, onFavoriteToggle, onSaveToggle, fullWidth = false }) {
+export default function ServiceCardItem({ service, onClick, onFavoriteToggle, onBookmarkToggle, fullWidth = false }) {
   const user = authService.getCurrentUser();
   const isClient = user?.role === "client";
 
-  // Load initial favorite status from localStorage
+  // Load initial favorite status from localStorage (legacy) - keep for UX; BE sync handled separately
   const getFavoriteStatus = () => {
     if (!user) return false;
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     return favorites.includes(service.id);
   };
 
-  // Load initial saved status from localStorage
-  const getSavedStatus = () => {
-    if (!user) return false;
-    const saved = JSON.parse(localStorage.getItem('saved') || '[]');
-    return saved.includes(service.id);
-  };
+  // Initial saved status: rely on prop if provided (e.g., SavedPage), fallback to false
+  const initialBookmarked = Boolean(service?.isSaved || service?.isBookmarked);
 
   const [isFavorite, setIsFavorite] = useState(getFavoriteStatus());
-  const [isSaved, setIsSaved] = useState(getSavedStatus());
+  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSaveLoading, setIsSaveLoading] = useState(false);
+  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
-  const [showSaveToast, setShowSaveToast] = useState(false);
+  const [showBookmarkToast, setShowBookmarkToast] = useState(false);
   const [showUnfavoriteModal, setShowUnfavoriteModal] = useState(false);
-  const [showUnsaveModal, setShowUnsaveModal] = useState(false);
+  const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
@@ -115,7 +112,7 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
     }
   };
 
-  const handleSaveClick = async (e) => {
+  const handleBookmarkClick = async (e) => {
     e.stopPropagation();
 
     if (!user || !isClient) {
@@ -123,64 +120,59 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
     }
 
     // If unsaving, show confirmation modal
-    if (isSaved) {
-      setShowUnsaveModal(true);
+    if (isBookmarked) {
+      setShowUnbookmarkModal(true);
       return;
     }
 
-    // Saving (no confirmation needed)
-    setIsSaveLoading(true);
+    // Bookmarking (no confirmation needed)
+    setIsBookmarkLoading(true);
 
     try {
-      // Update localStorage immediately (offline-first)
-      const saved = JSON.parse(localStorage.getItem('saved') || '[]');
-      if (!saved.includes(service.id)) {
-        saved.push(service.id);
+      // Optimistic UI update
+      setIsBookmarked(true);
+      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
+      setShowBookmarkToast(true);
+
+      // Sync to backend bookmarks
+      const res = await bookmarkService.addBookmark(service.id);
+      if (!res?.success) {
+        // Revert if failed
+        setIsBookmarked(false);
+        if (onBookmarkToggle) onBookmarkToggle(service.id, false);
       }
-      localStorage.setItem('saved', JSON.stringify(saved));
-
-      // Update UI
-      setIsSaved(true);
-      if (onSaveToggle) {
-        onSaveToggle(service.id, true);
-      }
-
-      // Show toast notification
-      setShowSaveToast(true);
-
     } catch (error) {
-      console.error("Error:", error);
+      console.error("[ServiceCardItem] addBookmark error:", error);
+      setIsBookmarked(false);
+      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
     } finally {
-      setIsSaveLoading(false);
+      setIsBookmarkLoading(false);
     }
   };
 
-  const handleConfirmUnsave = async () => {
-    setShowUnsaveModal(false);
-    setIsSaveLoading(true);
+  const handleConfirmUnbookmark = async () => {
+    setShowUnbookmarkModal(false);
+    setIsBookmarkLoading(true);
 
     try {
-      // Update localStorage immediately (offline-first)
-      const saved = JSON.parse(localStorage.getItem('saved') || '[]');
-      const index = saved.indexOf(service.id);
-      if (index > -1) {
-        saved.splice(index, 1);
+      // Optimistic UI update
+      setIsBookmarked(false);
+      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
+      setShowBookmarkToast(true);
+
+      // Sync to backend bookmarks
+      const res = await bookmarkService.removeBookmark(service.id);
+      if (!res?.success) {
+        // Revert if failed
+        setIsBookmarked(true);
+        if (onBookmarkToggle) onBookmarkToggle(service.id, true);
       }
-      localStorage.setItem('saved', JSON.stringify(saved));
-
-      // Update UI
-      setIsSaved(false);
-      if (onSaveToggle) {
-        onSaveToggle(service.id, false);
-      }
-
-      // Show toast notification
-      setShowSaveToast(true);
-
     } catch (error) {
-      console.error("Error:", error);
+      console.error("[ServiceCardItem] removeBookmark error:", error);
+      setIsBookmarked(true);
+      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
     } finally {
-      setIsSaveLoading(false);
+      setIsBookmarkLoading(false);
     }
   };
 
@@ -255,14 +247,14 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
               </button>
 
               <button
-                onClick={handleSaveClick}
-                disabled={isSaveLoading}
+                onClick={handleBookmarkClick}
+                disabled={isBookmarkLoading}
                 className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSaveLoading ? (
+                {isBookmarkLoading ? (
                   <i className="fas fa-spinner fa-spin text-neutral-600 text-lg" />
                 ) : (
-                  <i className={`${isSaved ? 'fas' : 'far'} fa-bookmark ${isSaved ? 'text-neutral-900' : 'text-neutral-600'} text-lg`} />
+                  <i className={`${isBookmarked ? 'fas' : 'far'} fa-bookmark ${isBookmarked ? 'text-neutral-900' : 'text-neutral-600'} text-lg`} />
                 )}
               </button>
             </div>
@@ -279,9 +271,9 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
       />
 
       <SavedToast
-        isOpen={showSaveToast}
-        onClose={() => setShowSaveToast(false)}
-        isSaved={isSaved}
+        isOpen={showBookmarkToast}
+        onClose={() => setShowBookmarkToast(false)}
+        isSaved={isBookmarked}
       />
 
       {/* Unfavorite Confirmation Modal */}
@@ -292,11 +284,11 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
         serviceName={service.title}
       />
 
-      {/* Unsave Confirmation Modal */}
+      {/* Unbookmark Confirmation Modal */}
       <UnsaveConfirmModal
-        isOpen={showUnsaveModal}
-        onClose={() => setShowUnsaveModal(false)}
-        onConfirm={handleConfirmUnsave}
+        isOpen={showUnbookmarkModal}
+        onClose={() => setShowUnbookmarkModal(false)}
+        onConfirm={handleConfirmUnbookmark}
         serviceName={service.title}
       />
     </>
