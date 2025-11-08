@@ -123,7 +123,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.get(
     '/',
-    // authMiddleware,
+    authMiddleware,
     getRecommendationsValidation,
     (req, res) => recommendationController.getRecommendations(req, res)
   );
@@ -286,7 +286,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.post(
     '/track',
-    // authMiddleware,
+    authMiddleware,
     trackInteractionValidation,
     (req, res) => recommendationController.trackInteraction(req, res)
   );
@@ -324,7 +324,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.get(
     '/interactions',
-    // authMiddleware,
+    authMiddleware,
     getInteractionHistoryValidation,
     (req, res) => recommendationController.getInteractionHistory(req, res)
   );
@@ -369,7 +369,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.post(
     '/favorites/:serviceId',
-    // authMiddleware,
+    authMiddleware,
     addFavoriteValidation,
     (req, res) => favoriteController.addFavorite(req, res)
   );
@@ -402,7 +402,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.delete(
     '/favorites/:serviceId',
-    // authMiddleware,
+    authMiddleware,
     removeFavoriteValidation,
     (req, res) => favoriteController.removeFavorite(req, res)
   );
@@ -451,7 +451,7 @@ module.exports = (recommendationController, favoriteController) => {
    */
   router.get(
     '/favorites',
-    // authMiddleware,
+    authMiddleware,
     (req, res) => favoriteController.getFavorites(req, res)
   );
 
