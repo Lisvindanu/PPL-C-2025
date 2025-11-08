@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { favoriteService } from "../services/favoriteService";
-import { getServiceById } from "../utils/servicesData";
+import { getServiceByIdUniversal } from "../utils/servicesData";
+import { categoriesWithServices } from "../utils/categoriesWithServices";
 import Navbar from "../components/organisms/Navbar";
 import Footer from "../components/organisms/Footer";
 import OrderConfirmModal from "../components/molecules/OrderConfirmModal";
@@ -25,18 +26,21 @@ export default function ServiceDetailPage() {
   const isClient = user?.role === "client";
 
   useEffect(() => {
-    // Load service from centralized data
-    const serviceData = getServiceById(id);
+    // Load service from either servicesData.js (UUID) or categoriesWithServices (numeric ID)
+    const serviceData = getServiceByIdUniversal(id, categoriesWithServices);
     if (serviceData) {
       setService(serviceData);
     } else {
-      navigate("/");
+      // If service not found, redirect to services page
+      navigate("/services");
     }
 
     // Check favorite status from localStorage
     if (user && isClient) {
       const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
-      setIsFavorite(favorites.includes(id));
+      // Convert id to string for comparison
+      const idStr = String(id);
+      setIsFavorite(favorites.includes(idStr) || favorites.includes(parseInt(id)));
     }
   }, [id, navigate, user, isClient]);
 
@@ -49,14 +53,27 @@ export default function ServiceDetailPage() {
     try {
       // Update localStorage
       const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+      // Convert id to string for consistent comparison
+      const idStr = String(id);
+      const idNum = parseInt(id);
+      
       if (newStatus) {
-        if (!favorites.includes(id)) {
-          favorites.push(id);
+        // Add if not already in favorites (check both string and number)
+        if (!favorites.includes(idStr) && !favorites.includes(idNum) && !favorites.includes(id)) {
+          favorites.push(idStr);
         }
       } else {
-        const index = favorites.indexOf(id);
-        if (index > -1) {
-          favorites.splice(index, 1);
+        // Remove from favorites (check all possible formats)
+        const indexStr = favorites.indexOf(idStr);
+        const indexNum = favorites.indexOf(idNum);
+        const indexId = favorites.indexOf(id);
+        
+        if (indexStr > -1) {
+          favorites.splice(indexStr, 1);
+        } else if (indexNum > -1) {
+          favorites.splice(indexNum, 1);
+        } else if (indexId > -1) {
+          favorites.splice(indexId, 1);
         }
       }
       localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -65,7 +82,7 @@ export default function ServiceDetailPage() {
       setShowToast(true);
 
       // Sync to backend (optional)
-      favoriteService.toggleFavorite(id, newStatus).catch(err => {
+      favoriteService.toggleFavorite(idStr, newStatus).catch(err => {
         console.log("Backend sync failed:", err);
       });
     } catch (error) {
@@ -136,7 +153,7 @@ export default function ServiceDetailPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Link */}
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/services")}
           className="text-[#4782BE] hover:text-[#1D375B] mb-6 flex items-center gap-2 font-medium"
         >
           <i className="fas fa-arrow-left"></i>
@@ -220,17 +237,21 @@ export default function ServiceDetailPage() {
 
                 {activeTab === "fitur" && (
                   <div className="space-y-3">
-                    {service.features.map((feature, index) => (
-                      <label key={index} className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked
-                          readOnly
-                          className="w-5 h-5 rounded border-neutral-300 text-[#4782BE] focus:ring-[#4782BE]"
-                        />
-                        <span className="text-neutral-700">{feature}</span>
-                      </label>
-                    ))}
+                    {service.features && service.features.length > 0 ? (
+                      service.features.map((feature, index) => (
+                        <label key={index} className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked
+                            readOnly
+                            className="w-5 h-5 rounded border-neutral-300 text-[#4782BE] focus:ring-[#4782BE]"
+                          />
+                          <span className="text-neutral-700">{feature}</span>
+                        </label>
+                      ))
+                    ) : (
+                      <p className="text-neutral-600">Fitur layanan akan segera ditambahkan</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -270,17 +291,17 @@ export default function ServiceDetailPage() {
                 <i className="fas fa-star text-yellow-400"></i>
                 <span className="font-semibold text-neutral-900">{service.rating}</span>
               </div>
-              <div className="text-sm text-neutral-600 mb-3">{service.reviews} reviews</div>
-              <div className="text-sm text-neutral-600 mb-4">{service.orders} pesanan</div>
+              <div className="text-sm text-neutral-600 mb-3">{service.reviews || 0} reviews</div>
+              <div className="text-sm text-neutral-600 mb-4">{service.orders || 0} pesanan</div>
 
               {/* Details */}
               <div className="space-y-3 mb-6 pb-6 border-b border-neutral-200">
                 <div>
                   <div className="text-sm text-neutral-600">Estimasi pengerjaan</div>
-                  <div className="font-semibold text-neutral-900">{service.estimasi}</div>
+                  <div className="font-semibold text-neutral-900">{service.estimasi || "7-14 hari"}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-neutral-600">{service.revisi}</div>
+                  <div className="text-sm text-neutral-600">{service.revisi || "2x Revisi"}</div>
                 </div>
               </div>
 

@@ -15,6 +15,7 @@ import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
 import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import BookmarkPage from "./pages/BookmarkPage";
+import ServiceListPage from "./pages/ServiceListPage";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
+      <Route path="/services" element={<ServiceListPage />} />
       <Route
         path="/dashboard"
         element={
@@ -72,7 +74,23 @@ export default function App() {
         }
       />
       <Route
-        path="/jobs/:slug"
+        path="/services"
+        element={
+          <ProtectedRoute>
+            <ServiceListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/:id"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs"
         element={
           <ProtectedRoute>
             <ServiceDetailPage />
