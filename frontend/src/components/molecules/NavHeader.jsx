@@ -6,7 +6,7 @@ import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
 
-function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onSaved, onOrders, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -84,7 +84,7 @@ function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard,
               <button
                 type="button"
                 role="menuitem"
-                onClick={onSaved}
+                onClick={onBookmarks}
                 className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50"
               >
                 Disimpan
@@ -139,7 +139,7 @@ export default function NavHeader() {
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
   const handleFavorites = () => navigate("/favorit");
-  const handleSaved = () => navigate("/saved");
+  const handleBookmarks = () => navigate("/bookmarks");
   const handleOrders = () => navigate("/riwayat-pesanan");
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -180,7 +180,7 @@ export default function NavHeader() {
               onProfile={handleProfile}
               onDashboard={handleDashboard}
               onFavorites={handleFavorites}
-              onSaved={handleSaved}
+              onBookmarks={handleBookmarks}
               onOrders={handleOrders}
               onLogout={handleLogout}
             />
