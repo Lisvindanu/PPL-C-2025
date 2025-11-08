@@ -16,6 +16,7 @@ import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import ServiceListPage from "./pages/ServiceListPage";
+import CreateOrderPage from "./pages/CreateOrderPage";
 
 export default function App() {
   return (
@@ -94,6 +95,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-order"
+        element={
+          <ProtectedRoute>
+            <CreateOrderPage />
           </ProtectedRoute>
         }
       />

@@ -251,7 +251,19 @@ export default function ServiceDetailPage() {
   } : dummyFreelancer;
 
   function orderNow() {
-    navigate(`/checkout/${serviceData?.slug || serviceData?.id || serviceIdentifier || slug}`);
+    // Redirect ke CreateOrderPage dengan data service
+    navigate('/create-order', {
+      state: {
+        service: {
+          id: serviceData?.id || serviceIdentifier,
+          title: detail.title,
+          price: order.price,
+          category: serviceData?.category || 'Lainnya',
+          freelancer: freelancer.name,
+          thumbnail: serviceData?.thumbnail || '/asset/layanan/Layanan.png'
+        }
+      }
+    });
   }
   function contact() {
     navigate(`/messages/new?to=${encodeURIComponent(freelancer.name)}`);
