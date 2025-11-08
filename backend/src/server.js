@@ -134,22 +134,17 @@ const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRout
 app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
 
 // ===== Modul 2: Service Listing & Search =====
-// Kategori & Sub-Kategori routes (public)
-const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
-const kategoriController = new KategoriController(sequelize);
+const setupServiceDependencies = require('./modules/service/config/serviceDependencies');
+const { serviceController, kategoriController, subKategoriController } = setupServiceDependencies(sequelize);
+
+const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
+app.use('/api/services', serviceRoutes(serviceController));
+
 const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
 app.use('/api/kategori', kategoriRoutes(kategoriController));
 
-const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
-const subKategoriController = new SubKategoriController(sequelize);
 const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
-
-// Service CRUD routes (Dalam Pengembangan)
-const ServiceController = require('./modules/service/presentation/controllers/ServiceController');
-const serviceController = new ServiceController(sequelize);
-const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
-app.use('/api/services', serviceRoutes(serviceController));
 
 // ===== Modul 3: Order & Booking System (Dalam Pengembangan) =====
 const OrderController = require('./modules/order/presentation/controllers/OrderController');
