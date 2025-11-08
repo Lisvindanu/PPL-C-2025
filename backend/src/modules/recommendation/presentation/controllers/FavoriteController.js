@@ -32,7 +32,7 @@ class FavoriteController {
      */
     async addFavorite(req, res) {
         try {
-            const userId = req.user?.user_id || req.body.userId;
+            const userId = req.user?.userId || req.body.userId;
             const { serviceId } = req.params;
 
             const dto = new AddFavoriteDTO({
@@ -85,7 +85,7 @@ class FavoriteController {
      */
     async removeFavorite(req, res) {
         try {
-            const userId = req.user?.user_id || req.query.userId;
+            const userId = req.user?.userId || req.query.userId;
             const { serviceId } = req.params;
 
             const dto = new RemoveFavoriteDTO({
@@ -135,7 +135,7 @@ class FavoriteController {
      */
     async getFavorites(req, res) {
         try {
-            const userId = req.user?.user_id || req.query.userId;
+            const userId = req.user?.userId || req.query.userId;
 
             const dto = new GetFavoritesDTO({ userId });
 
