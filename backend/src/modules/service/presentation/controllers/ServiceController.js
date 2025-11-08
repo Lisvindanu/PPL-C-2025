@@ -4,9 +4,9 @@
  */
 
 class ServiceController {
-  constructor(sequelize) {
-    this.sequelize = sequelize;
-    // TODO: Initialize use cases when implemented
+  constructor(getAllServicesUseCase, getServiceByIdUseCase) {
+    this.getAllServicesUseCase = getAllServicesUseCase;
+    this.getServiceByIdUseCase = getServiceByIdUseCase;
   }
 
   /**
@@ -33,12 +33,27 @@ class ServiceController {
    */
   async getAllServices(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur listing service belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const filters = {
+        kategori_id: req.query.kategori_id,
+        harga_min: req.query.harga_min,
+        harga_max: req.query.harga_max,
+        rating_min: req.query.rating_min,
+        page: req.query.page,
+        limit: req.query.limit,
+        sortBy: req.query.sortBy,
+        sortOrder: req.query.sortOrder,
+        status: req.query.status
+      };
+
+      const result = await this.getAllServicesUseCase.execute(filters);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Services retrieved successfully',
+        data: result
       });
     } catch (error) {
-      return res.status(500).json({
+      return res.status(400).json({
         status: 'error',
         message: error.message
       });
@@ -69,12 +84,21 @@ class ServiceController {
    */
   async getServiceById(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur detail service belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const serviceId = req.params.id;
+      const options = {
+        userId: req.user?.id // If authenticated
+      };
+
+      const result = await this.getServiceByIdUseCase.execute(serviceId, options);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Service detail retrieved successfully',
+        data: result
       });
     } catch (error) {
-      return res.status(500).json({
+      const statusCode = error.message.includes('not found') ? 404 : 400;
+      return res.status(statusCode).json({
         status: 'error',
         message: error.message
       });
