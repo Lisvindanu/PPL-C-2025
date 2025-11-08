@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { serviceService } from "../../services/serviceService";
 import Navbar from "../../components/organisms/Navbar";
 import Chip from "../../components/atoms/Chip";
 import ServiceHeaderCard from "../../components/molecules/ServiceHeaderCard";
@@ -9,16 +11,69 @@ import ReviewsSection from "../../components/organisms/ReviewsSection";
 import PortfolioGrid from "../../components/molecules/PortfolioGrid";
 import AboutFreelancerCard from "../../components/molecules/AboutFreelancerCard";
 import Footer from "../../components/organisms/Footer";
-// integrasi mock by slug:
-// import { getMockServiceBySlug } from "../../mock/services";
+
+// Helper function to map backend service data to frontend format
+const mapServiceToFrontend = (backendService) => {
+  // Format waktu pengerjaan (number of days)
+  const formatWaktuPengerjaan = (days) => {
+    if (!days) return '1–3 Minggu'
+    if (typeof days === 'number') {
+      if (days === 1) return '1 hari'
+      if (days <= 7) return `${days} hari`
+      if (days <= 14) return '1–2 Minggu'
+      if (days <= 30) return `${Math.ceil(days / 7)} Minggu`
+      return `${Math.ceil(days / 30)} Bulan`
+    }
+    return days
+  }
+
+  // Format batas revisi
+  const formatBatasRevisi = (revisi) => {
+    if (!revisi) return '3x revisi besar'
+    if (typeof revisi === 'number') {
+      return `${revisi}x revisi besar`
+    }
+    return revisi
+  }
+
+  return {
+    id: backendService.id,
+    title: backendService.judul || backendService.title || '',
+    slug: backendService.slug || '',
+    description: backendService.deskripsi || '',
+    price: backendService.harga || backendService.price || 0,
+    category: backendService.kategori?.nama_kategori || backendService.category || 'Lainnya',
+    categorySlug: backendService.kategori?.slug || '',
+    freelancer: {
+      id: backendService.freelancer?.id || '',
+      name: backendService.freelancer?.nama_lengkap || backendService.freelancer || 'Freelancer',
+      avatar: backendService.freelancer?.avatar || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80',
+      role: backendService.kategori?.nama_kategori || 'Freelancer',
+      about: backendService.freelancer?.bio || 'Freelancer profesional',
+      projectCompleted: backendService.total_pesanan || 0
+    },
+    rating: backendService.rating_rata_rata || backendService.rating || 0,
+    reviewCount: backendService.jumlah_rating || backendService.jumlah_review || backendService.reviews || 0,
+    completed: backendService.total_pesanan || backendService.orders || 0,
+    waktu_pengerjaan: formatWaktuPengerjaan(backendService.waktu_pengerjaan),
+    batas_revisi: formatBatasRevisi(backendService.batas_revisi),
+    thumbnail: backendService.thumbnail || '/asset/layanan/Layanan.png',
+    gambar: backendService.gambar || [],
+    features: backendService.features || []
+  }
+}
 
 export default function ServiceDetailPage() {
-  const { slug } = useParams();
+  const { id, slug } = useParams(); // Support both id and slug
   const navigate = useNavigate();
+  const [serviceData, setServiceData] = useState(null);
+  
+  // Determine which parameter to use (id takes priority)
+  const serviceIdentifier = id || slug;
 
-  // ----- dummy -----
-  const categories = ["Desain Logo", "Cara Penggunaan", "Tentang SkillConnect"];
-  const header = {
+  // ----- dummy data (fallback) -----
+  const dummyCategories = ["Desain Logo", "Cara Penggunaan", "Tentang SkillConnect"];
+  const dummyHeader = {
     avatar:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80",
     name: "Natashia Bunny",
@@ -29,7 +84,7 @@ export default function ServiceDetailPage() {
       "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&q=80",
     ],
   };
-  const detail = {
+  const dummyDetail = {
     title: "Modern Logo Design Four Bussiness",
     description:
       "Layanan pembuatan logo modern yang kuat, bersih, dan mudah diingat. Cocok untuk brand baru maupun rebranding. Output termasuk logo utama, varian, panduan penggunaan singkat, serta file sumber siap pakai.",
@@ -41,7 +96,7 @@ export default function ServiceDetailPage() {
       "Waktu pengerjaan 1–3 minggu",
     ],
   };
-  const order = {
+  const dummyOrder = {
     price: 3500000,
     rating: 4.9,
     reviewCount: 45,
@@ -49,7 +104,7 @@ export default function ServiceDetailPage() {
     waktu_pengerjaan: "1–3 Minggu",
     batas_revisi: "3x revisi besar",
   };
-  const reviews = [
+  const dummyReviews = [
     {
       rating: 5,
       title: "Amazing services",
@@ -74,23 +129,129 @@ export default function ServiceDetailPage() {
       name: "Kristin Hester",
     },
   ];
-  const portfolio = [
+  const dummyPortfolio = [
     "https://images.unsplash.com/photo-1545235617-9465d2a55698?w=1200&q=80",
     "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?w=1200&q=80",
     "https://images.unsplash.com/photo-1523475496153-3d6ccf0c5d55?w=1200&q=80",
   ];
-  const freelancer = {
+  const dummyFreelancer = {
     avatar:
       "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&q=80",
     name: "Natashia Bunny",
     role: "UI/UX Designer",
     about:
-      "I’m a passionate brand identity designer with over 8+ years of experience helping businesses stand out.",
+      "I'm a passionate brand identity designer with over 8+ years of experience helping businesses stand out.",
     projectCompleted: 250,
   };
 
+  // Fetch service data from API
+  useEffect(() => {
+    // Skip fetch if no identifier
+    if (!serviceIdentifier) {
+      console.log('[ServiceDetailPage] No service identifier (id/slug), using dummy data');
+      return;
+    }
+
+    let cancelled = false;
+    
+    const fetchService = async () => {
+      try {
+        // Check if identifier is UUID (ID) or slug
+        const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(serviceIdentifier);
+        
+        let result;
+        if (isUUID) {
+          // If it's a UUID, fetch by ID
+          if (import.meta.env.DEV) {
+            console.log('[ServiceDetailPage] Fetching service by ID:', serviceIdentifier);
+          }
+          result = await serviceService.getServiceById(serviceIdentifier);
+        } else {
+          // If it's not a UUID, fetch by slug
+          if (import.meta.env.DEV) {
+            console.log('[ServiceDetailPage] Fetching service by slug:', serviceIdentifier);
+          }
+          result = await serviceService.getServiceBySlug(serviceIdentifier);
+        }
+        
+        if (cancelled) return;
+        
+        if (result.success && result.service) {
+          const mappedService = mapServiceToFrontend(result.service);
+          setServiceData(mappedService);
+          if (import.meta.env.DEV) {
+            console.log('[ServiceDetailPage] Service data loaded from API:', mappedService);
+          }
+        } else {
+          if (import.meta.env.DEV) {
+            console.log('[ServiceDetailPage] Service not found, using dummy data');
+          }
+        }
+        // If API fails or returns no data, keep using dummy data (no error state)
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[ServiceDetailPage] Error fetching service:', err);
+        // Keep using dummy data on error
+      }
+    };
+
+    fetchService();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [serviceIdentifier]);
+
+  // Use API data if available, otherwise use dummy data
+  const categories = serviceData 
+    ? [serviceData.category, "Cara Penggunaan", "Tentang SkillConnect"]
+    : dummyCategories;
+  
+  const header = serviceData ? {
+    avatar: serviceData.freelancer.avatar,
+    name: serviceData.freelancer.name,
+    rating: serviceData.rating,
+    reviewCount: serviceData.reviewCount,
+    images: serviceData.gambar.length > 0 
+      ? serviceData.gambar 
+      : [serviceData.thumbnail || '/asset/layanan/Layanan.png'],
+  } : dummyHeader;
+  
+  const detail = serviceData ? {
+    title: serviceData.title,
+    description: serviceData.description || dummyDetail.description,
+    features: serviceData.features.length > 0 
+      ? serviceData.features 
+      : dummyDetail.features,
+  } : dummyDetail;
+  
+  const order = serviceData ? {
+    price: serviceData.price,
+    rating: serviceData.rating,
+    reviewCount: serviceData.reviewCount,
+    completed: serviceData.completed,
+    waktu_pengerjaan: serviceData.waktu_pengerjaan,
+    batas_revisi: serviceData.batas_revisi,
+  } : dummyOrder;
+  
+  const reviews = dummyReviews; // Keep using dummy reviews for now
+  
+  const portfolio = serviceData 
+    ? (serviceData.gambar.length > 0 
+        ? serviceData.gambar 
+        : [serviceData.thumbnail || '/asset/layanan/Layanan.png'])
+    : dummyPortfolio;
+  
+  const freelancer = serviceData ? {
+    avatar: serviceData.freelancer.avatar,
+    name: serviceData.freelancer.name,
+    role: serviceData.freelancer.role,
+    about: serviceData.freelancer.about,
+    projectCompleted: serviceData.freelancer.projectCompleted,
+  } : dummyFreelancer;
+
   function orderNow() {
-    navigate(`/checkout/${slug}`);
+    navigate(`/checkout/${serviceData?.slug || serviceData?.id || serviceIdentifier || slug}`);
   }
   function contact() {
     navigate(`/messages/new?to=${encodeURIComponent(freelancer.name)}`);

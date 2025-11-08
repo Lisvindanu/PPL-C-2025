@@ -1,127 +1,123 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
 import ServiceCardItem from '../components/molecules/ServiceCardItem'
+import { serviceService } from '../services/serviceService'
 
-// Data dari landing page
-const categoriesWithServices = [
-  {
-    id: 1,
-    title: "Pengembangan Website",
-    slug: "pengembangan-website",
-    services: [
-      { id: 1, title: "Pembuatan Website Company Profile Modern & Responsif", category: "Website", freelancer: "Ahmad Rizki", rating: 4.9, reviews: 127, price: 2500000 },
-      { id: 2, title: "Jasa Pembuatan Website E-Commerce Full Fitur", category: "Website", freelancer: "Siti Nurhaliza", rating: 5.0, reviews: 89, price: 5000000 },
-      { id: 3, title: "Website Landing Page untuk Bisnis & Produk", category: "Website", freelancer: "Budi Santoso", rating: 4.8, reviews: 156, price: 1500000 },
-      { id: 4, title: "Pengembangan Website Portal Berita & Blog", category: "Website", freelancer: "Diana Putri", rating: 4.7, reviews: 92, price: 3000000 },
-      { id: 101, title: "Website Toko Online UMKM Lengkap & Mudah", category: "Website", freelancer: "Rudi Hartono", rating: 4.9, reviews: 84, price: 3500000 },
-      { id: 102, title: "Jasa Redesign Website Modern & SEO Friendly", category: "Website", freelancer: "Linda Kusuma", rating: 4.8, reviews: 71, price: 2000000 },
-      { id: 103, title: "Website Booking & Reservasi Online", category: "Website", freelancer: "Andi Wijaya", rating: 5.0, reviews: 63, price: 4000000 },
-      { id: 104, title: "Website Membership & Learning Management", category: "Website", freelancer: "Dian Permata", rating: 4.7, reviews: 58, price: 4500000 },
-      { id: 105, title: "Website Marketplace Multi Vendor", category: "Website", freelancer: "Hendra Gunawan", rating: 5.0, reviews: 47, price: 8000000 },
-      { id: 106, title: "Website Portfolio Kreatif & Interaktif", category: "Website", freelancer: "Sari Indah", rating: 4.9, reviews: 94, price: 1800000 },
-    ],
-  },
-  {
-    id: 2,
-    title: "Pengembangan Aplikasi Mobile",
-    slug: "pengembangan-aplikasi-mobile",
-    services: [
-      { id: 5, title: "Aplikasi Mobile iOS & Android Native", category: "Mobile", freelancer: "Eko Prasetyo", rating: 4.9, reviews: 73, price: 8000000 },
-      { id: 6, title: "Jasa Pembuatan Aplikasi E-Commerce Mobile", category: "Mobile", freelancer: "Rina Wijaya", rating: 5.0, reviews: 45, price: 10000000 },
-      { id: 7, title: "Aplikasi Mobile untuk Startup & UMKM", category: "Mobile", freelancer: "Faisal Rahman", rating: 4.8, reviews: 68, price: 6000000 },
-      { id: 8, title: "Pengembangan Aplikasi Hybrid React Native", category: "Mobile", freelancer: "Maya Sari", rating: 4.9, reviews: 51, price: 7000000 },
-      { id: 201, title: "Aplikasi Mobile Food Delivery & Ojek Online", category: "Mobile", freelancer: "Rizky Pratama", rating: 5.0, reviews: 62, price: 12000000 },
-      { id: 202, title: "Aplikasi Mobile Kesehatan & Telemedicine", category: "Mobile", freelancer: "Sinta Dewi", rating: 4.8, reviews: 48, price: 9000000 },
-      { id: 203, title: "Aplikasi Mobile Point of Sale (POS)", category: "Mobile", freelancer: "Agung Nugroho", rating: 4.9, reviews: 55, price: 7500000 },
-      { id: 204, title: "Aplikasi Mobile Booking & Tiket Online", category: "Mobile", freelancer: "Mega Putri", rating: 5.0, reviews: 39, price: 8500000 },
-      { id: 205, title: "Aplikasi Mobile Edukasi & E-Learning", category: "Mobile", freelancer: "Bayu Saputra", rating: 4.7, reviews: 71, price: 8000000 },
-      { id: 206, title: "Aplikasi Mobile Fintech & Digital Wallet", category: "Mobile", freelancer: "Kartika Sari", rating: 5.0, reviews: 44, price: 15000000 },
-    ],
-  },
-  {
-    id: 3,
-    title: "UI/UX Design",
-    slug: "ui-ux-design",
-    services: [
-      { id: 9, title: "Desain UI/UX untuk Website & Mobile App", category: "UI/UX", freelancer: "Dinda Permata", rating: 5.0, reviews: 142, price: 3500000 },
-      { id: 10, title: "Jasa Redesign UI/UX Aplikasi Modern", category: "UI/UX", freelancer: "Andi Wijaya", rating: 4.9, reviews: 98, price: 2500000 },
-      { id: 11, title: "Prototyping & Wireframing untuk Produk Digital", category: "UI/UX", freelancer: "Lina Kartika", rating: 4.8, reviews: 76, price: 2000000 },
-      { id: 12, title: "Design System & Component Library", category: "UI/UX", freelancer: "Reza Firmansyah", rating: 5.0, reviews: 54, price: 4000000 },
-      { id: 301, title: "UI/UX Design untuk E-Commerce & Marketplace", category: "UI/UX", freelancer: "Anisa Rahma", rating: 4.9, reviews: 87, price: 3800000 },
-      { id: 302, title: "User Research & Usability Testing", category: "UI/UX", freelancer: "Farhan Alamsyah", rating: 5.0, reviews: 65, price: 3000000 },
-      { id: 303, title: "UI/UX Design Dashboard & Admin Panel", category: "UI/UX", freelancer: "Wulan Sari", rating: 4.8, reviews: 92, price: 3200000 },
-      { id: 304, title: "Mobile App UI Design iOS & Android", category: "UI/UX", freelancer: "Galih Pratama", rating: 4.9, reviews: 73, price: 2800000 },
-      { id: 305, title: "Landing Page UI Design High Converting", category: "UI/UX", freelancer: "Tari Kusuma", rating: 5.0, reviews: 104, price: 2200000 },
-      { id: 306, title: "Branding & Visual Identity Design", category: "UI/UX", freelancer: "Kevin Wijaya", rating: 4.7, reviews: 81, price: 4500000 },
-    ],
-  },
-  {
-    id: 4,
-    title: "Data Science & Machine Learning",
-    slug: "data-science-machine-learning",
-    services: [
-      { id: 13, title: "Analisis Data & Visualisasi Dashboard", category: "Data Science", freelancer: "Dr. Bambang Sudiro", rating: 5.0, reviews: 67, price: 5000000 },
-      { id: 14, title: "Pengembangan Model Machine Learning", category: "Data Science", freelancer: "Putri Maharani", rating: 4.9, reviews: 43, price: 8000000 },
-      { id: 15, title: "Predictive Analytics untuk Bisnis", category: "Data Science", freelancer: "Hendra Gunawan", rating: 4.8, reviews: 38, price: 6000000 },
-      { id: 16, title: "Natural Language Processing (NLP) Solutions", category: "Data Science", freelancer: "Fitri Nurjanah", rating: 5.0, reviews: 29, price: 9000000 },
-      { id: 401, title: "Deep Learning & Neural Network Development", category: "Data Science", freelancer: "Dr. Andi Prasetyo", rating: 5.0, reviews: 34, price: 10000000 },
-      { id: 402, title: "Big Data Processing & Analytics", category: "Data Science", freelancer: "Sari Wulandari", rating: 4.9, reviews: 46, price: 7000000 },
-      { id: 403, title: "Computer Vision & Image Recognition", category: "Data Science", freelancer: "Rudi Hartono", rating: 4.8, reviews: 31, price: 8500000 },
-      { id: 404, title: "Recommender System Development", category: "Data Science", freelancer: "Indah Permatasari", rating: 5.0, reviews: 28, price: 6500000 },
-      { id: 405, title: "Time Series Forecasting & Analysis", category: "Data Science", freelancer: "Ahmad Fauzi", rating: 4.9, reviews: 52, price: 5500000 },
-      { id: 406, title: "AI Chatbot & Conversational AI", category: "Data Science", freelancer: "Novi Andriani", rating: 4.7, reviews: 67, price: 7500000 },
-    ],
-  },
-  {
-    id: 5,
-    title: "Cybersecurity & Testing",
-    slug: "cybersecurity-testing",
-    services: [
-      { id: 17, title: "Penetration Testing & Security Audit", category: "Security", freelancer: "Agus Setiawan", rating: 5.0, reviews: 52, price: 7000000 },
-      { id: 18, title: "Vulnerability Assessment Website & Aplikasi", category: "Security", freelancer: "Desi Ratnasari", rating: 4.9, reviews: 41, price: 4000000 },
-      { id: 19, title: "QA Testing & Automation Testing", category: "Security", freelancer: "Irfan Hakim", rating: 4.8, reviews: 63, price: 3000000 },
-      { id: 20, title: "Security Monitoring & Incident Response", category: "Security", freelancer: "Nurul Hidayah", rating: 5.0, reviews: 35, price: 6000000 },
-      { id: 501, title: "Web Application Security Testing (OWASP)", category: "Security", freelancer: "Budi Santoso", rating: 4.9, reviews: 48, price: 5000000 },
-      { id: 502, title: "Mobile App Security Assessment", category: "Security", freelancer: "Dewi Anggraini", rating: 5.0, reviews: 37, price: 5500000 },
-      { id: 503, title: "Network Security & Firewall Configuration", category: "Security", freelancer: "Yoga Pratama", rating: 4.8, reviews: 44, price: 4500000 },
-      { id: 504, title: "Secure Code Review & Analysis", category: "Security", freelancer: "Rina Kusuma", rating: 4.9, reviews: 56, price: 3500000 },
-      { id: 505, title: "API Security Testing & Documentation", category: "Security", freelancer: "Farhan Ahmad", rating: 5.0, reviews: 42, price: 4000000 },
-      { id: 506, title: "Cloud Security Assessment (AWS/Azure/GCP)", category: "Security", freelancer: "Siti Rahayu", rating: 4.7, reviews: 33, price: 6500000 },
-    ],
-  },
-  {
-    id: 6,
-    title: "Copy Writing",
-    slug: "copy-writing",
-    services: [
-      { id: 21, title: "Penulisan Konten Website & Blog SEO Friendly", category: "Writing", freelancer: "Dewi Lestari", rating: 5.0, reviews: 186, price: 500000 },
-      { id: 22, title: "Copywriting untuk Iklan & Marketing Campaign", category: "Writing", freelancer: "Tono Sugiarto", rating: 4.9, reviews: 142, price: 750000 },
-      { id: 23, title: "Content Writing untuk Social Media", category: "Writing", freelancer: "Ayu Lestari", rating: 4.8, reviews: 203, price: 400000 },
-      { id: 24, title: "Technical Writing & Documentation", category: "Writing", freelancer: "Fahmi Hidayat", rating: 5.0, reviews: 78, price: 1000000 },
-      { id: 601, title: "Email Marketing Copywriting & Campaign", category: "Writing", freelancer: "Rina Anggraini", rating: 4.9, reviews: 124, price: 650000 },
-      { id: 602, title: "Product Description & E-Commerce Content", category: "Writing", freelancer: "Joko Widodo", rating: 4.8, reviews: 167, price: 450000 },
-      { id: 603, title: "Landing Page Copywriting High Converting", category: "Writing", freelancer: "Nina Kusuma", rating: 5.0, reviews: 95, price: 800000 },
-      { id: 604, title: "Press Release & Media Relations Writing", category: "Writing", freelancer: "Andi Setiawan", rating: 4.9, reviews: 82, price: 700000 },
-      { id: 605, title: "Script Writing untuk Video & Podcast", category: "Writing", freelancer: "Putri Maharani", rating: 4.7, reviews: 139, price: 600000 },
-      { id: 606, title: "Brand Storytelling & Company Profile", category: "Writing", freelancer: "Hendra Gunawan", rating: 5.0, reviews: 101, price: 900000 },
-    ],
-  },
-]
+// Helper function to map backend service data to frontend format
+const mapServiceToFrontend = (backendService) => {
+  return {
+    id: backendService.id,
+    title: backendService.judul || backendService.title || '',
+    category: backendService.kategori?.nama_kategori || backendService.category || 'Lainnya',
+    categoryId: backendService.kategori?.id || backendService.kategori_id || null,
+    freelancer: backendService.freelancer?.nama_lengkap || backendService.freelancer || 'Freelancer',
+    rating: backendService.rating_rata_rata || backendService.rating || 0,
+    reviews: backendService.jumlah_review || backendService.reviews || 0,
+    price: backendService.harga || backendService.price || 0,
+    thumbnail: backendService.thumbnail,
+    slug: backendService.slug
+  }
+}
 
 const ServiceListPage = () => {
   const navigate = useNavigate()
   const [selectedCategory, setSelectedCategory] = useState(null)
+  const [services, setServices] = useState([])
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Flatten all services
-  const allServices = categoriesWithServices.flatMap(cat => cat.services)
-  
-  // Filter services
+  // Fetch services and categories on component mount
+  useEffect(() => {
+    let cancelled = false;
+    
+    const fetchData = async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Fetch categories
+        const categoriesResult = await serviceService.getCategories()
+        if (cancelled) return;
+        
+        if (categoriesResult.success) {
+          setCategories(categoriesResult.categories)
+        }
+
+        // Fetch services with pagination
+        // Get first page with max limit (100)
+        let allServices = []
+        let currentPage = 1
+        let hasMore = true
+        const limit = 100 // Maximum allowed by backend
+        const maxPages = 10 // Safety limit to prevent infinite loops
+
+        while (hasMore && currentPage <= maxPages && !cancelled) {
+          const servicesResult = await serviceService.getAllServices({
+            page: currentPage,
+            limit: limit,
+            status: 'aktif'
+          })
+
+          if (cancelled) return;
+
+          if (servicesResult.success && servicesResult.services) {
+            const mappedServices = servicesResult.services.map(mapServiceToFrontend)
+            allServices = [...allServices, ...mappedServices]
+            
+            // Check if there are more pages
+            const pagination = servicesResult.pagination || {}
+            if (pagination.totalPages && currentPage < pagination.totalPages) {
+              currentPage++
+            } else {
+              hasMore = false
+            }
+          } else {
+            // If first page fails, show error
+            if (currentPage === 1) {
+              setError(servicesResult.message || 'Gagal memuat layanan')
+            }
+            hasMore = false
+          }
+        }
+
+        if (cancelled) return;
+
+        if (allServices.length > 0) {
+          setServices(allServices)
+        } else if (currentPage === 1) {
+          // Only show error if first page failed
+          setError('Tidak ada layanan ditemukan')
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Error fetching data:', err)
+        setError('Terjadi kesalahan saat memuat data')
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    fetchData()
+
+    // Cleanup function
+    return () => {
+      cancelled = true;
+    };
+  }, [])
+
+  // Filter services by category
   const filteredServices = selectedCategory
-    ? categoriesWithServices.find(cat => cat.id === selectedCategory)?.services || []
-    : allServices
+    ? services.filter(service => {
+        // Check if service belongs to the selected category by ID
+        return service.categoryId === selectedCategory
+      })
+    : services
 
   const handleServiceClick = (service) => {
     navigate(`/services/${service.id}`)
@@ -153,74 +149,102 @@ const ServiceListPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Category Filter */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold text-neutral-900 mb-6">Filter Kategori</h2>
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                selectedCategory === null
-                  ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white shadow-lg'
-                  : 'bg-[#D8E3F3] text-[#1D375B] hover:bg-[#4782BE]/20'
-              }`}
-            >
-              Semua Layanan
-            </button>
-            {categoriesWithServices.map(category => (
-              <button
-                key={category.id}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
-                  selectedCategory === category.id
-                    ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white shadow-lg'
-                    : 'bg-[#D8E3F3] text-[#1D375B] hover:bg-[#4782BE]/20'
-                }`}
-              >
-                {category.title}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Services Count */}
-        <div className="mb-6">
-          <p className="text-neutral-600">
-            Menampilkan <span className="font-semibold text-[#4782BE]">{filteredServices.length}</span> layanan
-            {selectedCategory && (
-              <span>
-                {' '}dalam kategori{' '}
-                <span className="font-semibold text-[#1D375B]">
-                  {categoriesWithServices.find(cat => cat.id === selectedCategory)?.title}
-                </span>
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Services Grid */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-        >
-          {filteredServices.map((service) => (
-            <ServiceCardItem
-              key={service.id}
-              service={service}
-              onClick={() => handleServiceClick(service)}
-            />
-          ))}
-        </motion.div>
-
-        {/* Empty State */}
-        {filteredServices.length === 0 && (
+        {/* Loading State */}
+        {loading && (
           <div className="text-center py-20">
-            <div className="text-6xl mb-4">🔍</div>
-            <h3 className="text-2xl font-bold text-neutral-900 mb-2">Tidak ada layanan ditemukan</h3>
-            <p className="text-neutral-600">Coba pilih kategori lain atau lihat semua layanan</p>
+            <i className="fas fa-spinner fa-spin text-4xl text-[#4782BE] mb-4"></i>
+            <p className="text-neutral-600">Memuat layanan...</p>
           </div>
+        )}
+
+        {/* Error State */}
+        {error && !loading && (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-bold text-neutral-900 mb-2">Terjadi Kesalahan</h3>
+            <p className="text-neutral-600 mb-4">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-6 py-3 bg-[#4782BE] text-white rounded-full font-medium hover:bg-[#1D375B] transition-all"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        )}
+
+        {/* Content */}
+        {!loading && !error && (
+          <>
+            {/* Category Filter */}
+            <div className="mb-12">
+              <h2 className="text-2xl font-bold text-neutral-900 mb-6">Filter Kategori</h2>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+                    selectedCategory === null
+                      ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white shadow-lg'
+                      : 'bg-[#D8E3F3] text-[#1D375B] hover:bg-[#4782BE]/20'
+                  }`}
+                >
+                  Semua Layanan
+                </button>
+                {categories.map(category => (
+                  <button
+                    key={category.id}
+                    onClick={() => setSelectedCategory(category.id)}
+                    className={`px-6 py-3 rounded-full font-medium transition-all duration-200 ${
+                      selectedCategory === category.id
+                        ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white shadow-lg'
+                        : 'bg-[#D8E3F3] text-[#1D375B] hover:bg-[#4782BE]/20'
+                    }`}
+                  >
+                    {category.nama}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Services Count */}
+            <div className="mb-6">
+              <p className="text-neutral-600">
+                Menampilkan <span className="font-semibold text-[#4782BE]">{filteredServices.length}</span> layanan
+                {selectedCategory && (
+                  <span>
+                    {' '}dalam kategori{' '}
+                    <span className="font-semibold text-[#1D375B]">
+                      {categories.find(cat => cat.id === selectedCategory)?.nama}
+                    </span>
+                  </span>
+                )}
+              </p>
+            </div>
+
+            {/* Services Grid */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
+              {filteredServices.map((service) => (
+                <ServiceCardItem
+                  key={service.id}
+                  service={service}
+                  onClick={() => handleServiceClick(service)}
+                />
+              ))}
+            </motion.div>
+
+            {/* Empty State */}
+            {filteredServices.length === 0 && !loading && (
+              <div className="text-center py-20">
+                <div className="text-6xl mb-4">🔍</div>
+                <h3 className="text-2xl font-bold text-neutral-900 mb-2">Tidak ada layanan ditemukan</h3>
+                <p className="text-neutral-600">Coba pilih kategori lain atau lihat semua layanan</p>
+              </div>
+            )}
+          </>
         )}
       </div>
       

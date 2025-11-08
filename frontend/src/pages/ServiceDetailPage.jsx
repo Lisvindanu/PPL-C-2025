@@ -2,18 +2,65 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { favoriteService } from "../services/favoriteService";
-import { getServiceByIdUniversal } from "../utils/servicesData";
-import { categoriesWithServices } from "../utils/categoriesWithServices";
+import { serviceService } from "../services/serviceService";
 import Navbar from "../components/organisms/Navbar";
 import Footer from "../components/organisms/Footer";
 import OrderConfirmModal from "../components/molecules/OrderConfirmModal";
 import SuccessModal from "../components/molecules/SuccessModal";
 import FavoriteToast from "../components/molecules/FavoriteToast";
 
+// Helper function to map backend service data to frontend format
+const mapServiceDetailToFrontend = (backendService) => {
+  // Format waktu pengerjaan (number of days)
+  const formatWaktuPengerjaan = (days) => {
+    if (!days) return '7-14 hari'
+    if (typeof days === 'number') {
+      if (days === 1) return '1 hari'
+      if (days <= 7) return `${days} hari`
+      if (days <= 14) return `7-14 hari`
+      if (days <= 30) return `${Math.ceil(days / 7)} minggu`
+      return `${Math.ceil(days / 30)} bulan`
+    }
+    return days
+  }
+
+  // Format batas revisi
+  const formatBatasRevisi = (revisi) => {
+    if (!revisi) return '2x Revisi'
+    if (typeof revisi === 'number') {
+      return `${revisi}x Revisi`
+    }
+    return revisi
+  }
+
+  return {
+    id: backendService.id,
+    title: backendService.judul || backendService.title || '',
+    slug: backendService.slug || '',
+    description: backendService.deskripsi || '',
+    price: backendService.harga || backendService.price || 0,
+    category: backendService.kategori?.nama_kategori || backendService.category || 'Lainnya',
+    freelancer: backendService.freelancer?.nama_lengkap || backendService.freelancer || 'Freelancer',
+    rating: backendService.rating_rata_rata || backendService.rating || 0,
+    reviews: backendService.jumlah_rating || backendService.jumlah_review || backendService.reviews || 0,
+    orders: backendService.total_pesanan || backendService.orders || 0,
+    estimasi: formatWaktuPengerjaan(backendService.waktu_pengerjaan),
+    revisi: formatBatasRevisi(backendService.batas_revisi),
+    thumbnail: backendService.thumbnail || '/asset/layanan/Layanan.png',
+    gambar: backendService.gambar || [],
+    features: backendService.features || [],
+    // Keep original values for reference
+    waktu_pengerjaan: backendService.waktu_pengerjaan,
+    batas_revisi: backendService.batas_revisi
+  }
+}
+
 export default function ServiceDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [service, setService] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("deskripsi");
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -26,23 +73,62 @@ export default function ServiceDetailPage() {
   const isClient = user?.role === "client";
 
   useEffect(() => {
-    // Load service from either servicesData.js (UUID) or categoriesWithServices (numeric ID)
-    const serviceData = getServiceByIdUniversal(id, categoriesWithServices);
-    if (serviceData) {
-      setService(serviceData);
-    } else {
-      // If service not found, redirect to services page
-      navigate("/services");
-    }
+    let cancelled = false;
+    
+    const fetchService = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await serviceService.getServiceById(id);
+        
+        if (cancelled) return;
+        
+        if (result.success && result.service) {
+          const mappedService = mapServiceDetailToFrontend(result.service);
+          setService(mappedService);
+        } else {
+          setError(result.message || 'Layanan tidak ditemukan');
+          // Redirect to services page after 2 seconds
+          setTimeout(() => {
+            if (!cancelled) {
+              navigate("/services");
+            }
+          }, 2000);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('[ServiceDetailPage] Error fetching service:', err);
+        setError('Terjadi kesalahan saat memuat layanan');
+        setTimeout(() => {
+          if (!cancelled) {
+            navigate("/services");
+          }
+        }, 2000);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchService();
 
     // Check favorite status from localStorage
-    if (user && isClient) {
+    const currentUser = authService.getCurrentUser();
+    const currentIsClient = currentUser?.role === "client";
+    if (currentUser && currentIsClient) {
       const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
       // Convert id to string for comparison
       const idStr = String(id);
       setIsFavorite(favorites.includes(idStr) || favorites.includes(parseInt(id)));
     }
-  }, [id, navigate, user, isClient]);
+
+    // Cleanup function
+    return () => {
+      cancelled = true;
+    };
+  }, [id, navigate]);
 
   const handleFavoriteToggle = async () => {
     if (!user || !isClient) return;
@@ -138,10 +224,39 @@ export default function ServiceDetailPage() {
     navigate("/riwayat-pesanan");
   };
 
-  if (!service) {
+  // Loading state
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <i className="fas fa-spinner fa-spin text-4xl text-[#4782BE]"></i>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <i className="fas fa-spinner fa-spin text-4xl text-[#4782BE] mb-4"></i>
+            <p className="text-neutral-600">Memuat detail layanan...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error || !service) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-6xl mb-4">⚠️</div>
+            <h3 className="text-2xl font-bold text-neutral-900 mb-2">Terjadi Kesalahan</h3>
+            <p className="text-neutral-600 mb-4">{error || 'Layanan tidak ditemukan'}</p>
+            <button
+              onClick={() => navigate("/services")}
+              className="px-6 py-3 bg-[#4782BE] text-white rounded-full font-medium hover:bg-[#1D375B] transition-all"
+            >
+              Kembali ke Daftar Layanan
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -180,9 +295,12 @@ export default function ServiceDetailPage() {
               {/* Image Area */}
               <div className="relative h-80 bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] flex items-center justify-center">
                 <img
-                  src="/asset/layanan/Layanan.png"
+                  src={service.thumbnail || "/asset/layanan/Layanan.png"}
                   alt={service.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.target.src = "/asset/layanan/Layanan.png";
+                  }}
                 />
               </div>
 
@@ -230,8 +348,8 @@ export default function ServiceDetailPage() {
               {/* Tab Content */}
               <div className="p-6">
                 {activeTab === "deskripsi" && (
-                  <div className="text-neutral-700 leading-relaxed">
-                    {service.description}
+                  <div className="text-neutral-700 leading-relaxed whitespace-pre-wrap">
+                    {service.description || 'Deskripsi layanan akan segera ditambahkan'}
                   </div>
                 )}
 

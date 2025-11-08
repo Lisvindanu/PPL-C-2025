@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -15,9 +15,19 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
+    // Only log in development
+    if (import.meta.env.DEV) {
+      console.log('[axiosConfig] Request:', {
+        method: config.method,
+        url: config.url,
+        baseURL: config.baseURL,
+        fullURL: `${config.baseURL}${config.url}`
+      })
+    }
     return config
   },
   (error) => {
+    console.error('[axiosConfig] Request error:', error)
     return Promise.reject(error)
   }
 )
@@ -25,9 +35,21 @@ api.interceptors.request.use(
 // Response interceptor to handle common errors
 api.interceptors.response.use(
   (response) => {
+    // Only log in development
+    if (import.meta.env.DEV) {
+      console.log('[axiosConfig] Response:', {
+        status: response.status,
+        url: response.config.url
+      })
+    }
     return response
   },
   (error) => {
+    console.error('[axiosConfig] Response error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      message: error.message
+    })
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token')
