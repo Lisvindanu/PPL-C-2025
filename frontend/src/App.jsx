@@ -43,7 +43,7 @@ export default function App() {
         }
       />
       <Route
-        path="/saved"
+        path="/bookmarks"
         element={
           <ProtectedRoute>
             <BookmarkPage />
