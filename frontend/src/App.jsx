@@ -82,6 +82,14 @@ export default function App() {
         }
       />
       <Route
+        path="/services/:id"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/jobs"
         element={
           <ProtectedRoute>
