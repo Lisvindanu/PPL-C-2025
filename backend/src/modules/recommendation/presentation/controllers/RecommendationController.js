@@ -180,41 +180,30 @@ class RecommendationController {
    */
   async trackInteraction(req, res) {
     try {
-      const userId = req.user?.userId || req.body.userId;
+      let { userId, activityType, serviceId, keyword } = req.body;
 
-      const dto = new TrackInteractionDTO({
-        userId,
-        serviceId: req.body.serviceId,
-        interactionType: req.body.interactionType,
-        value: req.body.value || 1,
-        metadata: req.body.metadata || {}
-      });
+      // VALIDASI: Jika serviceId adalah 'string' atau bukan UUID, set ke null
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-      const result = await this.trackInteractionUseCase.execute(
-        dto.userId,
-        dto.serviceId,
-        dto.interactionType,
-        dto.value,
-        dto.metadata
-      );
-
-      if (!result.success) {
-        return res.status(400).json({
-          success: false,
-          message: result.error
-        });
+      if (!serviceId || serviceId === 'string' || !uuidRegex.test(serviceId)) {
+        serviceId = null;
       }
 
-      return res.status(201).json({
+      await this.trackInteractionUseCase.execute({
+        userId,
+        activityType,
+        serviceId,
+        keyword
+      });
+
+      res.status(200).json({
         success: true,
-        message: result.message,
-        data: result.data
+        message: 'Interaction tracked successfully'
       });
     } catch (error) {
-      console.error('RecommendationController.trackInteraction Error:', error);
-      return res.status(500).json({
+      console.error('TrackInteractionController Error:', error);
+      res.status(400).json({
         success: false,
-        message: 'Internal server error',
         error: error.message
       });
     }
@@ -256,6 +245,284 @@ class RecommendationController {
         message: 'Internal server error',
         error: error.message
       });
+    }
+  }
+
+  /**
+ * POST /api/recommendations/hide/:serviceId
+ * Hide service from recommendations permanently
+ */
+  async hideService(req, res) {
+    try {
+      const userId = req.user?.userId;
+      const { serviceId } = req.params;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      // 🔍 Cek apakah layanan dengan ID tersebut ada
+      const [service] = await this.sequelize.query(
+        `SELECT id FROM layanan WHERE id = :serviceId LIMIT 1`,
+        {
+          replacements: { serviceId },
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          message: 'Service not found'
+        });
+      }
+
+      // 💾 Simpan interaksi "hide" ke tabel aktivitas_user
+      await this.sequelize.query(
+        `
+      INSERT INTO aktivitas_user (user_id, layanan_id, tipe_aktivitas, created_at)
+      VALUES (:userId, :serviceId, 'hide', NOW(), NOW())
+      `,
+        {
+          replacements: { userId, serviceId },
+          type: this.sequelize.QueryTypes.INSERT
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: 'Service hidden from recommendations',
+        data: {
+          userId,
+          serviceId,
+          hiddenAt: new Date()
+        }
+      });
+    } catch (error) {
+      console.error('RecommendationController.hideService Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * DELETE /api/recommendations/hide/:serviceId
+   * Unhide service (remove from hidden list)
+   */
+  async unhideService(req, res) {
+    try {
+      const userId = req.user?.userId;
+      const { serviceId } = req.params;
+
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'User not authenticated'
+        });
+      }
+
+      // Delete hide interaction
+      await this.sequelize.query(`
+        DELETE FROM aktivitas_user 
+        WHERE user_id = :userId 
+        AND layanan_id = :serviceId 
+        AND tipe_aktivitas = 'hide'
+      `, {
+        replacements: { userId, serviceId },
+        type: this.sequelize.QueryTypes.DELETE
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Service unhidden successfully',
+        data: {
+          userId,
+          serviceId
+        }
+      });
+    } catch (error) {
+      console.error('RecommendationController.unhideService Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/recommendations/admin/stats
+   * Get recommendation statistics (ADMIN ONLY)
+   */
+  async getAdminStats(req, res) {
+    try {
+      const timeRange = req.query.timeRange || '7d';
+      const startDate = this._getStartDate(timeRange);
+
+      // 1. CTR (Click-Through Rate)
+      const ctrStats = await this.sequelize.query(`
+        SELECT 
+          COUNT(CASE WHEN tipe_aktivitas = 'lihat_layanan' THEN 1 END) as views,
+          COUNT(CASE WHEN tipe_aktivitas IN ('tambah_favorit', 'buat_pesanan') THEN 1 END) as conversions,
+          ROUND(
+            (COUNT(CASE WHEN tipe_aktivitas IN ('tambah_favorit', 'buat_pesanan') THEN 1 END)::numeric / 
+            NULLIF(COUNT(CASE WHEN tipe_aktivitas = 'lihat_layanan' THEN 1 END), 0) * 100), 2
+          ) as ctr_percentage
+        FROM aktivitas_user
+        WHERE created_at >= :startDate
+      `, {
+        replacements: { startDate },
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // 2. Most Recommended Services
+      const topServices = await this.sequelize.query(`
+        SELECT 
+          l.id,
+          l.nama_layanan,
+          l.kategori,
+          COUNT(DISTINCT au.user_id) as unique_views,
+          COUNT(*) as total_interactions,
+          COUNT(CASE WHEN au.tipe_aktivitas = 'tambah_favorit' THEN 1 END) as favorites,
+          COUNT(CASE WHEN au.tipe_aktivitas = 'buat_pesanan' THEN 1 END) as orders
+        FROM layanan l
+        LEFT JOIN aktivitas_user au ON l.id = au.layanan_id
+        WHERE au.created_at >= :startDate
+        GROUP BY l.id, l.nama_layanan, l.kategori
+        ORDER BY total_interactions DESC
+        LIMIT 10
+      `, {
+        replacements: { startDate },
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // 3. User Engagement Stats
+      const engagementStats = await this.sequelize.query(`
+        SELECT 
+          COUNT(DISTINCT user_id) as active_users,
+          COUNT(*) as total_interactions,
+          ROUND(AVG(interactions_per_user), 2) as avg_interactions_per_user
+        FROM (
+          SELECT 
+            user_id,
+            COUNT(*) as interactions_per_user
+          FROM aktivitas_user
+          WHERE created_at >= :startDate
+          GROUP BY user_id
+        ) subquery
+      `, {
+        replacements: { startDate },
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // 4. Conversion Rate by Activity Type
+      const conversionByType = await this.sequelize.query(`
+        SELECT 
+          tipe_aktivitas,
+          COUNT(*) as count,
+          ROUND((COUNT(*)::numeric / SUM(COUNT(*)) OVER ()) * 100, 2) as percentage
+        FROM aktivitas_user
+        WHERE created_at >= :startDate
+        GROUP BY tipe_aktivitas
+        ORDER BY count DESC
+      `, {
+        replacements: { startDate },
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Admin statistics retrieved successfully',
+        data: {
+          timeRange,
+          period: {
+            start: startDate,
+            end: new Date()
+          },
+          ctr: ctrStats[0],
+          topServices,
+          engagement: engagementStats[0],
+          conversionByType
+        }
+      });
+    } catch (error) {
+      console.error('RecommendationController.getAdminStats Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * GET /api/recommendations/admin/performance
+   * Get recommendation performance metrics
+   */
+  async getRecommendationPerformance(req, res) {
+    try {
+      const timeRange = req.query.timeRange || '7d';
+      const startDate = this._getStartDate(timeRange);
+
+      const performance = await this.sequelize.query(`
+        SELECT 
+          DATE(created_at) as date,
+          COUNT(DISTINCT user_id) as active_users,
+          COUNT(*) as total_interactions,
+          COUNT(CASE WHEN tipe_aktivitas = 'lihat_layanan' THEN 1 END) as views,
+          COUNT(CASE WHEN tipe_aktivitas = 'tambah_favorit' THEN 1 END) as favorites,
+          COUNT(CASE WHEN tipe_aktivitas = 'buat_pesanan' THEN 1 END) as orders,
+          ROUND(
+            (COUNT(CASE WHEN tipe_aktivitas = 'buat_pesanan' THEN 1 END)::numeric / 
+            NULLIF(COUNT(CASE WHEN tipe_aktivitas = 'lihat_layanan' THEN 1 END), 0) * 100), 2
+          ) as conversion_rate
+        FROM aktivitas_user
+        WHERE created_at >= :startDate
+        GROUP BY DATE(created_at)
+        ORDER BY date DESC
+      `, {
+        replacements: { startDate },
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Performance metrics retrieved successfully',
+        data: {
+          timeRange,
+          metrics: performance
+        }
+      });
+    } catch (error) {
+      console.error('RecommendationController.getRecommendationPerformance Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  // Helper method
+  _getStartDate(timeRange) {
+    const now = new Date();
+    switch (timeRange) {
+      case '24h':
+        return new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      case '7d':
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '30d':
+        return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case 'all':
+        return new Date('2020-01-01');
+      default:
+        return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     }
   }
 }
