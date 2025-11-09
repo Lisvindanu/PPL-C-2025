@@ -16,7 +16,7 @@ class SequelizeReviewRepository {
   }
 
   async create(reviewData) {
-    const result = await this.sequelize.models.Review.create(reviewData);
+    const result = await this.sequelize.models.ulasan.create(reviewData);
     return new Review(result.toJSON());
   }
 

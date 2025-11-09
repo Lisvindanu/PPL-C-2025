@@ -1,7 +1,7 @@
-/**
- * Review Controller
- * HTTP handler untuk review endpoints
- */
+const SequelizeReviewRepository = require('../../infrastructure/repositories/SequelizeReviewRepository');
+const CreateReview = require('../../application/use-cases/CreateReview');
+const db = require('../../../../shared/database/connection.js');
+const defineReviewModel = require('../../infrastructure/models/ReviewModel');
 
 class ReviewController {
   constructor(sequelize) {
@@ -12,11 +12,26 @@ class ReviewController {
    * Create review for completed order
    * POST /api/reviews
    */
-  async createReview(req, res) {
+ async createReview(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur create review belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { pesanan_id, layanan_id, pemberi_ulasan_id, penerima_ulasan_id, rating, judul, komentar } = req.body;
+
+      const reviewBaru = await Review.create({
+        pesanan_id,
+        layanan_id,
+        pemberi_ulasan_id,
+        penerima_ulasan_id,
+        rating,
+        judul,
+        komentar,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+
+      return res.status(201).json({
+        status: 'success',
+        message: 'Ulasan berhasil dibuat',
+        data: reviewBaru
       });
     } catch (error) {
       return res.status(500).json({
@@ -25,6 +40,7 @@ class ReviewController {
       });
     }
   }
+
 
   /**
    * Get all reviews for a service

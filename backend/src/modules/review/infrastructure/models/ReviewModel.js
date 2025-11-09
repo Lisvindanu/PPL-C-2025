@@ -1,35 +1,66 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Review = sequelize.define('Review', {
+  const Review = sequelize.define('ulasan', {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.CHAR(36),
       primaryKey: true,
+      defaultValue: DataTypes.UUIDV4
     },
-    user_id: {
-      type: DataTypes.UUID,
+    pesanan_id: {
+      type: DataTypes.CHAR(36),
+      unique: true,
       allowNull: false,
+      references: { model: 'pesanan', key: 'id' },
+      onDelete: 'CASCADE'
     },
-    service_id: {
-      type: DataTypes.UUID,
+    layanan_id: {
+      type: DataTypes.CHAR(36),
       allowNull: false,
+      references: { model: 'layanan', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    pemberi_ulasan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
+    },
+    penerima_ulasan_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: { model: 'users', key: 'id' },
+      onDelete: 'CASCADE'
     },
     rating: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      validate: {
-        min: 1,
-        max: 5,
-      },
+      validate: { min: 1, max: 5 }
     },
-    comment: {
+    judul: DataTypes.STRING(255),
+    komentar: {
       type: DataTypes.TEXT,
-      allowNull: true,
+      allowNull: false
     },
+    gambar: DataTypes.JSON,
+    balasan: DataTypes.TEXT,
+    dibalas_pada: DataTypes.DATE,
+    is_approved: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    is_reported: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    }
   }, {
-    tableName: 'ulasan', // sesuai tabel di DB
     timestamps: true,
+    underscored: true,
+    indexes: [
+      { fields: ['layanan_id'] },
+      { fields: ['rating'] },
+      { fields: ['pesanan_id'] }
+    ]
   });
 
   return Review;
