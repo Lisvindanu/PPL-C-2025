@@ -35,16 +35,14 @@ export default function LoginPage() {
     setErrors(newErrors);
     if (emailErr || passErr) return;
     try {
-      const user = await login(form);
+      await login(form);
       toast.show("Logged in successfully", "success");
-      
-      // Redirect based on user role
-      if (user.role === 'admin') {
-        navigate("/admin/dashboardadmin", { replace: true });
-      } else if (user.role === 'freelancer' || user.role === 'client') {
-        navigate("/dashboard", { replace: true });
+
+      // Check user role and redirect accordingly
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      if (user.role === "admin") {
+        navigate("/admin/dashboard", { replace: true });
       } else {
-        // Fallback untuk role yang tidak dikenal
         navigate("/dashboard", { replace: true });
       }
     } catch (_) {
@@ -54,16 +52,16 @@ export default function LoginPage() {
 
   const footer = (
     <div className="mt-6">
-      <div className="flex items-center gap-4 text-[#8a8a8a]">
-        <div className="flex-1 h-px bg-[#B3B3B3]" />
+      <div className="flex items-center gap-4 text-[#1D375B]">
+        <div className="flex-1 h-px bg-[#9DBBDD]" />
         <span>Atau</span>
-        <div className="flex-1 h-px bg-[#B3B3B3]" />
+        <div className="flex-1 h-px bg-[#9DBBDD]" />
       </div>
       <Button variant="outline" className="w-full mt-4" icon={<Icon name="google" size="md" />}>
         Lanjutkan dengan Google
       </Button>
       <div className="text-center mt-4">
-        <Link to="/forgot-password" className="text-[#112D4E] underline hover:no-underline">
+        <Link to="/forgot-password" className="text-[#1B1B1B] underline hover:no-underline">
           Lupa kata sandi Anda?
         </Link>
       </div>
@@ -74,10 +72,10 @@ export default function LoginPage() {
     <AuthLayout
       title="Login"
       bottom={
-        <div className="w-full max-w-xl shadow-md">
-          <div className="bg-[#f9f7f8] rounded-lg px-6 py-4 text-center text-[#112D4E]">
+        <div className="w-full max-w-md">
+          <div className="bg-[#FFFFFF] rounded-lg px-6 py-4 text-center text-[#1B1B1B] shadow-md">
             Belum punya akun?{" "}
-            <Link to="/register/client" className="underline">
+            <Link to="/register/client" className="text-[#1B1B1B] font-semibold underline hover:no-underline">
               Daftar
             </Link>
           </div>
@@ -88,7 +86,9 @@ export default function LoginPage() {
       <AuthCard title="Masuk ke Skill Connect" footer={footer}>
         <form onSubmit={handleSubmit}>
           <FormGroup label="Alamat Email" name="email" type="email" placeholder="" value={form.email} onChange={handleChange} error={errors.email} />
+
           <FormGroup label="Password Anda" name="password" type="password" value={form.password} onChange={handleChange} error={errors.password} />
+
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
           <Button type="submit" variant="neutral" className="w-full" disabled={loading}>
             {loading ? "Loading..." : "Masuk"}

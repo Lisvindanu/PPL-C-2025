@@ -186,7 +186,5 @@ export default function App() {
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
-  )
+  );
 }
-
-

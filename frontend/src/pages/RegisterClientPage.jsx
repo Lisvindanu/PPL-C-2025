@@ -130,7 +130,7 @@ export default function RegisterClientPage() {
             <span>Atau</span>
             <div className="flex-1 h-px bg-[#B3B3B3]" />
           </div>
-          <Button variant="outline" className="w-full">
+          <Button variant="outline" className="w-full" icon={<Icon name="google" size="md" />}>
             Lanjutkan dengan Google
           </Button>
         </form>
