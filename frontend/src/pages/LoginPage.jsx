@@ -26,9 +26,18 @@ export default function LoginPage() {
     setErrors(newErrors);
     if (emailErr || passErr) return;
     try {
-      await login(form);
+      const user = await login(form);
       toast.show("Logged in successfully", "success");
-      navigate("/dashboard", { replace: true });
+      
+      // Redirect based on user role
+      if (user.role === 'admin') {
+        navigate("/admin/dashboardadmin", { replace: true });
+      } else if (user.role === 'freelancer' || user.role === 'client') {
+        navigate("/dashboard", { replace: true });
+      } else {
+        // Fallback untuk role yang tidak dikenal
+        navigate("/dashboard", { replace: true });
+      }
     } catch (_) {
       toast.show("Invalid email or password", "error");
     }

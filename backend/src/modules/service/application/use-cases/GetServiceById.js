@@ -1,16 +1,6 @@
 /**
  * Get Service By ID Use Case
- *
- * Use case paling gampang, cuma ambil data doang.
- * Tapi tetep perlu validasi, jangan asal return null anjir.
- *
- * Yang perlu lo lakuin:
- * 1. Ambil service dari database by ID
- * 2. Include relations (user/penyedia, kategori, sub_kategori, reviews)
- * 3. Hitung average rating (kalo review module udah jadi)
- * 4. Return lengkap dengan semua relasi nya
- *
- * Bonus points kalo lo bikin view counter buat analytics
+ * Business logic untuk ambil detail layanan berdasarkan ID
  */
 
 class GetServiceById {
@@ -19,31 +9,70 @@ class GetServiceById {
   }
 
   async execute(serviceId, options = {}) {
-    // TODO: Ambil service dari database
-    // const service = await this.serviceRepository.findById(serviceId, {
-    //   includeUser: true,      // Include data penyedia
-    //   includeKategori: true,  // Include kategori & sub_kategori
-    //   includeReviews: options.includeReviews || false
-    // });
+    try {
+      // Validate service ID
+      if (!serviceId) {
+        throw new Error('Service ID is required');
+      }
 
-    // TODO: Validasi service exist
-    // if (!service) {
-    //   throw new Error('Service not found, salah ID kali lu');
-    // }
+      // Get service from repository
+      const service = await this.serviceRepository.findById(serviceId);
 
-    // TODO: Cek status - kalo draft cuma owner yang bisa liat
-    // if (service.status === 'draft' && options.userId !== service.user_id) {
-    //   throw new Error('Service ini masih draft, ga bisa diliat orang');
-    // }
+      // Validate service exists
+      if (!service) {
+        throw new Error('Service not found');
+      }
 
-    // TODO: (Optional) Increment view counter buat analytics
-    // if (options.trackView) {
-    //   await this.serviceRepository.incrementViewCount(serviceId);
-    // }
+      // Check if service is active (unless owner is viewing)
+      if (!service.isActive() && options.userId !== service.user_id) {
+        throw new Error('Service is not available');
+      }
 
-    // return service;
+      // Format and return service detail
+      return this.formatServiceDetail(service);
+    } catch (error) {
+      throw new Error(`Failed to get service detail: ${error.message}`);
+    }
+  }
 
-    throw new Error('Not implemented yet - Kerjain dong, tinggal query doang kok');
+  /**
+   * Format service entity for detail response
+   */
+  formatServiceDetail(service) {
+    return {
+      id: service.id,
+      judul: service.judul,
+      slug: service.slug,
+      deskripsi: service.deskripsi,
+      harga: service.harga_minimum,
+      waktu_pengerjaan: service.waktu_pengerjaan,
+      batas_revisi: service.batas_revisi,
+      thumbnail: service.thumbnail,
+      gambar: service.foto_layanan || [],
+      rating_rata_rata: service.rating_rata_rata,
+      jumlah_rating: service.jumlah_review,
+      total_pesanan: service.total_pesanan,
+      jumlah_dilihat: service.jumlah_dilihat,
+      status: service.status,
+      created_at: service.created_at,
+      updated_at: service.updated_at,
+      freelancer: service.freelancer ? {
+        id: service.freelancer.id,
+        nama_lengkap: `${service.freelancer.nama_depan || ''} ${service.freelancer.nama_belakang || ''}`.trim(),
+        email: service.freelancer.email,
+        no_telepon: service.freelancer.no_telepon,
+        avatar: service.freelancer.avatar,
+        bio: service.freelancer.bio,
+        kota: service.freelancer.kota
+      } : null,
+      kategori: service.kategori ? {
+        id: service.kategori.id,
+        nama_kategori: service.kategori.nama,
+        slug: service.kategori.slug,
+        icon: service.kategori.icon
+      } : null,
+      can_be_ordered: service.canBeOrdered()
+    };
   }
 }
 

@@ -714,7 +714,7 @@
 
         console.log('[MOCK PAYMENT] Sending webhook:', webhookPayload);
 
-        const response = await fetch('http://localhost:5001/api/payments/webhook', {
+        const response = await fetch('https://api-ppl.vinmedia.my.id/api/payments/webhook', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -760,8 +760,8 @@
 
     // Redirect back
     function redirectBack() {
-      // In real scenario, redirect to frontend app
-      window.location.href = 'http://localhost:3000/orders'; // Adjust to your frontend URL
+      // Redirect to frontend app
+      window.location.href = 'https://ppl.vinmedia.my.id/orders';
     }
 
     // Initialize on load

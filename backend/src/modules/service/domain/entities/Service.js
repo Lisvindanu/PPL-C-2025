@@ -26,7 +26,14 @@ class Service {
     total_pesanan,
     is_active,
     created_at,
-    updated_at
+    updated_at,
+    // Relations
+    freelancer,
+    kategori,
+    thumbnail,
+    waktu_pengerjaan,
+    batas_revisi,
+    jumlah_dilihat
   }) {
     this.id = id;
     this.user_id = user_id;
@@ -50,6 +57,13 @@ class Service {
     this.is_active = is_active;
     this.created_at = created_at;
     this.updated_at = updated_at;
+    // Relations
+    this.freelancer = freelancer;
+    this.kategori = kategori;
+    this.thumbnail = thumbnail;
+    this.waktu_pengerjaan = waktu_pengerjaan;
+    this.batas_revisi = batas_revisi;
+    this.jumlah_dilihat = jumlah_dilihat;
   }
 
   // Business logic methods

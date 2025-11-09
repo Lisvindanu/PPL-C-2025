@@ -103,6 +103,36 @@ module.exports = (adminController) => {
 
   /**
    * @swagger
+   * /api/admin/users/{id}:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get user details
+   *     description: Retrieve detailed information about a specific user including block log if blocked
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: User ID
+   *     responses:
+   *       200:
+   *         description: User details retrieved successfully
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         $ref: '#/components/responses/ForbiddenError'
+   *       404:
+   *         $ref: '#/components/responses/NotFoundError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/users/:id', (req, res) => adminController.getUserDetails(req, res));
+
+  /**
+   * @swagger
    * /api/admin/users/{id}/block:
    *   put:
    *     tags: [Admin]
@@ -378,6 +408,36 @@ module.exports = (adminController) => {
 
   /**
    * @swagger
+   * /api/admin/services/{id}:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get service details
+   *     description: Retrieve detailed information about a specific service including block log if blocked
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Service ID
+   *     responses:
+   *       200:
+   *         description: Service details retrieved successfully
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         $ref: '#/components/responses/ForbiddenError'
+   *       404:
+   *         $ref: '#/components/responses/NotFoundError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/services/:id', (req, res) => adminController.getServiceDetails(req, res));
+
+  /**
+   * @swagger
    * /api/admin/services/{id}/block:
    *   put:
    *     tags: [Admin]
@@ -587,8 +647,7 @@ module.exports = (adminController) => {
    *       500:
    *         $ref: '#/components/responses/ServerError'
    */
-  router.get('/logs/:id', (req, res) => adminController.getActivityLogDetail(req, res));
-
+router.get('/log', (req, res) => adminController.getActivityLogDetail(req, res));
   /**
    * @swagger
    * /api/admin/logs/admin/{adminId}:
@@ -615,7 +674,7 @@ module.exports = (adminController) => {
    *       500:
    *         $ref: '#/components/responses/ServerError'
    */
-  router.get('/logs/admin/:adminId', (req, res) => adminController.getActivityLogsByAdmin(req, res));
+router.get('/logs/admin/:adminId', (req, res) => adminController.getActivityLogsByAdmin(req, res));
 
   return router;
 };
