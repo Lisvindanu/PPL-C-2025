@@ -617,7 +617,7 @@ module.exports = (adminController) => {
    *       500:
    *         $ref: '#/components/responses/ServerError'
    */
-  router.get('/logs', (req, res) => adminController.getActivityLogs(req, res));
+router.get('/log', adminController.getLogDetail.bind(adminController));
 
   /**
    * @swagger
@@ -647,7 +647,7 @@ module.exports = (adminController) => {
    *       500:
    *         $ref: '#/components/responses/ServerError'
    */
-router.get('/log', (req, res) => adminController.getActivityLogDetail(req, res));
+router.get('/logs/admin/:adminId', adminController.getLogsByAdminId.bind(adminController));
   /**
    * @swagger
    * /api/admin/logs/admin/{adminId}:
@@ -674,7 +674,7 @@ router.get('/log', (req, res) => adminController.getActivityLogDetail(req, res))
    *       500:
    *         $ref: '#/components/responses/ServerError'
    */
-router.get('/logs/admin/:adminId', (req, res) => adminController.getActivityLogsByAdmin(req, res));
+router.get('/logs', adminController.getAllLogs.bind(adminController));
 
   return router;
 };
