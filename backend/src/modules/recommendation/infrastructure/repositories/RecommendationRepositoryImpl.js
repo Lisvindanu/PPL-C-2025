@@ -388,6 +388,50 @@ class RecommendationRepositoryImpl extends IRecommendationRepository {
 
         return 'clicks';
     }
+
+    /**
+   * Get active users in last N days
+   */
+    async getActiveUsers(days = 30) {
+        try {
+            const cutoffDate = new Date();
+            cutoffDate.setDate(cutoffDate.getDate() - days);
+
+            const [results] = await this.sequelize.query(`
+        SELECT DISTINCT user_id as id
+        FROM aktivitas_user
+        WHERE created_at >= :cutoffDate
+        ORDER BY user_id
+      `, {
+                replacements: { cutoffDate: cutoffDate.toISOString() }
+            });
+
+            return results;
+        } catch (error) {
+            console.error('Error getting active users:', error);
+            return [];
+        }
+    }
+
+    /**
+     * Delete old interactions
+     */
+    async deleteOldInteractions(cutoffDate) {
+        try {
+            const [results] = await this.sequelize.query(`
+        DELETE FROM aktivitas_user
+        WHERE created_at < :cutoffDate
+        AND tipe_aktivitas NOT IN ('hide', 'tambah_favorit')
+      `, {
+                replacements: { cutoffDate: cutoffDate.toISOString() }
+            });
+
+            return results.rowCount || 0;
+        } catch (error) {
+            console.error('Error deleting old interactions:', error);
+            return 0;
+        }
+    }
 }
 
 module.exports = RecommendationRepositoryImpl;

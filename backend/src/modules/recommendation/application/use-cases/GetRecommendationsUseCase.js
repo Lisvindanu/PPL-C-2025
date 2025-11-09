@@ -22,7 +22,6 @@ class GetRecommendationsUseCase {
                 excludeServiceIds = []
             } = options;
 
-            // Validate user ID
             if (!userId) {
                 return {
                     success: false,
@@ -30,41 +29,59 @@ class GetRecommendationsUseCase {
                 };
             }
 
-            // Refresh recommendations if requested
-            if (refresh) {
-                await this.recommendationRepository.refreshRecommendations(userId);
-            }
+            // Ambil daftar layanan tersembunyi (hidden)
+            const hiddenServiceIds = await this.recommendationService.getHiddenServiceIds?.(
+                userId,
+                this.recommendationRepository
+            ) || [];
 
-            // Get personalized recommendations
-            let recommendations = await this.recommendationRepository
-                .getPersonalizedRecommendations(userId, limit * 2); // Get more for filtering
+            // Ambil interaksi pengguna (fallback jika fungsi tidak ada)
+            const userInteractions = this.recommendationRepository.getUserInteractions
+                ? await this.recommendationRepository.getUserInteractions(userId)
+                : [];
 
-            // Filter out excluded services
-            if (excludeServiceIds.length > 0) {
-                recommendations = this.recommendationService
-                    .filterRecommendations(recommendations, excludeServiceIds);
-            }
+            // Ambil favorit pengguna (fallback jika fungsi tidak ada)
+            const userFavorites = this.recommendationRepository.getUserFavorites
+                ? await this.recommendationRepository.getUserFavorites(userId)
+                : [];
 
-            // Sort by score
-            recommendations = this.recommendationService
-                .sortByScore(recommendations);
+            // Ambil semua layanan yang tersedia
+            const allServices = this.recommendationRepository.getAllServices
+                ? await this.recommendationRepository.getAllServices()
+                : [];
 
-            // Diversify recommendations to avoid too similar services
-            recommendations = this.recommendationService
-                .diversifyRecommendations(recommendations);
+            // Hitung skor untuk setiap layanan
+            const scoredServices = allServices.map(service => ({
+                ...service,
+                score: this.recommendationService.calculateRecommendationScore(
+                    service,
+                    userInteractions,
+                    userFavorites
+                )
+            }));
 
-            // Get top N recommendations
-            recommendations = this.recommendationService
-                .getTopRecommendations(recommendations, limit);
+            // Filter layanan tersembunyi & yang dikecualikan
+            const filteredServices = await this.recommendationService.filterRecommendations(
+                scoredServices,
+                excludeServiceIds,
+                hiddenServiceIds
+            );
+
+            // Urutkan & ambil rekomendasi terbaik
+            const sortedServices = this.recommendationService.sortByScore(filteredServices);
+            const topRecommendations = this.recommendationService.getTopRecommendations(
+                sortedServices,
+                limit
+            );
 
             return {
                 success: true,
-                data: recommendations.map(rec => rec.toJSON()),
+                data: topRecommendations,
                 metadata: {
-                    total: recommendations.length,
-                    timestamp: new Date(),
-                    userId,
-                    refresh
+                    total: topRecommendations.length,
+                    hiddenCount: hiddenServiceIds.length,
+                    timestamp: new Date().toISOString(),
+                    userId
                 }
             };
         } catch (error) {

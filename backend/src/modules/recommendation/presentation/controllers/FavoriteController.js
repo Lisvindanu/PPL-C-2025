@@ -33,8 +33,63 @@ class FavoriteController {
     async addFavorite(req, res) {
         try {
             const userId = req.user?.userId || req.body.userId;
-            const { serviceId } = req.params;
+            let { serviceId } = req.params;
 
+            console.log('addFavorite - Input:', { userId, serviceId });
+
+            // VALIDASI userId
+            if (!userId) {
+                return res.status(401).json({
+                    success: false,
+                    message: 'User ID is required. Please login first.'
+                });
+            }
+
+            // VALIDASI serviceId
+            if (!serviceId) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Service ID is required'
+                });
+            }
+
+            // Trim whitespace
+            serviceId = serviceId.trim();
+
+            // VALIDASI format UUID
+            const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+            if (!uuidRegex.test(serviceId)) {
+                console.warn(`Invalid serviceId format: ${serviceId}`);
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid service ID format. Must be a valid UUID, not a number or string literal.'
+                });
+            }
+
+            // VALIDASI: Cek apakah layanan exists di database
+            try {
+                const Layanan = this.sequelize.models.Layanan;
+                const layananExists = await Layanan.findByPk(serviceId);
+
+                if (!layananExists) {
+                    console.warn(`Service ID ${serviceId} not found in database`);
+                    return res.status(404).json({
+                        success: false,
+                        message: 'Layanan tidak ditemukan di database'
+                    });
+                }
+            } catch (dbError) {
+                console.error('Error checking layanan existence:', dbError);
+                return res.status(500).json({
+                    success: false,
+                    message: 'Error validating service ID'
+                });
+            }
+
+            console.log('addFavorite - After validation:', { userId, serviceId });
+
+            // Create DTO setelah validasi
             const dto = new AddFavoriteDTO({
                 userId,
                 serviceId,
@@ -51,6 +106,7 @@ class FavoriteController {
                 });
             }
 
+            // Call use case
             const result = await this.manageFavoritesUseCase.addFavorite(
                 dto.userId,
                 dto.serviceId,
@@ -58,6 +114,14 @@ class FavoriteController {
             );
 
             if (!result.success) {
+                // Handle specific error messages
+                if (result.error?.includes('sudah ada')) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Layanan sudah ada di favorit'
+                    });
+                }
+
                 return res.status(400).json({
                     success: false,
                     message: result.error
@@ -66,15 +130,32 @@ class FavoriteController {
 
             return res.status(201).json({
                 success: true,
-                message: result.message,
+                message: result.message || 'Layanan berhasil ditambahkan ke favorit',
                 data: result.data
             });
         } catch (error) {
             console.error('FavoriteController.addFavorite Error:', error);
+            console.error('Error stack:', error.stack);
+
+            // Handle specific Sequelize errors
+            if (error.name === 'SequelizeForeignKeyConstraintError') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Invalid service ID or user ID - Foreign key constraint failed'
+                });
+            }
+
+            if (error.name === 'SequelizeUniqueConstraintError') {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Layanan sudah ada di favorit'
+                });
+            }
+
             return res.status(500).json({
                 success: false,
                 message: 'Internal server error',
-                error: error.message
+                error: process.env.NODE_ENV === 'development' ? error.message : 'An error occurred'
             });
         }
     }
@@ -86,7 +167,20 @@ class FavoriteController {
     async removeFavorite(req, res) {
         try {
             const userId = req.user?.userId || req.query.userId;
-            const { serviceId } = req.params;
+            let { serviceId } = req.params;
+
+            // VALIDASI format UUID untuk removeFavorite juga
+            if (serviceId) {
+                serviceId = serviceId.trim();
+                const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+                if (!uuidRegex.test(serviceId)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: 'Invalid service ID format'
+                    });
+                }
+            }
 
             const dto = new RemoveFavoriteDTO({
                 userId,

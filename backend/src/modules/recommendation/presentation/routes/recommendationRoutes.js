@@ -455,5 +455,231 @@ module.exports = (recommendationController, favoriteController) => {
     (req, res) => favoriteController.getFavorites(req, res)
   );
 
+  // ==================== HIDE SERVICE ENDPOINTS ====================
+
+  /**
+   * @swagger
+   * /api/recommendations/hide/{serviceId}:
+   *   post:
+   *     tags: [Recommendations]
+   *     summary: Sembunyikan layanan dari rekomendasi
+   *     description: Menyembunyikan layanan tertentu agar tidak muncul lagi di rekomendasi pengguna
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: serviceId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID layanan yang ingin disembunyikan
+   *     responses:
+   *       200:
+   *         description: Layanan berhasil disembunyikan dari rekomendasi
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Service hidden from recommendations"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     userId:
+   *                       type: string
+   *                       example: "123"
+   *                     serviceId:
+   *                       type: string
+   *                       example: "45"
+   *                     hiddenAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-11-08T10:26:37.593Z"
+   *       400:
+   *         description: Parameter serviceId tidak valid
+   *       401:
+   *         description: User tidak terautentikasi
+   *       404:
+   *         description: Layanan tidak ditemukan
+   *       500:
+   *         description: Terjadi kesalahan server
+   */
+  router.post(
+    '/hide/:serviceId',
+    authMiddleware,
+    (req, res) => recommendationController.hideService(req, res)
+  );
+
+
+  /**
+   * @swagger
+   * /api/recommendations/hide/{serviceId}:
+   *   delete:
+   *     tags: [Recommendations]
+   *     summary: Tampilkan kembali layanan yang disembunyikan (Unhide)
+   *     description: Mengembalikan layanan yang sebelumnya disembunyikan agar muncul lagi di rekomendasi pengguna
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: serviceId
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: ID layanan yang ingin ditampilkan kembali
+   *     responses:
+   *       200:
+   *         description: Layanan berhasil ditampilkan kembali
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Service unhidden successfully"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     userId:
+   *                       type: string
+   *                       example: "123"
+   *                     serviceId:
+   *                       type: string
+   *                       example: "45"
+   *                     unhiddenAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-11-08T10:30:00.000Z"
+   *       400:
+   *         description: Parameter serviceId tidak valid
+   *       401:
+   *         description: User tidak terautentikasi
+   *       404:
+   *         description: Layanan tidak ditemukan
+   *       500:
+   *         description: Terjadi kesalahan server
+   */
+  router.delete(
+    '/hide/:serviceId',
+    authMiddleware,
+    (req, res) => recommendationController.unhideService(req, res)
+  );
+
+
+  // ==================== ADMIN ENDPOINTS ====================
+
+  /**
+   * @swagger
+   * /api/recommendations/admin/stats:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan statistik rekomendasi (Admin)
+   *     description: Endpoint untuk melihat ringkasan statistik data rekomendasi, seperti total rekomendasi, jumlah interaksi, dan performa keseluruhan.
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Statistik rekomendasi berhasil diambil
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Recommendation statistics retrieved successfully"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     totalRecommendations:
+   *                       type: integer
+   *                       example: 120
+   *                     totalInteractions:
+   *                       type: integer
+   *                       example: 480
+   *                     topCategory:
+   *                       type: string
+   *                       example: "Design & Creative"
+   *                     generatedAt:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-11-08T10:35:00.000Z"
+   *       401:
+   *         description: User tidak terautentikasi atau tidak memiliki akses admin
+   *       500:
+   *         description: Terjadi kesalahan server
+   */
+  router.get(
+    '/admin/stats',
+    authMiddleware,
+    (req, res) => recommendationController.getAdminStats(req, res)
+  );
+
+
+  /**
+   * @swagger
+   * /api/recommendations/admin/performance:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan metrik performa rekomendasi (Admin)
+   *     description: Endpoint untuk melihat performa algoritma rekomendasi berdasarkan engagement pengguna (clicks, likes, orders).
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Data performa berhasil diambil
+   *         content:
+   *           application/json:
+   *             schema:
+   *               type: object
+   *               properties:
+   *                 success:
+   *                   type: boolean
+   *                   example: true
+   *                 message:
+   *                   type: string
+   *                   example: "Recommendation performance metrics retrieved successfully"
+   *                 data:
+   *                   type: object
+   *                   properties:
+   *                     accuracy:
+   *                       type: number
+   *                       format: float
+   *                       example: 0.87
+   *                     precision:
+   *                       type: number
+   *                       format: float
+   *                       example: 0.81
+   *                     recall:
+   *                       type: number
+   *                       format: float
+   *                       example: 0.84
+   *                     lastUpdated:
+   *                       type: string
+   *                       format: date-time
+   *                       example: "2025-11-08T10:40:00.000Z"
+   *       401:
+   *         description: User tidak terautentikasi atau tidak memiliki akses admin
+   *       500:
+   *         description: Terjadi kesalahan server
+   */
+  router.get(
+    '/admin/performance',
+    authMiddleware,
+    (req, res) => recommendationController.getRecommendationPerformance(req, res)
+  );
+
   return router;
 };
