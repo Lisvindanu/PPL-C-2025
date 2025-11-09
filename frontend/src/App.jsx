@@ -5,6 +5,8 @@ import RegisterClientPage from "./pages/RegisterClientPage";
 import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminUserManagementPage from "./pages/AdminUserManagementPage";
+import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
@@ -17,14 +19,19 @@ import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import ServiceListPage from "./pages/ServiceListPage";
 import CreateOrderPage from "./pages/CreateOrderPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import OTPConfirmPage from "./pages/OTPConfirmPage";
+import NewPasswordPage from "./pages/NewPasswordPage";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
+      <Route path="/reset-password/new-password" element={<NewPasswordPage />} />
       <Route path="/services" element={<ServiceListPage />} />
       <Route
         path="/dashboard"
@@ -39,6 +46,30 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboardadmin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminUserManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/services"
+        element={
+          <ProtectedRoute>
+            <AdminServiceManagementPage />
           </ProtectedRoute>
         }
       />
@@ -75,14 +106,6 @@ export default function App() {
         }
       />
       <Route
-        path="/services"
-        element={
-          <ProtectedRoute>
-            <ServiceListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/services/:id"
         element={
           <ProtectedRoute>
@@ -110,7 +133,9 @@ export default function App() {
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
-  );
+  )
 }
+
+
