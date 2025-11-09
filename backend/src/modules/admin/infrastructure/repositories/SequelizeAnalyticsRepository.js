@@ -1,5 +1,3 @@
-const { sequelize } = require('../../../../shared/database/connection');
-
 class SequelizeAnalyticsRepository {
   constructor(sequelize) {
     this.sequelize = sequelize;
@@ -52,6 +50,7 @@ async countOrders(status = null) {
           DATE_FORMAT(created_at, '%Y-%m') as month,
           COUNT(*) as count
         FROM users
+        WHERE role != 'admin'
         GROUP BY DATE_FORMAT(created_at, '%Y-%m')
         ORDER BY month ASC
       `, {
@@ -76,6 +75,7 @@ async countOrders(status = null) {
           END as name,
           COUNT(*) as value
         FROM users
+        WHERE role != 'admin'
         GROUP BY is_active
         ORDER BY value DESC
       `, {
@@ -196,6 +196,7 @@ async countOrders(status = null) {
           COUNT(CASE WHEN p.status = 'gagal' THEN 1 END) as failed_count
         FROM users u
         LEFT JOIN pembayaran p ON u.id = p.user_id
+        WHERE u.role != 'admin'
         GROUP BY u.id
         HAVING failed_count > 3 OR transaction_count > 50
       `, {
