@@ -16,11 +16,8 @@ class SequelizeReviewRepository {
   }
 
   async create(reviewData) {
-    // TODO: Implementasi create review
-    // const result = await this.sequelize.models.Review.create(reviewData);
-    // return new Review(result.toJSON());
-
-    throw new Error('Not implemented - Standard Sequelize create');
+    const result = await this.sequelize.models.Review.create(reviewData);
+    return new Review(result.toJSON());
   }
 
   async findById(id) {
