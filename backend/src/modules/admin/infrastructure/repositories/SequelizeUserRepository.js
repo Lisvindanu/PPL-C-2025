@@ -5,11 +5,11 @@ class SequelizeUserRepository {
 
   async countByRole(role = 'all') {
     try {
-      let query = 'SELECT COUNT(*) as count FROM users';
-      const replacements = [];
+      let query = 'SELECT COUNT(*) as count FROM users WHERE role != ?';
+      const replacements = ['admin'];
 
       if (role !== 'all') {
-        query += ' WHERE role = ?';
+        query += ' AND role = ?';
         replacements.push(role);
       }
 
@@ -192,8 +192,9 @@ class SequelizeUserRepository {
   async getActiveUsers() {
     try {
       const users = await this.sequelize.query(
-        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 1 ORDER BY created_at DESC',
+        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 1 AND role != ? ORDER BY created_at DESC',
         {
+          replacements: ['admin'],
           raw: true,
           type: this.sequelize.QueryTypes.SELECT
         }
@@ -208,8 +209,9 @@ class SequelizeUserRepository {
   async getInactiveUsers() {
     try {
       const users = await this.sequelize.query(
-        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 0 ORDER BY created_at DESC',
+        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 0 AND role != ? ORDER BY created_at DESC',
         {
+          replacements: ['admin'],
           raw: true,
           type: this.sequelize.QueryTypes.SELECT
         }
