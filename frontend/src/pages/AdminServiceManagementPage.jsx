@@ -189,16 +189,18 @@ function ServiceDetailModal({
               )}
               <div>
                 <label className="text-sm font-medium text-gray-700">Freelancer</label>
-                <p className="text-gray-900">{service.freelancer_name || 'N/A'}</p>
-                {service.freelancer_email && (
-                  <p className="text-sm text-gray-600">{service.freelancer_email}</p>
+                <p className="text-gray-900">
+                  {service.freelancer?.full_name || service.freelancer?.email || service.freelancer_name || 'N/A'}
+                </p>
+                {service.freelancer?.email && service.freelancer?.full_name && (
+                  <p className="text-sm text-gray-600">{service.freelancer.email}</p>
                 )}
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-700">Kategori</label>
                 <div className="mt-1">
-                  <Badge className="bg-[#9DBBDD] text-white">
-                    {service.kategori_name || 'N/A'}
+                  <Badge className="!bg-[#9DBBDD] !text-white">
+                    {service.kategori?.nama || service.kategori_name || 'N/A'}
                   </Badge>
                 </div>
               </div>
