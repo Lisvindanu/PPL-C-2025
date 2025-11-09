@@ -12,16 +12,6 @@ class AdminLogService {
   async getLogDetail(logId) {
     return await this.adminLogRepository.findById(logId);
   }
-
-  async getAllLogs() {
-  return await this.adminLogRepository.findAll();
-}
-
-async getLogs(filters) {
-  return await this.adminLogRepository.getLogs(filters);
-}
-
-
 }
 
 module.exports = AdminLogService;

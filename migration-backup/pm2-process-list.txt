@@ -1,0 +1,12 @@
+┌────┬──────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                     │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ nobar-backend-8000       │ default     │ N/A     │ fork    │ 746916   │ 5D     │ 7    │ online    │ 0%       │ 4.1mb    │ root     │ disabled │
+│ 1  │ nobar-backend-8001       │ default     │ N/A     │ fork    │ 746925   │ 5D     │ 7    │ online    │ 0%       │ 4.3mb    │ root     │ disabled │
+│ 2  │ nobar-backend-8002       │ default     │ N/A     │ fork    │ 746934   │ 5D     │ 7    │ online    │ 0%       │ 4.3mb    │ root     │ disabled │
+│ 3  │ nobar-backend-8003       │ default     │ N/A     │ fork    │ 746943   │ 5D     │ 7    │ online    │ 0%       │ 4.1mb    │ root     │ disabled │
+│ 6  │ ppl-backend-5001         │ default     │ 1.0.0   │ fork    │ 976826   │ 4m     │ 807  │ online    │ 0%       │ 98.0mb   │ root     │ disabled │
+│ 5  │ ppl-frontend-3000        │ default     │ N/A     │ fork    │ 966894   │ 24m    │ 13   │ online    │ 0%       │ 55.0mb   │ root     │ disabled │
+│ 7  │ project-n-discord-bot    │ default     │ 1.0.0   │ cluster │ 689998   │ 6D     │ 16   │ online    │ 0%       │ 53.5mb   │ root     │ disabled │
+│ 8  │ wa-notif                 │ default     │ 1.0.0   │ fork    │ 894750   │ 2D     │ 19   │ online    │ 0%       │ 46.4mb   │ root     │ disabled │
+└────┴──────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘

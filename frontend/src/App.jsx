@@ -1,13 +1,27 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
-import LoginPage from './pages/LoginPage'
-import RegisterClientPage from './pages/RegisterClientPage'
-import RegisterFreelancerPage from './pages/RegisterFreelancerPage'
-import DashboardPage from './pages/DashboardPage'
-import ProfilePage from './pages/ProfilePage'
-import ForgotPasswordPage from './pages/ForgotPasswordPage'
-import OTPConfirmPage from './pages/OTPConfirmPage'
-import NewPasswordPage from './pages/NewPasswordPage'
-import ProtectedRoute from './components/templates/ProtectedRoute'
+import { Routes, Route, Navigate } from "react-router-dom";
+import Landing from "./pages/Landing";
+import LoginPage from "./pages/LoginPage";
+import RegisterClientPage from "./pages/RegisterClientPage";
+import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
+import DashboardPage from "./pages/DashboardPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminUserManagementPage from "./pages/AdminUserManagementPage";
+import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
+import ProfilePage from "./pages/ProfilePage";
+import ProtectedRoute from "./components/templates/ProtectedRoute";
+import ServicePage from "./pages/freelance/ServicePage";
+import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
+import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
+import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
+import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
+import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
+import BookmarkPage from "./pages/BookmarkPage";
+import ServiceListPage from "./pages/ServiceListPage";
+import CreateOrderPage from "./pages/CreateOrderPage";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import OTPConfirmPage from "./pages/OTPConfirmPage";
+import NewPasswordPage from "./pages/NewPasswordPage";
 
 export default function App() {
   return (
@@ -18,8 +32,107 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
       <Route path="/reset-password/new-password" element={<NewPasswordPage />} />
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+      <Route path="/services" element={<ServiceListPage />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboardadmin"
+        element={
+          <ProtectedRoute>
+            <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute>
+            <AdminUserManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/services"
+        element={
+          <ProtectedRoute>
+            <AdminServiceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/bookmarks"
+        element={
+          <ProtectedRoute>
+            <BookmarkPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/freelance/service"
+        element={
+          <ProtectedRoute>
+            <ServicePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/freelance/service/new"
+        element={
+          <ProtectedRoute>
+            <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/services/:id"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/jobs"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create-order"
+        element={
+          <ProtectedRoute>
+            <CreateOrderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/payment/success" element={<PaymentSuccessPage />} />
+      <Route path="/payment/pending" element={<PaymentPendingPage />} />
+      <Route path="/payment/error" element={<PaymentErrorPage />} />
+      <Route path="/payment/expired" element={<PaymentExpiredPage />} />
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   )

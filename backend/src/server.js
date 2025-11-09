@@ -11,7 +11,25 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 // ==================== MIDDLEWARE ====================
-app.use(helmet()); // Security headers
+// Helmet security headers - with custom CSP for mock-payment
+app.use((req, res, next) => {
+  if (req.path.startsWith('/mock-payment')) {
+    // Relaxed CSP for mock payment page (allows inline scripts)
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrcAttr: ["'unsafe-inline'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+        }
+      }
+    })(req, res, next);
+  } else {
+    // Strict CSP for other routes
+    helmet()(req, res, next);
+  }
+});
 
 // CORS configuration - allow multiple origins
 const allowedOrigins = [
@@ -116,28 +134,29 @@ const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRout
 app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
 
 // ===== Modul 2: Service Listing & Search =====
-// Kategori & Sub-Kategori routes (public)
-const KategoriController = require('./modules/service/presentation/controllers/KategoriController');
-const kategoriController = new KategoriController(sequelize);
+const setupServiceDependencies = require('./modules/service/config/serviceDependencies');
+const { serviceController, kategoriController, subKategoriController } = setupServiceDependencies(sequelize);
+
+const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
+app.use('/api/services', serviceRoutes(serviceController));
+
 const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
 app.use('/api/kategori', kategoriRoutes(kategoriController));
 
-const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
-const subKategoriController = new SubKategoriController(sequelize);
 const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
-
-// Service CRUD routes (Dalam Pengembangan)
-const ServiceController = require('./modules/service/presentation/controllers/ServiceController');
-const serviceController = new ServiceController(sequelize);
-const serviceRoutes = require('./modules/service/presentation/routes/serviceRoutes');
-app.use('/api/services', serviceRoutes(serviceController));
 
 // ===== Modul 3: Order & Booking System (Dalam Pengembangan) =====
 const OrderController = require('./modules/order/presentation/controllers/OrderController');
 const orderController = new OrderController(sequelize);
 const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 app.use('/api/orders', orderRoutes(orderController));
+
+// Modul 3: Bookmark (menggunakan storage favorites)
+const BookmarkController = require('./modules/order/presentation/controllers/BookmarkController');
+const bookmarkController = new BookmarkController();
+const bookmarkRoutes = require('./modules/order/presentation/routes/bookmarkRoutes');
+app.use('/api/bookmarks', bookmarkRoutes(bookmarkController));
 
 // ===== Modul 4: Payment Gateway =====
 const paymentRoutes = require('./modules/payment/presentation/routes/paymentRoutes');
@@ -157,9 +176,63 @@ app.use('/api/chat', chatRoutes(chatController));
 
 // ===== Modul 8: Recommendation & Personalization (Dalam Pengembangan) =====
 const RecommendationController = require('./modules/recommendation/presentation/controllers/RecommendationController');
+const FavoriteController = require('./modules/recommendation/presentation/controllers/FavoriteController');
 const recommendationController = new RecommendationController(sequelize);
+const favoriteController = new FavoriteController(sequelize);
 const recommendationRoutes = require('./modules/recommendation/presentation/routes/recommendationRoutes');
-app.use('/api/recommendations', recommendationRoutes(recommendationController));
+app.use('/api/recommendations', recommendationRoutes(recommendationController, favoriteController));
+
+// ==================== WEBHOOK PROXY ====================
+// GitHub Webhook Proxy to WhatsApp Notifier
+const axios = require('axios');
+
+app.post('/webhook/github', async (req, res) => {
+  try {
+    // Forward the request to wa-notif service
+    const response = await axios({
+      method: 'POST',
+      url: 'http://localhost:3002/webhook/github',
+      data: req.body,
+      headers: {
+        'Content-Type': req.headers['content-type'] || 'application/json',
+        'X-GitHub-Event': req.headers['x-github-event'],
+        'X-Hub-Signature-256': req.headers['x-hub-signature-256'],
+        'X-GitHub-Delivery': req.headers['x-github-delivery'],
+        'User-Agent': req.headers['user-agent']
+      }
+    });
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error('[WEBHOOK PROXY] Error forwarding to wa-notif:', error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: error.response?.data || error.message
+    });
+  }
+});
+
+// Test notification endpoint proxy
+app.post('/test/notification', async (req, res) => {
+  try {
+    const response = await axios({
+      method: 'POST',
+      url: 'http://localhost:3002/test/notification',
+      data: req.body,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    res.status(response.status).json(response.data);
+  } catch (error) {
+    console.error('[TEST NOTIFICATION PROXY] Error:', error.message);
+    res.status(error.response?.status || 500).json({
+      success: false,
+      message: error.response?.data || error.message
+    });
+  }
+});
 
 // ==================== ERROR HANDLING ====================
 // 404 Handler

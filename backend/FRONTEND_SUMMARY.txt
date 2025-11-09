@@ -1,0 +1,263 @@
+================================================================================
+                    PPL-C-2025 FRONTEND ARCHITECTURE SUMMARY
+================================================================================
+
+TECH STACK:
+  React 18.3.1 + Vite 5.2.0 | React Router v6 | Tailwind CSS 3.4.18
+  Axios 1.7.2 | TanStack React Query | Framer Motion | Recharts
+  FontAwesome + Lucide Icons
+
+FOLDER STRUCTURE:
+  frontend/
+    src/
+      components/  -- Atomic Design Pattern
+        atoms/     -- 28 base UI elements (Button, Input, Card, etc.)
+        molecules/ -- 39 composed components (forms, cards, lists)
+        organisms/ -- 24 complex sections (Navbar, Sidebar, modals)
+        templates/ -- 4 page layouts (Dashboard, Profile, Auth, Landing)
+      pages/       -- User-facing page components (14 pages + subdirs)
+      services/    -- API service calls (auth, admin, favorite)
+      hooks/       -- Custom React hooks (useAuth, useUserIdentity)
+      utils/       -- Utilities (axiosConfig, validators, data)
+      styles/      -- Global styles (auth.css, fonts.css)
+
+ROUTING STRUCTURE (React Router v6):
+  /                    PUBLIC  -> Landing page
+  /login               PUBLIC  -> Login page
+  /register/client     PUBLIC  -> Client registration
+  /register/freelancer PUBLIC  -> Freelancer registration
+  /dashboard           PROTECTED -> Dashboard
+  /admin/dashboard     PROTECTED -> Admin dashboard
+  /profile             PROTECTED -> User profile
+  /freelance/service   PROTECTED -> Services list
+  /freelance/service/new PROTECTED -> Create service
+  /jobs/:slug          PROTECTED -> Job details
+  *                    -> Redirect to /
+
+STYLING APPROACH:
+  ** ONLY TAILWIND CSS ** (Utility-first, no CSS modules or styled-components)
+  Custom Colors:
+    Primary: #4782BE, #9DBBDD, #D8E3F3
+    Success: #10b981 | Warning: #f59e0b | Danger: #ef4444
+    Fonts: Poppins (titles), Inter (body)
+
+COMPONENT HIERARCHY (Atomic Design):
+  Atoms (base)
+    ↓
+  Molecules (composed atoms)
+    ↓
+  Organisms (complex molecules)
+    ↓
+  Templates (layouts)
+    ↓
+  Pages (route components)
+
+STATE MANAGEMENT:
+  Local: useState + useEffect
+  Persistence: localStorage (token, user object)
+  Global: ToastProvider for notifications
+  No Zustand/Redux used currently
+
+API INTEGRATION:
+  Base: axios instance at src/utils/axiosConfig.js
+  Pattern: Service layer (authService.js, adminService.js)
+  Auth: JWT token in localStorage + Authorization header
+  Error handling: Try-catch + error state management
+  401 response: Auto-redirect to /login
+  Protected routes: ProtectedRoute wrapper component
+
+EXISTING ATOMS (28):
+  Avatar, Badge, Button, Card, Chip, FAIcon, Icon, Input, Label,
+  TextArea, Select, SelectBox, Spinner, TextField, SearchInput, Text,
+  PasswordInput, NavLink, Breadcrumb, StarRating, TagPill, Logo,
+  GradientText, KebabButton, NotificationBell, SearchButton, IconButton,
+  UploadDropzone
+
+EXISTING MOLECULES (39):
+  PricingFormCard, MediaFormCard, ServiceCard, ServiceCardItem,
+  ProfileHeader, SkillTag, DashboardHeaderBar, NavHeader, NavKategori,
+  NavService, UserMenu, ServiceHeaderCard, NavItem, LanguageItem,
+  CategoryMenu, RoleCard, FormGroup, ServiceTabs, OrderCard,
+  OrderConfirmModal, SavedToast, FavoriteToast, SearchBar,
+  UnsaveConfirmModal, UnfavoriteConfirmModal, PortfolioGrid,
+  RemoveRecommendationModal, InteractionBar, BlockListSection,
+  AboutFreelancerCard, InfoCard, VerificationBadge, TextRotator,
+  AddServiceCallout, StatCard, SuccessModal, CategoryCard,
+  SearchBarLanding
+
+EXISTING ORGANISMS (24):
+  Navbar, Header, Sidebar, EditForm, ProfileInfo, SkillsSection,
+  PortfolioSection, OrderChart, UserChart, StatsGrid, ReviewsSection,
+  ToastProvider, RatingModal, LoadingOverlay, ProfileLoadingOverlay,
+  Footer, PortfolioSection, HeroSection, CategoryServiceSection,
+  RecommendationSection, CategoryGrid, FilterKategori, AuthCard,
+  ServicesGrid
+
+EXISTING TEMPLATES (4):
+  DashboardLayout, ProfileLayout, AuthLayout, LandingPageTemplate,
+  ProtectedRoute
+
+PATTERN EXAMPLES:
+
+Button (Atom):
+  <Button variant="primary" onClick={handler}>Click me</Button>
+  Variants: primary, outline, neutral, role
+
+Input (Atom):
+  <Input placeholder="text" value={val} onChange={handleChange} />
+
+Card (Atom):
+  <Card title="Title" subtitle="Subtitle">Content</Card>
+
+Form Pattern (Molecule):
+  state: { field1: '', field2: '' }
+  handler: setState(prev => ({ ...prev, updates }))
+  <Input value={form.field1} onChange={(e) => handleChange({field1: e.target.value})} />
+
+Page Pattern (Page):
+  - useState for form, loading, error
+  - useEffect for initial data
+  - async handlers with try-catch
+  - show error messages & loading states
+  - wrap with ProtectedRoute in App.jsx
+
+BACKEND PAYMENT ENDPOINTS (Ready):
+  POST   /api/payments/create              - Create payment
+  GET    /api/payments/:id                 - Get payment
+  GET    /api/payments/order/:orderId      - Get by order
+  POST   /api/payments/webhook             - Webhook
+  POST   /api/payments/escrow/release      - Release escrow
+  GET    /api/payments/escrow/:id          - Get escrow
+  POST   /api/payments/withdraw            - Create withdrawal
+  POST   /api/payments/:id/refund          - Request refund
+  PUT    /api/payments/refund/:id/process  - Process refund (admin)
+  GET    /api/payments/analytics/summary   - Analytics
+  POST   /api/payments/:id/retry           - Retry payment
+
+PAYMENT RESPONSE FORMAT:
+  {
+    success: boolean,
+    data: {
+      id: number,
+      pesanan_id: number,
+      user_id: number,
+      jumlah: number,
+      status: "pending|berhasil|gagal",
+      metode_pembayaran: string,
+      channel: string,
+      token: string,
+      payment_url: string,
+      created_at: datetime,
+      updated_at: datetime
+    }
+  }
+
+FOR PAYMENT PAGES DEVELOPMENT:
+
+1. CREATE SERVICE:
+   src/services/paymentService.js
+   - createPayment()
+   - getPaymentById()
+   - releaseEscrow()
+   - requestRefund()
+   - getAnalytics()
+
+2. CREATE ATOMS (2):
+   - AmountInput (currency formatting)
+   - PaymentStatusBadge (status display)
+
+3. CREATE MOLECULES (3):
+   - PaymentMethodCard (select method)
+   - PaymentFormCard (enter details)
+   - PaymentHistoryItem (display history)
+
+4. CREATE ORGANISMS (2):
+   - PaymentHistoryList (show multiple items)
+   - OrderPaymentCheckout (multi-step wizard)
+
+5. CREATE PAGES (3):
+   - PaymentPage (main payment)
+   - CheckoutPage (order checkout)
+   - PaymentHistoryPage (history with filters)
+
+6. UPDATE App.jsx:
+   - Import pages
+   - Add routes
+   - Wrap with ProtectedRoute
+
+7. FOLLOW PATTERNS:
+   - Use Tailwind only
+   - useState + useEffect
+   - Error handling
+   - Loading states
+   - Responsive design
+
+DOCUMENTATION FILES (in /backend):
+  - FRONTEND_ARCHITECTURE.md         -- Complete overview
+  - PAYMENT_COMPONENTS_TEMPLATE.md   -- Code examples & templates
+  - PAYMENT_IMPLEMENTATION_CHECKLIST.md -- Step-by-step guide
+  - FRONTEND_SUMMARY.txt             -- This file
+
+KEY FEATURES:
+  ✓ Atomic Design Pattern (highly modular & reusable)
+  ✓ Tailwind CSS (no build-time surprises, utility-first)
+  ✓ Protected Routes (auth check before page load)
+  ✓ Proper error handling (user-friendly messages)
+  ✓ Loading states (spinner overlays)
+  ✓ Responsive design (mobile-first)
+  ✓ Service layer (clean API separation)
+  ✓ localStorage persistence (auth & user data)
+  ✓ 401 auto-redirect (token expiry handling)
+  ✓ Interceptors (auto token injection)
+
+COMMON TAILWIND CLASSES:
+  Layout: max-w-7xl mx-auto px-4 py-8 | grid grid-cols-1 lg:grid-cols-3 gap-6
+  Cards: bg-white rounded-lg shadow-sm p-6
+  Buttons: px-6 py-3 rounded-full font-medium transition
+  Forms: w-full rounded-md bg-[#F5F0EB] px-4 py-3 focus:ring-2
+  Status: px-3 py-1 rounded-full text-sm font-medium
+  Colors: bg-[#4782BE] text-white hover:bg-[#9DBBDD]
+
+BEST PRACTICES:
+  1. Always use default props
+  2. Always handle loading/error states
+  3. Always wrap async in try-catch
+  4. Always use Tailwind (no external CSS)
+  5. Always follow atomic hierarchy
+  6. Always use useState/useEffect patterns
+  7. Always add ProtectedRoute to secure pages
+  8. Always call api through service layer
+  9. Always show user feedback (messages, spinners)
+  10. Always test on mobile & desktop
+
+DEV SETUP:
+  npm install         -- Install dependencies
+  npm run dev         -- Run dev server (port 3000)
+  npm run build       -- Build for production
+  npm run preview     -- Preview production build
+
+ENV VARIABLES:
+  VITE_API_BASE_URL=http://localhost:5000/api
+  Access: import.meta.env.VITE_API_BASE_URL
+
+ICONS:
+  FontAwesome: <i className="fas fa-icon-name"></i>
+  Lucide: import { IconName } from 'lucide-react'
+
+GIT STATUS:
+  Branch: dev (ready for feature branches)
+  Latest: integrasi midtrans payment integration
+  Main: for production releases
+
+NEXT STEPS:
+  1. Read FRONTEND_ARCHITECTURE.md
+  2. Review PAYMENT_COMPONENTS_TEMPLATE.md
+  3. Follow PAYMENT_IMPLEMENTATION_CHECKLIST.md
+  4. Create components in order (atoms → molecules → organisms → pages)
+  5. Test each component as you build
+  6. Integrate with backend endpoints
+  7. Deploy to dev/staging environment
+
+================================================================================
+                         END OF SUMMARY
+================================================================================
