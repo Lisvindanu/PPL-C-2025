@@ -120,13 +120,29 @@ class RecommendationService {
     }
 
     /**
-     * Filter recommendations by excluded service IDs
-     */
-    filterRecommendations(recommendations, excludeServiceIds = []) {
-        if (!excludeServiceIds || excludeServiceIds.length === 0) {
+   * Filter recommendations by excluded AND hidden service IDs
+   */
+    async filterRecommendations(recommendations, excludeServiceIds = [], hiddenServiceIds = []) {
+        const allExcluded = [...new Set([...excludeServiceIds, ...hiddenServiceIds])];
+
+        if (!allExcluded || allExcluded.length === 0) {
             return recommendations;
         }
-        return recommendations.filter(rec => !excludeServiceIds.includes(rec.serviceId));
+
+        return recommendations.filter(rec => !allExcluded.includes(rec.serviceId));
+    }
+
+    /**
+   * Get hidden service IDs for user
+   */
+    async getHiddenServiceIds(userId, repository) {
+        try {
+            const hiddenInteractions = await repository.getUserInteractions(userId, 'hide');
+            return hiddenInteractions.map(interaction => interaction.serviceId);
+        } catch (error) {
+            console.error('Error getting hidden services:', error);
+            return [];
+        }
     }
 
     /**
