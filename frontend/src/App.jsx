@@ -28,6 +28,7 @@ import NewPasswordPage from "./pages/NewPasswordPage";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
