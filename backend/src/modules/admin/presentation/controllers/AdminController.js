@@ -516,76 +516,65 @@ async exportReport(req, res) {
     }
   }
 
-async getActivityLogs(req, res) {
+async getAllLogs(req, res) {
   try {
-    const { adminId, limit, offset } = req.query;
-
-    const filters = {};
-    if (adminId) filters.adminId = adminId;
-    if (limit) filters.limit = parseInt(limit, 10);
-    if (offset) filters.offset = parseInt(offset, 10);
-
-    const logs = await this.adminLogService.getLogs(filters);
-
-    if (!logs || logs.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No logs found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Logs retrieved successfully',
-      data: logs
-    });
-  } catch (error) {
-    console.error('❌ Error in getActivityLogs:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
-
-
-
-async getActivityLogDetail(req, res) {
-  try {
-    const { id } = req.query; // ambil dari query param
-
-    const log = await this.adminLogService.getLogDetail(id);
-
-    if (!log) {
-      return res.status(404).json({
-        success: false,
-        error: 'Log not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Activity log detail retrieved',
-      data: log
-    });
-  } catch (error) {
-    console.error('Error in getActivityLogDetail:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
-
-
-async getActivityLogsByAdmin(req, res) {
-  try {
-    const { adminId } = req.params; // ✅ ambil dari params
     const { limit = 50, offset = 0 } = req.query;
 
-    console.log('🎯 Controller: getActivityLogsByAdmin called');
-    console.log('📋 Params:', { adminId });
-    console.log('📋 Query:', { limit, offset });
+    const filters = {
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    };
+
+    const result = await this.getActivityLogsUseCase.execute(filters);
+
+    if (!result.data || result.data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Belum ada log'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Semua log berhasil diambil',
+      data: result.data,
+      pagination: {
+        limit: result.limit,
+        offset: result.offset,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error in getAllLogs:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+}
+
+
+async getLogsByAdminId(req, res) {
+  try {
+    const { adminId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
+
+    // Validasi admin exist
+    const [adminExists] = await this.sequelize.query(
+      'SELECT id FROM users WHERE id = ? AND role = ?',
+      {
+        replacements: [adminId, 'admin'],
+        type: this.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!adminExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan'
+      });
+    }
 
     const filters = {
       adminId,
@@ -593,30 +582,68 @@ async getActivityLogsByAdmin(req, res) {
       offset: parseInt(offset)
     };
 
-    const logs = await this.getActivityLogsUseCase.execute(filters);
+    const result = await this.getActivityLogsUseCase.execute(filters);
 
-    if (!logs.data || logs.data.length === 0) {
+    if (!result.data || result.data.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'No logs found for this admin'
+        message: 'Log tidak ditemukan untuk admin ini'
       });
     }
 
     res.json({
       success: true,
-      message: 'Admin activity logs retrieved',
-      data: logs.data,
+      message: 'Log admin berhasil diambil',
+      data: result.data,
       pagination: {
-        limit: logs.limit,
-        offset: logs.offset,
-        total: logs.total
+        limit: result.limit,
+        offset: result.offset,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit)
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Error in getLogsByAdminId:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 }
 
+async getLogDetail(req, res) {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Log ID harus diisi'
+      });
+    }
+
+    const log = await this.adminLogService.getLogDetail(id);
+
+    if (!log) {
+      return res.status(404).json({
+        success: false,
+        message: 'Log tidak ditemukan'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Detail log berhasil diambil',
+      data: log
+    });
+  } catch (error) {
+    console.error('❌ Error in getLogDetail:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
 
 
   async getServices(req, res) {
