@@ -31,7 +31,14 @@ export const bookmarkService = {
   async addBookmark(serviceId) {
     try {
       const res = await api.post('/bookmarks', { layanan_id: serviceId });
-      return res.data;
+      // Normalize response to always include success flag
+      if (typeof res.data?.success !== 'undefined') {
+        return res.data;
+      }
+      return {
+        success: res.status >= 200 && res.status < 300,
+        data: res.data?.data ?? res.data,
+      };
     } catch (error) {
       return {
         success: false,
@@ -47,7 +54,18 @@ export const bookmarkService = {
   async removeBookmark(serviceId) {
     try {
       const res = await api.delete(`/bookmarks/${serviceId}`);
-      return res.data;
+      // Normalize response to always include success flag
+      if (typeof res.data?.success !== 'undefined') {
+        return res.data;
+      }
+      // Some APIs return 204 No Content for delete
+      if (res.status === 204) {
+        return { success: true, data: null };
+      }
+      return {
+        success: res.status >= 200 && res.status < 300,
+        data: res.data?.data ?? res.data,
+      };
     } catch (error) {
       return {
         success: false,

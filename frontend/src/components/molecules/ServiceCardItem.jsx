@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { authService } from "../../services/authService";
 import { favoriteService } from "../../services/favoriteService";
 import { bookmarkService } from "../../services/bookmarkService";
@@ -30,6 +30,28 @@ export default function ServiceCardItem({ service, onClick, onFavoriteToggle, on
   const [showBookmarkToast, setShowBookmarkToast] = useState(false);
   const [showUnfavoriteModal, setShowUnfavoriteModal] = useState(false);
   const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
+
+  // Ensure initial bookmark state reflects server on refresh/navigation
+  useEffect(() => {
+    let cancelled = false;
+
+    const hydrateBookmarkState = async () => {
+      if (!user || !isClient || !service?.id) return;
+
+      try {
+        const res = await bookmarkService.isBookmarked(service.id);
+        if (cancelled) return;
+        if (res?.success && typeof res.data?.isBookmarked === 'boolean') {
+          setIsBookmarked(res.data.isBookmarked);
+        }
+      } catch (_) {
+        // ignore - keep current optimistic state
+      }
+    };
+
+    hydrateBookmarkState();
+    return () => { cancelled = true; };
+  }, [user, isClient, service?.id]);
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();

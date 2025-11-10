@@ -22,6 +22,8 @@ import CreateOrderPage from "./pages/CreateOrderPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OTPConfirmPage from "./pages/OTPConfirmPage";
 import NewPasswordPage from "./pages/NewPasswordPage";
+import OrderListPage from "./pages/OrderListPage";
+import OrderDetailPage from "./pages/OrderDetailPage";
 
 export default function App() {
   return (
@@ -46,6 +48,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <OrderListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/:id"
+        element={
+          <ProtectedRoute>
+            <OrderDetailPage />
           </ProtectedRoute>
         }
       />
