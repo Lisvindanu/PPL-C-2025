@@ -26,6 +26,7 @@ import OTPConfirmPage from "./pages/OTPConfirmPage";
 import NewPasswordPage from "./pages/NewPasswordPage";
 import OrderListPage from "./pages/OrderListPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
+import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
 
 export default function App() {
   return (
@@ -115,6 +116,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ServiceCreatePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/freelance/orders"
+        element={
+          <ProtectedRoute>
+            <OrdersIncomingPage />
           </ProtectedRoute>
         }
       />
