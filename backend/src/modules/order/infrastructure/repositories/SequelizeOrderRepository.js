@@ -48,20 +48,45 @@ class SequelizeOrderRepository {
   }
 
   async findById(id) {
-    // TODO: Implementasi find by ID dengan include relations
-    // const result = await this.sequelize.models.Pesanan.findByPk(id, {
-    //   include: [
-    //     { model: this.sequelize.models.User, as: 'pembeli' },
-    //     { model: this.sequelize.models.User, as: 'penyedia' },
-    //     { model: this.sequelize.models.Layanan, as: 'layanan' },
-    //     { model: this.sequelize.models.Pembayaran, as: 'pembayaran' }
-    //   ]
-    // });
-    //
-    // if (!result) return null;
-    // return new Order(result.toJSON());
+    // Lazy-require Payment model and set association once
+    const PaymentModel = this.sequelize.models.pembayaran || require('../../../payment/infrastructure/models/PaymentModel');
+    if (!this.OrderModel.associations.pembayaran) {
+      this.OrderModel.hasMany(PaymentModel, { foreignKey: 'pesanan_id', as: 'pembayaran' });
+    }
 
-    throw new Error('Not implemented - Gunakan findByPk dengan include');
+    const result = await this.OrderModel.findByPk(id, {
+      attributes: [
+        'id', 'nomor_pesanan', 'judul', 'deskripsi', 'catatan_client',
+        'status', 'harga', 'biaya_platform', 'total_bayar', 'waktu_pengerjaan',
+        'tenggat_waktu', 'dikirim_pada', 'selesai_pada',
+        'client_id', 'freelancer_id', 'layanan_id', 'created_at', 'updated_at'
+      ],
+      include: [
+        {
+          model: this.UserModel,
+          as: 'client',
+          attributes: ['id', 'nama_depan', 'nama_belakang', 'avatar']
+        },
+        {
+          model: this.LayananModel,
+          as: 'layanan',
+          attributes: ['id', 'judul', 'thumbnail', 'harga']
+        },
+        {
+          model: PaymentModel,
+          as: 'pembayaran',
+          attributes: [
+            'id', 'transaction_id', 'nomor_invoice', 'invoice_url',
+            'metode_pembayaran', 'channel', 'payment_gateway',
+            'jumlah', 'biaya_platform', 'total_bayar', 'status',
+            'dibayar_pada', 'kadaluarsa_pada', 'created_at'
+          ]
+        }
+      ]
+    });
+
+    if (!result) return null;
+    return result.get({ plain: true });
   }
 
   async findByUserId(userId, filters = {}) {
