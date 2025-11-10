@@ -146,9 +146,9 @@ app.use('/api/kategori', kategoriRoutes(kategoriController));
 const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
 app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 
-// ===== Modul 3: Order & Booking System (Dalam Pengembangan) =====
-const OrderController = require('./modules/order/presentation/controllers/OrderController');
-const orderController = new OrderController(sequelize);
+// ===== Modul 3: Order & Booking System =====
+const setupOrderDependencies = require('./modules/order/config/orderDependencies');
+const { orderController } = setupOrderDependencies(sequelize);
 const orderRoutes = require('./modules/order/presentation/routes/orderRoutes');
 app.use('/api/orders', orderRoutes(orderController));
 
