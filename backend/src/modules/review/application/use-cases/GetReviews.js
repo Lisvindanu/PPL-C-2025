@@ -4,17 +4,41 @@ class GetReviews {
   }
 
   async byService(serviceId, filters = {}) {
-    return await this.reviewRepository.findByServiceId(serviceId, filters);
+    const reviews = await this.reviewRepository.findByServiceId(
+      serviceId,
+      filters
+    );
+    const total = await this.reviewRepository.countByServiceId(
+      serviceId,
+      filters
+    );
+
+    return { reviews, total };
   }
 
   async byFreelancer(freelancerId, filters = {}) {
-    return await this.reviewRepository.findByUserId(freelancerId, filters);
+    const reviews = await this.reviewRepository.findByFreelancerId(
+      freelancerId,
+      filters
+    );
+    const total = await this.reviewRepository.countByFreelancerId(
+      freelancerId,
+      filters
+    );
+
+    return { reviews, total };
+  }
+
+  async byUser(userId, filters = {}) {
+    return await this.reviewRepository.findByUserId(userId, filters);
   }
 
   async latest(limit = 5) {
-    const rows = await this.reviewRepository.findByServiceId(null, { limit, page:1, sortBy: 'newest' });
-    // if repo doesn't support null serviceId, implement query directly in repo later
-    return rows.slice(0, limit);
+    return await this.reviewRepository.findLatest(limit);
+  }
+
+  async byId(id) {
+    return await this.reviewRepository.findById(id);
   }
 }
 

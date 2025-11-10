@@ -1,15 +1,15 @@
 /**
- * CreateReview Use Case
- * ---------------------
- * Langkah:
- * 1. Validasi order exist & sudah completed
- * 2. Validasi user adalah pembeli
- * 3. Validasi belum pernah review
- * 4. Validasi rating (1-5)
+ * CreateReview Use Case (Final Version)
+ * -------------------------------------
+ * Alur:
+ * 1. Cek pesanan ada dan sudah selesai
+ * 2. Pastikan user adalah pembeli (client)
+ * 3. Pastikan belum pernah review
+ * 4. Validasi rating
  * 5. Moderasi teks (judul & komentar)
  * 6. Simpan review
  * 7. Update rata-rata rating layanan
- * 8. Kirim notifikasi ke penyedia
+ * 8. (Opsional) Kirim notifikasi ke freelancer
  */
 
 const ModerationService = require('../../infrastructure/services/ModerationService');
@@ -30,23 +30,23 @@ class CreateReview {
     const order = await this.orderRepository.findById(pesanan_id);
     if (!order) throw new Error('Pesanan tidak ditemukan');
 
-    // --- [2] Validasi pesanan sudah selesai ---
-    if (order.status !== 'completed') {
+    // --- [2] Pastikan status pesanan selesai ---
+    if (!['selesai', 'completed'].includes(order.status)) {
       throw new Error('Pesanan belum selesai, tidak bisa memberi ulasan');
     }
 
-    // --- [3] Validasi user adalah pembeli ---
-    if (order.pembeli_id !== userId) {
+    // --- [3] Pastikan user adalah pembeli (client) ---
+    if (order.client_id?.toString() !== userId.toString()) {
       throw new Error('Anda bukan pembeli dari pesanan ini');
     }
 
-    // --- [4] Validasi belum pernah review ---
+    // --- [4] Pastikan belum pernah review pesanan ini ---
     const existing = await this.reviewRepository.findByOrderId(pesanan_id);
     if (existing) throw new Error('Pesanan ini sudah pernah diulas');
 
     // --- [5] Validasi rating ---
-    if (rating < 1 || rating > 5) {
-      throw new Error('Rating harus antara 1-5');
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+      throw new Error('Rating harus antara 1 dan 5');
     }
 
     // --- [6] Moderasi teks ---
@@ -67,12 +67,12 @@ class CreateReview {
       updated_at: new Date(),
     });
 
-    // --- [8] Update rating rata-rata layanan ---
+    // --- [8] Update rating layanan ---
     const { average, count } = await this.reviewRepository.calculateAverageRating(order.layanan_id);
     await this.serviceRepository.updateRating(order.layanan_id, average, count);
 
-    // --- [9] Notifikasi ke freelancer ---
-    if (this.notificationService) {
+    // --- [9] (Opsional) Kirim notifikasi ke freelancer ---
+    if (this.notificationService && typeof this.notificationService.sendNewReviewNotification === 'function') {
       await this.notificationService.sendNewReviewNotification(order.freelancer_id, review);
     }
 

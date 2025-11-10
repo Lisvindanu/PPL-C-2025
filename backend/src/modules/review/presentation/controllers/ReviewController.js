@@ -1,4 +1,3 @@
-// review/presentation/controllers/ReviewController.js
 const CreateReview = require('../../application/use-cases/CreateReview');
 const GetReviews = require('../../application/use-cases/GetReviews');
 const UpdateReview = require('../../application/use-cases/UpdateReview');
@@ -10,23 +9,27 @@ const OrderRepository = require('../../infrastructure/repositories/OrderReposito
 const ServiceRepository = require('../../infrastructure/repositories/ServiceRepository');
 const ModerationService = require('../../infrastructure/services/ModerationService');
 
-const db = require('../../../../shared/database/connection.js');
+const initModels = require('../../infrastructure/models');
+
 
 class ReviewController {
-  constructor(sequelize) {
+  constructor(sequelize, notificationService = null) {
     this.sequelize = sequelize;
+    this.notificationService = notificationService;
+    initModels(this.sequelize);
 
-    // Repository Layer
+    // Repository layer
     this.reviewRepository = new SequelizeReviewRepository(sequelize);
     this.orderRepository = new OrderRepository(sequelize);
     this.serviceRepository = new ServiceRepository(sequelize);
     this.moderationService = new ModerationService();
 
-    // Application (Use Case) Layer
+    // Application (use case) layer
     this.createReviewUseCase = new CreateReview(
       this.reviewRepository,
       this.orderRepository,
-      this.serviceRepository
+      this.serviceRepository,
+      this.notificationService
     );
 
     this.getReviewsUseCase = new GetReviews(this.reviewRepository);
@@ -44,10 +47,7 @@ class ReviewController {
     );
   }
 
-  /**
-   * POST /api/reviews
-   * Buat review baru
-   */
+  /** POST /api/reviews */
   async createReview(req, res) {
     try {
       const userId = req.user?.id || req.body.user_id;
@@ -67,15 +67,12 @@ class ReviewController {
     }
   }
 
-  /**
-   * GET /api/reviews/service/:id
-   * Ambil semua review berdasarkan layanan
-   */
+  /** GET /api/reviews/service/:layanan_id */
   async getServiceReviews(req, res) {
     try {
-      const { id } = req.params;
+      const { layanan_id } = req.params;
       const filters = req.query;
-      const reviews = await this.getReviewsUseCase.byService(id, filters);
+      const reviews = await this.getReviewsUseCase.byService(layanan_id, filters);
 
       return res.status(200).json({
         status: 'success',
@@ -90,10 +87,7 @@ class ReviewController {
     }
   }
 
-  /**
-   * GET /api/reviews/freelancer/:id
-   * Ambil review berdasarkan freelancer
-   */
+  /** GET /api/reviews/freelancer/:id */
   async getByFreelancer(req, res) {
     try {
       const { id } = req.params;
@@ -113,10 +107,7 @@ class ReviewController {
     }
   }
 
-  /**
-   * GET /api/reviews/latest
-   * Ambil review terbaru
-   */
+  /** GET /api/reviews/latest */
   async getLatestReviews(req, res) {
     try {
       const limit = parseInt(req.query.limit || 5, 10);
@@ -135,10 +126,7 @@ class ReviewController {
     }
   }
 
-  /**
-   * PUT /api/reviews/:id
-   * Update review milik user
-   */
+  /** PUT /api/reviews/:id */
   async updateReview(req, res) {
     try {
       const { id } = req.params;
@@ -159,10 +147,7 @@ class ReviewController {
     }
   }
 
-  /**
-   * DELETE /api/reviews/:id
-   * Hapus review (admin atau pemilik)
-   */
+  /** DELETE /api/reviews/:id */
   async deleteReview(req, res) {
     try {
       const { id } = req.params;
@@ -183,10 +168,7 @@ class ReviewController {
     }
   }
 
-  /**
-   * POST /api/reviews/:id/report
-   * Report review
-   */
+  /** POST /api/reviews/:id/report */
   async reportReview(req, res) {
     try {
       const { id } = req.params;
