@@ -16,7 +16,7 @@ export default function ServiceTable({ services = [], onBlock, onDetail }) {
 
   const getCategoryBadge = (categoryName) => {
     return (
-      <Badge className="bg-[#9DBBDD] text-white px-3 py-1 text-sm font-medium">
+      <Badge className="!bg-[#9DBBDD] !text-white px-3 py-1 text-sm font-medium">
         {categoryName || 'N/A'}
       </Badge>
     );
@@ -67,14 +67,14 @@ export default function ServiceTable({ services = [], onBlock, onDetail }) {
                 {/* Freelancer */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">
-                    {service.freelancer_name || 'N/A'}
+                    {service.freelancer?.full_name || service.freelancer?.email || service.freelancer_name || 'N/A'}
                   </div>
                 </td>
 
                 {/* Kategori */}
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
-                    {getCategoryBadge(service.kategori_name)}
+                    {getCategoryBadge(service.kategori?.nama || service.kategori_name)}
                   </div>
                 </td>
 

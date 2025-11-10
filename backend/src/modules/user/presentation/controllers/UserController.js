@@ -28,7 +28,18 @@ class UserController {
 
   register = async (req, res, next) => {
     try {
-      const result = await this.registerUser.execute(req.body);
+      console.log('Registration request body:', req.body);
+      const { email, password, nama_depan, nama_belakang } = req.body;
+      const termsAccepted = req.body.ketentuan_agree === true;
+      console.log('Terms accepted value:', termsAccepted);
+      
+      const result = await this.registerUser.execute({
+        email,
+        password,
+        firstName: nama_depan,
+        lastName: nama_belakang,
+        termsAccepted
+      });
       res.status(201).json({ success: true, data: result });
     } catch (err) {
       next(err);

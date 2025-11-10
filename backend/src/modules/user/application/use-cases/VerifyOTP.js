@@ -51,7 +51,7 @@ class VerifyOTP {
     await this.userTokenModel.create({
       user_id: user.id,
       token: resetToken,
-      type: 'password_reset_verified',
+      type: 'password_reset',
       expires_at: expiresAt
     });
 

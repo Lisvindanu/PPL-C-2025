@@ -19,7 +19,7 @@ class ResetPassword {
       where: { 
         user_id: user.id,
         token, 
-        type: 'password_reset_verified' 
+        type: 'password_reset' 
       } 
     });
     if (!tokenRow) {

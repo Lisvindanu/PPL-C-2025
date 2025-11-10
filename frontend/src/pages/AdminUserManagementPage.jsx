@@ -187,7 +187,7 @@ function UserDetailModal({
               <div>
                 <label className="text-sm font-medium text-gray-700">Role</label>
                 <div className="mt-1">
-                  <Badge className="bg-[#9DBBDD] text-white">
+                  <Badge className="!bg-[#9DBBDD] !text-white">
                     {roleText}
                   </Badge>
                 </div>
