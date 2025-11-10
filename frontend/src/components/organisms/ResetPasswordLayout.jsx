@@ -4,7 +4,7 @@ export default function ResetPasswordLayout({ children, bottom, title, showCorne
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-3">
-          <img src="/LogoSkillConnect.png" alt="Skill Connect Logo" className="h-10 object-contain" />
+          <img src="/assets/logo.png" alt="Skill Connect Logo" className="h-10 object-contain" />
         </div>
       </div>
 

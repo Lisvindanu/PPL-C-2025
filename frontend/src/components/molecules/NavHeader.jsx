@@ -155,9 +155,9 @@ export default function NavHeader() {
         <div className="flex items-center">
           <a href="/" className="flex items-center" aria-label="Ke beranda">
             <img
-              src="/LogoSkillConnect.png"
+              src="/assets/logo.png"
               alt="SkillConnect Logo"
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
           </a>
         </div>

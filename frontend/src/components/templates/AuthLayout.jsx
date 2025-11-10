@@ -4,7 +4,7 @@ export default function AuthLayout({ children, bottom, title, showCorner = true 
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-3">
-          <img src="/LogoSkillConnect.png" alt="Skill Connect Logo" className="h-10 object-contain" />
+          <img src="/assets/logo.png" alt="Skill Connect Logo" className="h-16 w-auto object-contain" />
         </div>
       </div>
 
