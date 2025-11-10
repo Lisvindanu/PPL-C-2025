@@ -150,6 +150,14 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/create-order"
+        element={
+          <ProtectedRoute>
+            <CreateOrderPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
       <Route path="/payment/processing/:paymentId" element={<PaymentProcessingPage />} />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
