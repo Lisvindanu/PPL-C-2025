@@ -11,7 +11,32 @@ const { Op } = require('sequelize');
 class SequelizeOrderRepository {
   constructor(sequelize) {
     this.sequelize = sequelize;
-    // Model akan di-load dari sequelize.models setelah sync
+    // Pastikan model Pesanan terdaftar
+    this.OrderModel = this.sequelize.models.pesanan || require('../models/OrderModel');
+
+    const { DataTypes } = require('sequelize');
+    // Related models (lightweight definitions if not present)
+    this.UserModel = this.sequelize.models.User || this.sequelize.define('User', {
+      id: { type: DataTypes.UUID, primaryKey: true },
+      nama_depan: DataTypes.STRING,
+      nama_belakang: DataTypes.STRING,
+      avatar: DataTypes.STRING
+    }, { tableName: 'users', timestamps: false });
+
+    this.LayananModel = this.sequelize.models.Layanan || this.sequelize.define('Layanan', {
+      id: { type: DataTypes.UUID, primaryKey: true },
+      judul: DataTypes.STRING,
+      thumbnail: DataTypes.STRING,
+      harga: DataTypes.DECIMAL(10, 2)
+    }, { tableName: 'layanan', timestamps: false });
+
+    // Associations (define once)
+    if (!this.OrderModel.associations.client) {
+      this.OrderModel.belongsTo(this.UserModel, { foreignKey: 'client_id', as: 'client' });
+    }
+    if (!this.OrderModel.associations.layanan) {
+      this.OrderModel.belongsTo(this.LayananModel, { foreignKey: 'layanan_id', as: 'layanan' });
+    }
   }
 
   async create(orderData) {
@@ -61,10 +86,60 @@ class SequelizeOrderRepository {
   }
 
   async findByPenyediaId(penyediaId, filters = {}) {
-    // TODO: Implementasi find by penyedia (sebagai seller)
-    // Similar dengan findByUserId tapi where.penyedia_id = penyediaId
+    const { Op } = require('sequelize');
 
-    throw new Error('Not implemented - Mirip dengan findByUserId');
+    const page = Math.max(parseInt(filters.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(filters.limit || '10', 10), 1), 100);
+    const offset = (page - 1) * limit;
+
+    const where = { freelancer_id: penyediaId };
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.created_from || filters.created_to) {
+      where.created_at = {};
+      if (filters.created_from) where.created_at[Op.gte] = new Date(filters.created_from);
+      if (filters.created_to) where.created_at[Op.lte] = new Date(filters.created_to);
+    }
+
+    if (filters.q) {
+      where[Op.or] = [
+        { nomor_pesanan: { [Op.like]: `%${filters.q}%` } },
+        { judul: { [Op.like]: `%${filters.q}%` } }
+      ];
+    }
+
+    const allowedSort = new Set(['created_at', 'total_bayar', 'harga', 'status', 'tenggat_waktu']);
+    const sortBy = allowedSort.has(filters.sortBy) ? filters.sortBy : 'created_at';
+    const sortOrder = (filters.sortOrder || 'DESC').toString().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    const result = await this.OrderModel.findAndCountAll({
+      where,
+      order: [[sortBy, sortOrder]],
+      limit,
+      offset,
+      attributes: [
+        'id', 'nomor_pesanan', 'judul', 'status', 'total_bayar', 'harga',
+        'waktu_pengerjaan', 'tenggat_waktu', 'created_at', 'updated_at',
+        'client_id', 'freelancer_id', 'layanan_id'
+      ],
+      include: [
+        {
+          model: this.UserModel,
+          as: 'client',
+          attributes: ['id', 'nama_depan', 'nama_belakang', 'avatar']
+        },
+        {
+          model: this.LayananModel,
+          as: 'layanan',
+          attributes: ['id', 'judul', 'thumbnail', 'harga']
+        }
+      ]
+    });
+
+    return result; // { count, rows }
   }
 
   async findByServiceId(serviceId, filters = {}) {
