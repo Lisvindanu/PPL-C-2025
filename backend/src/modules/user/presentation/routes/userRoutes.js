@@ -12,7 +12,7 @@ const userController = new UserController();
  *   post:
  *     tags: [Users]
  *     summary: Register new user
- *     description: Create a new user account (client or freelancer)
+ *     description: Create a new user account (automatically assigned client role)
  *     requestBody:
  *       required: true
  *       content:

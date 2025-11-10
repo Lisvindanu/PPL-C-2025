@@ -25,7 +25,7 @@ module.exports = {
         type: Sequelize.ENUM('client', 'freelancer', 'admin'),
         allowNull: false,
         defaultValue: 'client',
-        comment: 'User role'
+        comment: 'User role (defaults to client for new registrations)'
       },
       nama_depan: {
         type: Sequelize.STRING(100),
