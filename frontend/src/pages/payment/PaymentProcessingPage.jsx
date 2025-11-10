@@ -12,6 +12,7 @@ export default function PaymentProcessingPage() {
   const [paymentInstructions, setPaymentInstructions] = useState(location.state?.paymentInstructions || null)
   const [orderData, setOrderData] = useState(location.state?.orderData || null)
   const [timeLeft, setTimeLeft] = useState(24 * 60 * 60) // 24 hours in seconds
+  const [loading, setLoading] = useState(false)
 
   // Debug: Log state on mount
   useEffect(() => {
@@ -23,8 +24,27 @@ export default function PaymentProcessingPage() {
       type: paymentInstructions?.type,
       qrString: paymentInstructions?.qr_string,
       vaNumber: paymentInstructions?.va_number,
-      bank: paymentInstructions?.bank
+      bank: paymentInstructions?.bank,
+      fullInstructions: paymentInstructions
     })
+
+    // Fallback: Fetch payment data from API if not in state
+    if (!paymentInstructions && paymentId) {
+      console.log('[PaymentProcessingPage] No instructions in state, fetching from API...')
+      setLoading(true)
+      api.get(`/payments/${paymentId}`)
+        .then(response => {
+          console.log('[PaymentProcessingPage] Fetched payment data:', response.data)
+          const data = response.data.data
+          setPaymentData(data)
+          setPaymentInstructions(data.payment_instructions)
+          setLoading(false)
+        })
+        .catch(error => {
+          console.error('[PaymentProcessingPage] Failed to fetch payment:', error)
+          setLoading(false)
+        })
+    }
   }, [])
 
   // Format rupiah
@@ -124,10 +144,11 @@ export default function PaymentProcessingPage() {
     alert('Berhasil disalin ke clipboard!')
   }
 
-  if (!paymentInstructions) {
+  if (!paymentInstructions || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading payment instructions...</p>
         </div>
       </div>

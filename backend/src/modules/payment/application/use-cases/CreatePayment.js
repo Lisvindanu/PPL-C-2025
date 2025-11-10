@@ -125,7 +125,7 @@ class CreatePayment {
       total_bayar: parseFloat(paymentRecord.total_bayar),
       status: paymentRecord.status,
       expires_at: paymentRecord.kadaluarsa_pada,
-      payment_instructions: gatewayResponse.payment_instructions
+      payment_instructions: gatewayResponse.payment_instructions || gatewayResponse.instructions
     };
   }
 
