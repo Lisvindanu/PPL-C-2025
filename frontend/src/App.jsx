@@ -5,6 +5,7 @@ import RegisterClientPage from "./pages/RegisterClientPage";
 import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
+import AdminReviewPage from "./pages/AdminReviewPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
@@ -35,6 +36,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/review"
+        element={
+          <ProtectedRoute>
+            <AdminReviewPage />
           </ProtectedRoute>
         }
       />

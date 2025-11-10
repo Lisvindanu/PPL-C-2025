@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, LogOut } from 'lucide-react'; 
+import { Eye, LayoutDashboard, LogOut } from 'lucide-react'; 
 import Logo from '../atoms/Logo';
 import { NavItem } from '../molecules/NavItem';
 import { Text } from '../atoms/Text';
@@ -17,7 +17,8 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Operasional', path: '/dashboard'}, 
+    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Operasional', path: '/dashboard'},
+    { id: 'review', icon: <Eye size={18} />, label: 'review', path: '/admin/review'}, 
   ];
 
   return (
