@@ -1,9 +1,12 @@
 /**
  * Midtrans Payment Gateway Service
- * Real payment gateway integration using Midtrans Snap
+ * Real payment gateway integration using Midtrans Core API for custom UI
  *
  * Features:
- * - Snap Payment (All payment methods in one)
+ * - Core API Payment (Custom UI for each payment method)
+ * - QRIS with QR code generation
+ * - Virtual Account with VA number
+ * - E-Wallet with deeplink
  * - Webhook notification handling
  * - Transaction status checking
  * - Signature verification
@@ -21,27 +24,28 @@ const crypto = require('crypto');
 
 class MidtransService {
   constructor() {
-    // Initialize Snap API client
-    this.snap = new midtransClient.Snap({
-      isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
-      serverKey: process.env.MIDTRANS_SERVER_KEY,
-      clientKey: process.env.MIDTRANS_CLIENT_KEY
-    });
-
-    // Initialize Core API client (untuk check status)
+    // Initialize Core API client for custom UI
     this.coreApi = new midtransClient.CoreApi({
       isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
       serverKey: process.env.MIDTRANS_SERVER_KEY,
       clientKey: process.env.MIDTRANS_CLIENT_KEY
     });
 
+    // Initialize Snap API client (fallback)
+    this.snap = new midtransClient.Snap({
+      isProduction: process.env.MIDTRANS_IS_PRODUCTION === 'true',
+      serverKey: process.env.MIDTRANS_SERVER_KEY,
+      clientKey: process.env.MIDTRANS_CLIENT_KEY
+    });
+
     this.merchantId = process.env.MIDTRANS_MERCHANT_ID;
+    this.clientKey = process.env.MIDTRANS_CLIENT_KEY;
   }
 
   /**
-   * Create payment transaction using Snap
+   * Create payment transaction using Core API Charge
    * @param {Object} params - Payment parameters
-   * @returns {Promise<Object>} Payment response with redirect_url
+   * @returns {Promise<Object>} Payment response with payment instructions
    */
   async createTransaction({
     transaction_id,
@@ -52,11 +56,14 @@ class MidtransService {
     channel = null
   }) {
     try {
-      // Prepare transaction parameter
+      console.log(`[MIDTRANS] Creating ${payment_method} payment via Core API`);
+
+      // Prepare base transaction parameter
       const parameter = {
+        payment_type: this.mapPaymentType(payment_method),
         transaction_details: {
           order_id: transaction_id,
-          gross_amount: Math.round(gross_amount) // Must be integer
+          gross_amount: Math.round(gross_amount)
         },
         customer_details: {
           first_name: customer_details.first_name || customer_details.nama_depan || 'Customer',
@@ -69,37 +76,172 @@ class MidtransService {
           price: Math.round(gross_amount),
           quantity: 1,
           name: 'SkillConnect Service Payment'
-        }],
-        callbacks: {
-          finish: `${process.env.FRONTEND_URL}/payment/success`,
-          error: `${process.env.FRONTEND_URL}/payment/error`,
-          pending: `${process.env.FRONTEND_URL}/payment/pending`
-        }
+        }]
       };
 
-      // Optional: Enable specific payment methods
-      if (payment_method) {
-        parameter.enabled_payments = this.getEnabledPayments(payment_method, channel);
-      }
+      // Add payment method specific parameters
+      this.addPaymentMethodParams(parameter, payment_method, channel);
 
-      // Create transaction via Snap
-      const transaction = await this.snap.createTransaction(parameter);
+      // Charge via Core API
+      const chargeResponse = await this.coreApi.charge(parameter);
+
+      console.log('[MIDTRANS] Charge response:', JSON.stringify(chargeResponse, null, 2));
+
+      // Extract payment instructions based on payment method
+      const paymentInstructions = this.extractPaymentInstructions(chargeResponse, payment_method);
 
       return {
         transaction_id,
-        external_id: transaction.token,
-        payment_url: transaction.redirect_url,
-        token: transaction.token,
+        external_id: chargeResponse.transaction_id,
+        payment_url: null, // No redirect URL for custom UI
+        token: null,
         status: 'pending',
         payment_method,
         channel,
+        payment_instructions: paymentInstructions,
         created_at: new Date().toISOString(),
-        expires_at: this.getExpiryTime()
+        expires_at: this.getExpiryTime(),
+        raw_response: chargeResponse
       };
     } catch (error) {
       console.error('[MIDTRANS] Create transaction error:', error);
       throw new Error(`Failed to create Midtrans transaction: ${error.message}`);
     }
+  }
+
+  /**
+   * Map our payment method to Midtrans payment_type
+   */
+  mapPaymentType(payment_method) {
+    const typeMap = {
+      'qris': 'qris',
+      'virtual_account': 'bank_transfer',
+      'e_wallet': 'gopay', // or shopeepay
+      'transfer_bank': 'bank_transfer',
+      'kartu_kredit': 'credit_card'
+    };
+
+    return typeMap[payment_method] || 'qris';
+  }
+
+  /**
+   * Add payment method specific parameters
+   */
+  addPaymentMethodParams(parameter, payment_method, channel) {
+    switch (payment_method) {
+      case 'qris':
+        parameter.qris = {
+          acquirer: 'gopay' // QRIS acquirer
+        };
+        break;
+
+      case 'virtual_account':
+      case 'transfer_bank':
+        // Determine bank
+        const bank = this.mapBankChannel(channel);
+        parameter.bank_transfer = {
+          bank: bank
+        };
+        break;
+
+      case 'e_wallet':
+        if (channel === 'GoPay') {
+          parameter.payment_type = 'gopay';
+          parameter.gopay = {
+            enable_callback: true,
+            callback_url: `${process.env.FRONTEND_URL}/payment/processing`
+          };
+        } else if (channel === 'ShopeePay') {
+          parameter.payment_type = 'shopeepay';
+          parameter.shopeepay = {
+            callback_url: `${process.env.FRONTEND_URL}/payment/processing`
+          };
+        }
+        break;
+
+      case 'kartu_kredit':
+        parameter.payment_type = 'credit_card';
+        parameter.credit_card = {
+          secure: true,
+          bank: channel || 'bni',
+          installment_term: 0
+        };
+        break;
+    }
+  }
+
+  /**
+   * Map channel to Midtrans bank code
+   */
+  mapBankChannel(channel) {
+    const bankMap = {
+      'BCA': 'bca',
+      'BNI': 'bni',
+      'BRI': 'bri',
+      'Mandiri': 'mandiri',
+      'Permata': 'permata'
+    };
+
+    return bankMap[channel] || 'bca';
+  }
+
+  /**
+   * Extract payment instructions from charge response
+   */
+  extractPaymentInstructions(response, payment_method) {
+    const instructions = {
+      type: payment_method,
+      status: response.transaction_status,
+      transaction_id: response.transaction_id,
+      order_id: response.order_id,
+      gross_amount: response.gross_amount,
+      currency: response.currency || 'IDR'
+    };
+
+    switch (payment_method) {
+      case 'qris':
+        instructions.qr_string = response.actions?.find(a => a.name === 'generate-qr-code')?.url || '';
+        instructions.acquirer = response.acquirer || 'gopay';
+        instructions.actions = response.actions || []; // Pass actions array to frontend
+        break;
+
+      case 'virtual_account':
+      case 'transfer_bank':
+        // VA number from va_numbers array
+        if (response.va_numbers && response.va_numbers.length > 0) {
+          instructions.va_number = response.va_numbers[0].va_number;
+          instructions.bank = response.va_numbers[0].bank;
+        } else if (response.permata_va_number) {
+          instructions.va_number = response.permata_va_number;
+          instructions.bank = 'permata';
+        } else if (response.bill_key) {
+          // Mandiri bill payment
+          instructions.bill_key = response.bill_key;
+          instructions.biller_code = response.biller_code;
+          instructions.bank = 'mandiri';
+        }
+        break;
+
+      case 'e_wallet':
+        // GoPay/ShopeePay deeplink
+        if (response.actions && response.actions.length > 0) {
+          const deeplink = response.actions.find(a => a.name === 'deeplink-redirect');
+          const qr = response.actions.find(a => a.name === 'generate-qr-code');
+
+          instructions.deeplink_url = deeplink?.url || '';
+          instructions.qr_string = qr?.url || '';
+          instructions.actions = response.actions; // Pass actions array to frontend
+        }
+        break;
+
+      case 'kartu_kredit':
+        instructions.redirect_url = response.redirect_url || '';
+        break;
+    }
+
+    instructions.expiry_time = response.expiry_time || this.getExpiryTime();
+
+    return instructions;
   }
 
   /**
@@ -139,6 +281,8 @@ class MidtransService {
         payment_type: statusResponse.payment_type,
         gross_amount: statusResponse.gross_amount,
         transaction_time: statusResponse.transaction_time,
+        settlement_time: statusResponse.settlement_time,
+        expiry_time: statusResponse.expiry_time,
         raw_response: statusResponse
       };
     } catch (error) {
@@ -185,55 +329,6 @@ class MidtransService {
   }
 
   /**
-   * Get enabled payment methods based on user selection
-   */
-  getEnabledPayments(payment_method, channel) {
-    const paymentMap = {
-      'qris': ['qris'],
-      'virtual_account': this.getVirtualAccountChannels(channel),
-      'e_wallet': this.getEWalletChannels(channel),
-      'transfer_bank': ['permata_va', 'bca_va', 'bni_va', 'bri_va', 'other_va'],
-      'kartu_kredit': ['credit_card']
-    };
-
-    return paymentMap[payment_method] || [];
-  }
-
-  /**
-   * Get virtual account channels
-   */
-  getVirtualAccountChannels(channel) {
-    if (channel) {
-      const channelMap = {
-        'BCA': ['bca_va'],
-        'BNI': ['bni_va'],
-        'BRI': ['bri_va'],
-        'Mandiri': ['echannel'],
-        'Permata': ['permata_va']
-      };
-      return channelMap[channel] || ['bca_va'];
-    }
-
-    return ['bca_va', 'bni_va', 'bri_va', 'permata_va', 'other_va'];
-  }
-
-  /**
-   * Get e-wallet channels
-   */
-  getEWalletChannels(channel) {
-    if (channel) {
-      const channelMap = {
-        'GoPay': ['gopay'],
-        'ShopeePay': ['shopeepay'],
-        'QRIS': ['qris']
-      };
-      return channelMap[channel] || ['gopay'];
-    }
-
-    return ['gopay', 'shopeepay', 'qris'];
-  }
-
-  /**
    * Get expiry time (24 hours from now)
    */
   getExpiryTime() {
@@ -247,7 +342,8 @@ class MidtransService {
    */
   async processNotification(notificationJson) {
     try {
-      const statusResponse = await this.snap.transaction.notification(notificationJson);
+      // Get detailed status
+      const statusResponse = await this.coreApi.transaction.status(notificationJson.order_id);
 
       return {
         transaction_id: statusResponse.order_id,
@@ -256,9 +352,10 @@ class MidtransService {
         payment_type: statusResponse.payment_type,
         gross_amount: statusResponse.gross_amount,
         transaction_time: statusResponse.transaction_time,
+        settlement_time: statusResponse.settlement_time,
         fraud_status: statusResponse.fraud_status,
         status_code: statusResponse.status_code,
-        signature_key: statusResponse.signature_key,
+        signature_key: notificationJson.signature_key,
         raw_notification: statusResponse
       };
     } catch (error) {

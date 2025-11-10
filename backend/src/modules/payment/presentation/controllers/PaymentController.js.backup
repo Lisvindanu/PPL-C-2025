@@ -38,90 +38,9 @@ class PaymentController {
    */
   async createPayment(req, res) {
     try {
-      const { pesanan_id, jumlah, metode_pembayaran, channel, order_title, customer_name, customer_email } = req.body;
-      const user_id = req.user?.userId || req.user?.id || req.body.user_id;
+      const { pesanan_id, jumlah, metode_pembayaran, channel } = req.body;
+      const user_id = req.user?.userId || req.user?.id || req.body.user_id; // From auth middleware or body (testing)
 
-      if (!user_id) {
-        return res.status(401).json({
-          success: false,
-          message: 'User ID is required'
-        });
-      }
-
-      // TEMPORARY WORKAROUND: Auto-create order if not exists
-      // TODO: Remove this when order creation API is fully implemented by the team
-      try {
-        // Check if order exists
-        const [existingOrder] = await PaymentModel.sequelize.query(
-          'SELECT id FROM pesanan WHERE id = ? LIMIT 1',
-          {
-            replacements: [pesanan_id],
-            type: Sequelize.QueryTypes.SELECT
-          }
-        );
-
-        if (!existingOrder) {
-          console.log('[PAYMENT] Order not found, creating minimal order for payment...');
-
-          // Create minimal order for payment to work
-          const nomor_pesanan = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
-          const harga = parseFloat(jumlah) / 1.1; // Reverse calculate (total / 1.1)
-          const biaya_platform = parseFloat(jumlah) - harga;
-          const waktu_pengerjaan = 7; // Default 7 days
-          const tenggat_waktu = new Date();
-          tenggat_waktu.setDate(tenggat_waktu.getDate() + waktu_pengerjaan);
-
-          // Get a freelancer_id (temporary: use any freelancer, ideally from service)
-          const [anyFreelancer] = await PaymentModel.sequelize.query(
-            "SELECT id FROM users WHERE role = 'freelancer' LIMIT 1",
-            { type: Sequelize.QueryTypes.SELECT }
-          );
-
-          const freelancer_id = anyFreelancer ? anyFreelancer.id : user_id;
-
-          // Get a real layanan_id from database to satisfy foreign key constraint
-          const [anyLayanan] = await PaymentModel.sequelize.query(
-            "SELECT id FROM layanan LIMIT 1",
-            { type: Sequelize.QueryTypes.SELECT }
-          );
-
-          if (!anyLayanan) {
-            throw new Error('No services found in database. Please create at least one service first.');
-          }
-
-          await PaymentModel.sequelize.query(
-            `INSERT INTO pesanan (
-              id, nomor_pesanan, client_id, freelancer_id, layanan_id,
-              judul, deskripsi, harga, biaya_platform, total_bayar,
-              waktu_pengerjaan, tenggat_waktu, status, created_at, updated_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-            {
-              replacements: [
-                pesanan_id,
-                nomor_pesanan,
-                user_id, // client_id
-                freelancer_id,
-                anyLayanan.id, // Use real layanan_id
-                order_title || 'Payment Order',
-                `Temporary order created for payment. Customer: ${customer_name || 'N/A'}`,
-                harga,
-                biaya_platform,
-                jumlah,
-                waktu_pengerjaan,
-                tenggat_waktu,
-                'menunggu_pembayaran'
-              ]
-            }
-          );
-
-          console.log('[PAYMENT] Minimal order created:', pesanan_id);
-        }
-      } catch (dbError) {
-        console.error('[PAYMENT] Database error:', dbError);
-        throw new Error('Failed to create order: ' + dbError.message);
-      }
-
-      // Now create payment
       const result = await this.createPaymentUseCase.execute({
         pesanan_id,
         user_id,
