@@ -196,7 +196,7 @@ class PaymentController {
 
   /**
    * GET /api/payments/check-status/:transactionId
-   * Check payment status and return appropriate redirect URL
+   * Check payment status from Midtrans API and update database
    */
   async checkPaymentStatus(req, res) {
     try {
@@ -211,6 +211,60 @@ class PaymentController {
           success: false,
           message: 'Payment not found'
         });
+      }
+
+      // Query real-time status from Midtrans API if using midtrans gateway
+      if (payment.payment_gateway === 'midtrans') {
+        try {
+          console.log(`[PAYMENT CONTROLLER] Checking status from Midtrans for: ${transactionId}`);
+
+          const MidtransService = require('../../infrastructure/services/MidtransService');
+          const midtransService = new MidtransService();
+
+          const midtransStatus = await midtransService.getPaymentStatus(transactionId);
+          console.log(`[PAYMENT CONTROLLER] Midtrans status:`, midtransStatus);
+
+          // Update database if status changed
+          if (midtransStatus.status !== payment.status) {
+            console.log(`[PAYMENT CONTROLLER] Updating status from ${payment.status} to ${midtransStatus.status}`);
+
+            payment.status = midtransStatus.status;
+
+            // If payment successful, set paid date and generate invoice
+            if (midtransStatus.status === 'berhasil') {
+              payment.dibayar_pada = new Date();
+              if (!payment.nomor_invoice) {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const uniqueId = payment.id.substring(0, 8).toUpperCase();
+                payment.nomor_invoice = `INV/${year}/${month}/${uniqueId}`;
+              }
+
+              // Create escrow if not exists
+              const EscrowService = require('../../infrastructure/services/EscrowService');
+              const escrowService = new EscrowService();
+
+              try {
+                await escrowService.createEscrow({
+                  pembayaran_id: payment.id,
+                  pesanan_id: payment.pesanan_id,
+                  jumlah_ditahan: parseFloat(payment.jumlah),
+                  biaya_platform: parseFloat(payment.biaya_platform)
+                });
+                console.log(`[PAYMENT CONTROLLER] Escrow created for payment ${payment.id}`);
+              } catch (escrowError) {
+                // Escrow might already exist
+                console.log(`[PAYMENT CONTROLLER] Escrow creation note:`, escrowError.message);
+              }
+            }
+
+            await payment.save();
+          }
+        } catch (midtransError) {
+          console.error('[PAYMENT CONTROLLER] Failed to check Midtrans status:', midtransError);
+          // Continue with database status if Midtrans API fails
+        }
       }
 
       // Determine redirect URL based on status

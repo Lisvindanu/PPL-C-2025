@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faQrcode, faUniversity, faWallet, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
+import { faCcVisa } from '@fortawesome/free-brands-svg-icons'
 import Navbar from '../../components/organisms/Navbar'
 import Button from '../../components/atoms/Button'
 import api from '../../utils/axiosConfig'
@@ -19,7 +22,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'qris',
       name: 'QRIS',
-      icon: '📱',
+      icon: faQrcode,
+      iconColor: 'text-red-500',
       type: 'qris',
       channel: null,
       description: 'Scan QR code dengan aplikasi e-wallet atau mobile banking'
@@ -27,7 +31,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'bca',
       name: 'Bank Transfer - BCA',
-      icon: '🏦',
+      icon: faUniversity,
+      iconColor: 'text-blue-600',
       type: 'virtual_account',
       channel: 'BCA',
       description: 'Transfer melalui Virtual Account BCA'
@@ -35,7 +40,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'mandiri',
       name: 'Bank Transfer - Mandiri',
-      icon: '🏦',
+      icon: faUniversity,
+      iconColor: 'text-yellow-600',
       type: 'virtual_account',
       channel: 'Mandiri',
       description: 'Transfer melalui Virtual Account Mandiri'
@@ -43,7 +49,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'bni',
       name: 'Bank Transfer - BNI',
-      icon: '🏦',
+      icon: faUniversity,
+      iconColor: 'text-orange-600',
       type: 'virtual_account',
       channel: 'BNI',
       description: 'Transfer melalui Virtual Account BNI'
@@ -51,7 +58,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'gopay',
       name: 'GoPay',
-      icon: '💳',
+      icon: faWallet,
+      iconColor: 'text-green-500',
       type: 'e_wallet',
       channel: 'GoPay',
       description: 'Bayar dengan GoPay'
@@ -59,7 +67,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'ovo',
       name: 'OVO',
-      icon: '💰',
+      icon: faWallet,
+      iconColor: 'text-purple-600',
       type: 'e_wallet',
       channel: 'OVO',
       description: 'Bayar dengan OVO'
@@ -67,7 +76,8 @@ export default function PaymentGatewayPage() {
     {
       id: 'dana',
       name: 'DANA',
-      icon: '💵',
+      icon: faMobileAlt,
+      iconColor: 'text-blue-500',
       type: 'e_wallet',
       channel: 'DANA',
       description: 'Bayar dengan DANA'
@@ -213,7 +223,9 @@ export default function PaymentGatewayPage() {
                     ) + (loading ? ' opacity-50 cursor-not-allowed' : '')}
                   >
                     <div className="flex items-center gap-4">
-                      <span className="text-3xl">{method.icon}</span>
+                      <div className={`w-12 h-12 flex items-center justify-center ${method.iconColor}`}>
+                        <FontAwesomeIcon icon={method.icon} className="text-3xl" />
+                      </div>
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900">{method.name}</p>
                         <p className="text-sm text-gray-600">{method.description}</p>
