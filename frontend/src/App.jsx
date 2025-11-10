@@ -14,6 +14,8 @@ import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
 import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
 import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
+import PaymentGatewayPage from "./pages/payment/PaymentGatewayPage";
+import PaymentProcessingPage from "./pages/payment/PaymentProcessingPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import ServiceListPage from "./pages/ServiceListPage";
 import CreateOrderPage from "./pages/CreateOrderPage";
@@ -99,13 +101,15 @@ export default function App() {
         }
       />
       <Route
-        path="/create-order"
+        path="/create-order/:id"
         element={
           <ProtectedRoute>
             <CreateOrderPage />
           </ProtectedRoute>
         }
       />
+      <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
+      <Route path="/payment/processing/:paymentId" element={<PaymentProcessingPage />} />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
