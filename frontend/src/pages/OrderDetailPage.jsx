@@ -137,6 +137,14 @@ const OrderDetailPage = () => {
   const isFreelancer = currentUser?.id === order.freelancer_id || currentUser?.role === 'freelancer'
   const isClient = currentUser?.id === order.client_id || currentUser?.role === 'client'
 
+  // Mock status history (sementara pakai static data)
+  const mockStatusHistory = [
+    { status: 'dibuat', label: 'Pesanan dibuat', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString() },
+    { status: 'menunggu_pembayaran', label: 'Menunggu pembayaran', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString() },
+    { status: 'dibayar', label: 'Pembayaran dikonfirmasi', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2 + 1000 * 60 * 30).toISOString() },
+    { status: 'menunggu_konfirmasi', label: 'Menunggu konfirmasi freelancer', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2 + 1000 * 60 * 45).toISOString() }
+  ]
+
   // Force display freelancer info from currently logged-in freelancer
   const freelancerDisplay =
     currentUser?.role === 'freelancer'
@@ -306,7 +314,7 @@ const OrderDetailPage = () => {
             {/* Timeline */}
             <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Riwayat Status</h2>
-              <OrderTimeline statusHistory={order.statusHistory || []} />
+              <OrderTimeline statusHistory={mockStatusHistory} />
             </div>
           </div>
 
