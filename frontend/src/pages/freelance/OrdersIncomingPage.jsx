@@ -1,28 +1,64 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Navbar from "../../components/organisms/Navbar";
 import Footer from "../../components/organisms/Footer";
 import DashboardHeaderBar from "../../components/molecules/DashboardHeaderBar";
-import { mockOrders } from "../../mocks/orderMockData";
 import { useNavigate } from "react-router-dom";
+import { orderService } from "../../services/orderService";
 
 export default function OrdersIncomingPage() {
   const navigate = useNavigate();
+  const [incomingOrders, setIncomingOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // Ambil order yang relevan untuk "Order Masuk" (contoh: sudah dibayar → menunggu konfirmasi)
-  const incomingOrders = useMemo(() => {
-    return mockOrders
-      .filter((o) => o.status === "dibayar" || o.status === "menunggu_pembayaran")
-      .map((o) => ({
-        id: o.id,
-        nomor: o.nomor_pesanan,
-        judul: o.judul,
-        clientName: `${o.client?.nama_depan || ""} ${o.client?.nama_belakang || ""}`.trim(),
-        waktuPengerjaanHari: o.waktu_pengerjaan,
-        deadline: new Date(o.tenggat_waktu).toLocaleDateString("id-ID"),
-        total: o.total_bayar,
-        statusBadge:
-          o.status === "dibayar" ? "Menunggu Konfirmasi" : "Menunggu Pembayaran",
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      setLoading(true);
+      setError("");
+      const res = await orderService.getIncomingOrders({
+        sortBy: "created_at",
+        sortOrder: "DESC",
+        page: 1,
+        limit: 10,
+      });
+
+      if (!isMounted) return;
+
+      if (res?.success === false) {
+        setError(res?.message || "Gagal memuat order masuk");
+        setIncomingOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      // Normalisasi payload (dukung beberapa kemungkinan bentuk response)
+      const raw =
+        res?.data?.items ||
+        res?.data?.rows ||
+        res?.data?.orders ||
+        res?.data ||
+        res?.items ||
+        [];
+
+      const mapped = (Array.isArray(raw) ? raw : []).map((o) => ({
+        id: o.id ?? o.order_id ?? o.uuid,
+        nomor: o.nomor_pesanan ?? o.order_number ?? o.nomor,
+        judul: o.judul ?? o.title ?? "Tanpa Judul",
+        clientName: `${o.client?.nama_depan || o.client_first_name || ""} ${o.client?.nama_belakang || o.client_last_name || ""}`.trim(),
+        waktuPengerjaanHari: o.waktu_pengerjaan ?? o.duration_days ?? o.waktu ?? 0,
+        deadline: o.tenggat_waktu || o.deadline || o.due_date ? new Date(o.tenggat_waktu || o.deadline || o.due_date).toLocaleDateString("id-ID") : "-",
+        total: o.total_bayar ?? o.total ?? o.harga ?? 0,
+        statusBadge: o.status === "dibayar" ? "Menunggu Konfirmasi" : "Menunggu Pembayaran",
       }));
+
+      setIncomingOrders(mapped);
+      setLoading(false);
+    })();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return (
@@ -40,6 +76,24 @@ export default function OrdersIncomingPage() {
       {/* Daftar Order Masuk */}
       <div className="mx-auto max-w-7xl px-4 py-6">
         <h2 className="sr-only">Order Masuk</h2>
+
+        {loading && (
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600">
+            Memuat data...
+          </div>
+        )}
+
+        {!loading && error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && incomingOrders.length === 0 && (
+          <div className="rounded-xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600">
+            Belum ada pesanan masuk.
+          </div>
+        )}
 
         <div className="space-y-5">
           {incomingOrders.map((order) => (

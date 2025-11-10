@@ -21,6 +21,35 @@ export const orderService = {
     }
   },
 
+  // Freelancer: List pesanan masuk
+  async getIncomingOrders({
+    q,
+    status,
+    created_from,
+    created_to,
+    sortBy = 'created_at',
+    sortOrder = 'DESC',
+    page = 1,
+    limit = 10
+  } = {}) {
+    try {
+      const params = { sortBy, sortOrder, page, limit }
+      if (q) params.q = q
+      if (status) params.status = status
+      if (created_from) params.created_from = created_from
+      if (created_to) params.created_to = created_to
+
+      const response = await api.get('/orders/incoming', { params })
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to get incoming orders',
+        errors: error.response?.data?.errors || []
+      }
+    }
+  },
+
   // Get orders list (untuk current user)
   async getOrders({ page = 1, limit = 10, status = null }) {
     try {
