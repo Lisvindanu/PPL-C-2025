@@ -4,8 +4,9 @@
  */
 
 class OrderController {
-  constructor({ getIncomingOrdersUseCase }) {
+  constructor({ getIncomingOrdersUseCase, getOrderByIdUseCase }) {
     this.getIncomingOrdersUseCase = getIncomingOrdersUseCase;
+    this.getOrderByIdUseCase = getOrderByIdUseCase;
   }
 
   /**
@@ -89,13 +90,16 @@ class OrderController {
    */
   async getOrderById(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur order detail belum diimplementasikan - akan ditambahkan di sprint mendatang'
-      });
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+      const { id } = req.params;
+      const result = await this.getOrderByIdUseCase.execute(id, user);
+      return res.json({ success: true, message: 'Detail pesanan berhasil diambil', data: result.data });
     } catch (error) {
-      return res.status(500).json({
-        status: 'error',
+      return res.status(error.statusCode || 500).json({
+        success: false,
         message: error.message
       });
     }
