@@ -22,7 +22,7 @@ export default function UserTable({ users = [], onBlock, onDetail }) {
       admin: 'Admin'
     };
     return (
-      <Badge className="bg-[#9DBBDD] text-white px-3 py-1 text-sm font-medium">
+      <Badge className="!bg-[#9DBBDD] !text-white px-3 py-1 text-sm font-medium">
         {roleMap[role] || role}
       </Badge>
     );
