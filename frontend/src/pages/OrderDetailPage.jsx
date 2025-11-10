@@ -1,27 +1,96 @@
 import { useParams, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
 import Navbar from '../components/organisms/Navbar'
 import StatusBadge from '../components/atoms/StatusBadge'
 import PriceText from '../components/atoms/PriceText'
 import OrderTimeline from '../components/molecules/OrderTimeline'
 import FreelancerOrderActions from '../components/organisms/FreelancerOrderActions'
-import { getOrderById } from '../mocks/orderMockData'
+import { orderService } from '../services/orderService'
+import { authService } from '../services/authService'
 
 /**
  * OrderDetailPage using mock data
  * This version uses static mock data instead of API calls
  */
-const OrderDetailPageWithMock = () => {
+const OrderDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const [order, setOrder] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
-  // Mock current user (toggle between client and freelancer for testing)
-  const mockCurrentUser = {
-    id: 'user-freelancer-001', // Change to 'user-client-001' to test client view
-    role: 'freelancer' // Change to 'client' to test client view
-  }
+  useEffect(() => {
+    let isMounted = true
+    ;(async () => {
+      setLoading(true)
+      setError('')
+      const res = await orderService.getOrderById(id)
 
-  // Get order from mock data
-  const order = getOrderById(id)
+      if (!isMounted) return
+
+      if (res?.success === false) {
+        setError(res?.message || 'Gagal memuat detail pesanan')
+        setOrder(null)
+        setLoading(false)
+        return
+      }
+
+      // Ambil payload fleksibel
+      const o = res?.data?.order || res?.data || res
+
+      // Normalisasi ke bentuk yang dipakai UI saat ini
+      const normalized = o
+        ? {
+            id: o.id ?? o.order_id ?? id,
+            nomor_pesanan: o.nomor_pesanan ?? o.order_number ?? o.nomor ?? `#${id}`,
+            judul: o.judul ?? o.title ?? 'Detail Pesanan',
+            status: o.status ?? 'unknown',
+            harga: o.harga ?? o.price ?? 0,
+            biaya_platform: o.biaya_platform ?? o.platform_fee ?? 0,
+            total_bayar: o.total_bayar ?? o.total ?? 0,
+            waktu_pengerjaan: o.waktu_pengerjaan ?? o.duration_days ?? 0,
+            deskripsi: o.deskripsi ?? o.description ?? '',
+            catatan_client: o.catatan_client ?? o.client_note ?? '',
+            lampiran_client: o.lampiran_client ?? o.client_attachments ?? [],
+            lampiran_freelancer: o.lampiran_freelancer ?? o.freelancer_attachments ?? [],
+            tenggat_waktu: o.tenggat_waktu ?? o.deadline ?? o.due_date ?? null,
+            // Client normalization (support various API shapes)
+            client:
+              o.client ||
+              o.client_user ||
+              o.clientProfile || {
+                id: o.client_id ?? o.clientId ?? o.client?.id,
+                nama_depan: o.client_first_name || '',
+                nama_belakang: o.client_last_name || '',
+                email: o.client_email || ''
+              },
+            // Freelancer normalization (ensure object exists if only ID present)
+            freelancer:
+              o.freelancer ||
+              o.freelancer_user ||
+              o.freelancerProfile ||
+              (o.freelancer_id || o.freelancerId || o.freelancer?.id
+                ? {
+                    id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
+                    nama_depan: o.freelancer_first_name || o.freelancer?.nama_depan || '',
+                    nama_belakang: o.freelancer_last_name || o.freelancer?.nama_belakang || '',
+                    email: o.freelancer_email || o.freelancer?.email || ''
+                  }
+                : null),
+            client_id: o.client_id ?? o.clientId ?? o.client?.id,
+            freelancer_id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
+            statusHistory: o.statusHistory || o.history || []
+          }
+        : null
+
+      setOrder(normalized)
+      setLoading(false)
+    })()
+
+    return () => {
+      isMounted = false
+    }
+  }, [id])
 
   // Mock handlers
   const handleAccept = () => {
@@ -36,15 +105,23 @@ const OrderDetailPageWithMock = () => {
     alert(`Order completed! Files: ${data.files.length}, Note: ${data.note} (Demo mode - no actual API call)`)
   }
 
-  if (!order) {
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-700">Memuat detail pesanan...</div>
+      </div>
+    )
+  }
+
+  if (error || !order) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <svg className="mx-auto h-12 w-12 text-red-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Order Tidak Ditemukan</h2>
-          <p className="text-gray-600 mb-4">Order dengan ID "{id}" tidak ditemukan dalam mock data.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Gagal Memuat Pesanan</h2>
+          <p className="text-gray-600 mb-4">{error || `Order dengan ID "${id}" tidak ditemukan.`}</p>
           <button
             onClick={() => navigate('/orders')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -56,8 +133,46 @@ const OrderDetailPageWithMock = () => {
     )
   }
 
-  const isFreelancer = mockCurrentUser?.id === order.freelancer_id
-  const isClient = mockCurrentUser?.id === order.client_id
+  const currentUser = authService.getCurrentUser()
+  const isFreelancer = currentUser?.id === order.freelancer_id || currentUser?.role === 'freelancer'
+  const isClient = currentUser?.id === order.client_id || currentUser?.role === 'client'
+
+  // Force display freelancer info from currently logged-in freelancer
+  const freelancerDisplay =
+    currentUser?.role === 'freelancer'
+      ? {
+          nama_depan:
+            currentUser.firstName ||
+            currentUser.nama_depan ||
+            currentUser.first_name ||
+            (currentUser.name ? String(currentUser.name).split(' ')[0] : ''),
+          nama_belakang:
+            currentUser.lastName ||
+            currentUser.nama_belakang ||
+            currentUser.last_name ||
+            (currentUser.name ? String(currentUser.name).split(' ').slice(1).join(' ') : ''),
+          email: currentUser.email || ''
+        }
+      : (order.freelancer || null)
+
+  const freelancerName = (() => {
+    const combined =
+      [freelancerDisplay?.nama_depan, freelancerDisplay?.nama_belakang]
+        .filter(Boolean)
+        .join(' ')
+    if (combined) return combined
+    if (currentUser?.name) return currentUser.name
+    if (currentUser?.fullName) return currentUser.fullName
+    if (freelancerDisplay?.email) return String(freelancerDisplay.email).split('@')[0]
+    return 'Freelancer'
+  })()
+
+  const freelancerInitials = (() => {
+    const parts = String(freelancerName).trim().split(/\s+/).filter(Boolean)
+    if (parts.length === 0) return 'F'
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase()
+  })()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -214,16 +329,16 @@ const OrderDetailPageWithMock = () => {
             )}
 
             {/* Freelancer info */}
-            {order.freelancer && (
+            {freelancerDisplay && (
               <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
                 <h3 className="text-sm font-medium text-gray-700 mb-4">Freelancer</h3>
                 <div className="flex items-center">
                   <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-semibold mr-4">
-                    {order.freelancer.nama_depan?.charAt(0)}{order.freelancer.nama_belakang?.charAt(0)}
+                    {freelancerInitials}
                   </div>
                   <div>
-                    <p className="font-medium text-gray-900">{order.freelancer.nama_depan} {order.freelancer.nama_belakang}</p>
-                    <p className="text-sm text-gray-600">{order.freelancer.email}</p>
+                    <p className="font-medium text-gray-900">{freelancerName}</p>
+                    <p className="text-sm text-gray-600">{freelancerDisplay.email}</p>
                   </div>
                 </div>
               </div>
@@ -262,4 +377,4 @@ const OrderDetailPageWithMock = () => {
   )
 }
 
-export default OrderDetailPageWithMock
+export default OrderDetailPage
