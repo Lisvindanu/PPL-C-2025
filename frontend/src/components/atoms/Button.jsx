@@ -1,15 +1,18 @@
-export default function Button({ children, type = 'button', variant = 'primary', className = '', ...props }) {
+export default function Button({ children, type = 'button', variant = 'primary', className = '', icon, ...props }) {
   const variants = {
-    primary: 'bg-[#4782BE] text-white hover:bg-[#9DBBDD]',
-    outline: 'border-2 border-[#4782BE] text-[#1D375B] hover:bg-[#D8E3F3]',
-    neutral: 'bg-[#9DBBDD] text-white hover:bg-[#4782BE]',
-    role: 'bg-[#FFFFFF] text-[#1D375B] hover:bg-[#D8E3F3] border-2 border-[#9DBBDD] hover:border-[#4782BE]'
+    primary: 'bg-[#B5ABA0] text-white hover:opacity-90',
+    outline: 'border border-[#1B1B1B] text-[#1B1B1B] hover:bg-[#C7B9A7]/10',
+    neutral: 'bg-[#B3B3B3] text-white hover:bg-[#112D4E]',
+    role: 'bg-[#F9F7F8] text-[#1B1B1B] hover:opacity-90 border border-transparent hover:border-[#112D4E]'
   }
   return (
-    <button type={type} className={`px-6 py-3 rounded-full font-medium transition ${variants[variant]} ${className}`} {...props}>
-      {children}
+    <button 
+      type={type} 
+      className={`px-6 py-3 rounded-full font-medium transition inline-flex items-center justify-center gap-2 ${variants[variant]} ${className}`} 
+      {...props}
+    >
+      {icon && icon}
+      <span>{children}</span>
     </button>
   )
 }
-
-

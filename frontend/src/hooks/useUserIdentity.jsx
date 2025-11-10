@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import api from "../utils/axiosConfig";
 
 export default function useUserIdentity() {
   const [state, setState] = useState({
@@ -19,27 +20,23 @@ export default function useUserIdentity() {
 
         if (token) {
           try {
-            const res = await fetch("http://localhost:5000/api/users/profile", {
-              method: "GET",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (res.ok) {
-              const result = await res.json();
-              if (!cancelled && result?.success && result?.data) {
-                setState({
-                  firstName: result.data.nama_depan || "",
-                  lastName: result.data.nama_belakang || "",
-                  email: result.data.email || "",
-                  avatarUrl:
-                    result.data.avatar_url ||
-                    result.data.avatar ||
-                    "https://i.pravatar.cc/96",
-                  loading: false,
-                });
-                return;
-              }
+            const response = await api.get("/users/profile");
+            if (response.data?.success && response.data?.data && !cancelled) {
+              setState({
+                firstName: response.data.data.nama_depan || "",
+                lastName: response.data.data.nama_belakang || "",
+                email: response.data.data.email || "",
+                avatarUrl:
+                  response.data.data.avatar_url ||
+                  response.data.data.avatar ||
+                  "https://i.pravatar.cc/96",
+                loading: false,
+              });
+              return;
             }
-          } catch {}
+          } catch (error) {
+            console.error('API Error:', error);
+          }
         }
 
         const user =

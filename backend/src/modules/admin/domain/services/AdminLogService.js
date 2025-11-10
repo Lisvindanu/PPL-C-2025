@@ -13,15 +13,23 @@ class AdminLogService {
     return await this.adminLogRepository.findById(logId);
   }
 
-  async getAllLogs() {
-  return await this.adminLogRepository.findAll();
-}
+  async getLogs(filters = {}) {
+    const { adminId, limit = 50, offset = 0 } = filters;
+    
+    const whereClause = {};
+    if (adminId) {
+      whereClause.admin_id = adminId;
+    }
 
-async getLogs(filters) {
-  return await this.adminLogRepository.getLogs(filters);
-}
+    const logs = await this.adminLogRepository.findAll({
+      where: whereClause,
+      limit,
+      offset,
+      order: [['created_at', 'DESC']]
+    });
 
-
+    return logs;
+  }
 }
 
 module.exports = AdminLogService;

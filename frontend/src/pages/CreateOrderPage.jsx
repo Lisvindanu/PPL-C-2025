@@ -119,7 +119,7 @@ const CreateOrderPage = () => {
     localStorage.setItem('mockOrders', JSON.stringify(existingOrders))
 
     // Redirect ke order detail
-    navigate(`/orders/${orderId}`, { state: { order: newOrder } })
+    navigate(`/payment/${orderId}?amount=${totalBayar}&description=${encodeURIComponent(formData.judul)}`)
   }
 
   return (

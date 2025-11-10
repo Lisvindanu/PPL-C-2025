@@ -44,7 +44,7 @@ export default function AdminDashboardPage() {
         },
         {
           title: "Pesanan Selesai",
-          value: `${apiData.completedOrders?.toLocaleString('id-ID') || "0"} (${apiData.completionRate || "0%"})`,
+          value: apiData.completedOrders?.toLocaleString('id-ID') || "0",
           icon: <UserRoundCheck size={30} />, 
           bgColor: "bg-white"
         },
