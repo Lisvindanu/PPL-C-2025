@@ -1,51 +1,53 @@
+"use strict";
+
 /**
- * Service Repository Interface
- * Contract untuk service data access
+ * Abstraksi kontrak repository untuk Service (Layanan).
+ * Implementasi konkret: SequelizeServiceRepository.
  */
-
 class ServiceRepository {
-  async create(serviceData) {
-    throw new Error('Method create() must be implemented');
+  async create(service /* Service */) {
+    throw new Error("Not implemented");
   }
-
   async findById(id) {
-    throw new Error('Method findById() must be implemented');
+    throw new Error("Not implemented");
   }
-
   async findBySlug(slug) {
-    throw new Error('Method findBySlug() must be implemented');
+    throw new Error("Not implemented");
+  }
+  async findAll(filters = {}) {
+    throw new Error("Not implemented");
+  }
+  async search(params = {}) {
+    throw new Error("Not implemented");
   }
 
-  async findByUserId(userId, filters = {}) {
-    throw new Error('Method findByUserId() must be implemented');
+  async update(id, partial /* whitelist fields */) {
+    throw new Error("Not implemented");
+  }
+  async updateStatus(id, status) {
+    throw new Error("Not implemented");
   }
 
-  async findAll(filters = {}, pagination = {}) {
-    throw new Error('Method findAll() must be implemented');
+  async softDelete(id) {
+    throw new Error("Not implemented");
   }
 
-  async update(id, serviceData) {
-    throw new Error('Method update() must be implemented');
+  async incrementView(id) {
+    throw new Error("Not implemented");
   }
-
-  async delete(id) {
-    throw new Error('Method delete() must be implemented');
-  }
-
-  async search(keyword, filters = {}, pagination = {}) {
-    throw new Error('Method search() must be implemented');
-  }
-
-  async updateStatus(id, status, reason = null) {
-    throw new Error('Method updateStatus() must be implemented');
-  }
-
-  async updateRating(id, newRating, reviewCount) {
-    throw new Error('Method updateRating() must be implemented');
-  }
-
   async incrementOrderCount(id) {
-    throw new Error('Method incrementOrderCount() must be implemented');
+    throw new Error("Not implemented");
+  }
+
+  async existsKategori(id) {
+    throw new Error("Not implemented");
+  }
+  async existsFreelancer(id) {
+    throw new Error("Not implemented");
+  }
+
+  async hasActiveOrders(id) {
+    throw new Error("Not implemented");
   }
 }
 

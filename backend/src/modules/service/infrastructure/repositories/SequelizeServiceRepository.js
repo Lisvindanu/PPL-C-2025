@@ -1,267 +1,402 @@
-/**
- * Sequelize Service Repository Implementation
- * Database implementation untuk Service Repository
- */
+"use strict";
 
-const Service = require('../../domain/entities/Service');
-const { Op } = require('sequelize');
+const { v4: uuidv4 } = require("uuid");
 
 class SequelizeServiceRepository {
+  /**
+   * @param {import('sequelize').Sequelize} sequelize
+   */
   constructor(sequelize) {
     this.sequelize = sequelize;
-    
-    // Define models
-    const { DataTypes } = require('sequelize');
-    
-    // User Model
-    this.UserModel = sequelize.models.User || sequelize.define('User', {
-      id: { type: DataTypes.UUID, primaryKey: true },
-      nama_depan: DataTypes.STRING,
-      nama_belakang: DataTypes.STRING,
-      email: DataTypes.STRING,
-      no_telepon: DataTypes.STRING,
-      avatar: DataTypes.STRING,
-      bio: DataTypes.TEXT,
-      kota: DataTypes.STRING
-    }, {
-      tableName: 'users',
-      timestamps: false
-    });
-    
-    // Kategori Model
-    this.KategoriModel = sequelize.models.Kategori || sequelize.define('Kategori', {
-      id: { type: DataTypes.UUID, primaryKey: true },
-      nama: DataTypes.STRING,
-      slug: DataTypes.STRING,
-      icon: DataTypes.STRING
-    }, {
-      tableName: 'kategori',
-      timestamps: false
-    });
-    
-    // Layanan Model
-    this.LayananModel = sequelize.models.Layanan || sequelize.define('Layanan', {
-      id: { type: DataTypes.UUID, primaryKey: true },
-      freelancer_id: DataTypes.UUID,
-      kategori_id: DataTypes.UUID,
-      judul: DataTypes.STRING,
-      slug: DataTypes.STRING,
-      deskripsi: DataTypes.TEXT,
-      harga: DataTypes.DECIMAL(10, 2),
-      waktu_pengerjaan: DataTypes.INTEGER,
-      batas_revisi: DataTypes.INTEGER,
-      thumbnail: DataTypes.STRING,
-      gambar: {
-        type: DataTypes.JSON,
-        get() {
-          const rawValue = this.getDataValue('gambar');
-          return rawValue ? (typeof rawValue === 'string' ? JSON.parse(rawValue) : rawValue) : [];
-        }
-      },
-      rating_rata_rata: DataTypes.DECIMAL(3, 2),
-      jumlah_rating: DataTypes.INTEGER,
-      total_pesanan: DataTypes.INTEGER,
-      jumlah_dilihat: DataTypes.INTEGER,
-      status: DataTypes.ENUM('draft', 'aktif', 'nonaktif')
-    }, {
-      tableName: 'layanan',
-      timestamps: true,
-      underscored: true,
-      createdAt: 'created_at',
-      updatedAt: 'updated_at'
-    });
-    
-    // Setup associations
-    this.LayananModel.belongsTo(this.UserModel, {
-      foreignKey: 'freelancer_id',
-      as: 'freelancer'
-    });
-    
-    this.LayananModel.belongsTo(this.KategoriModel, {
-      foreignKey: 'kategori_id',
-      as: 'kategori'
-    });
+
+    this.USER_COL = process.env.SERVICE_USER_COLUMN || "freelancer_id";
+    this.columns = [
+      "id",
+      this.USER_COL + " AS freelancer_id",
+      "kategori_id",
+      "judul",
+      "slug",
+      "deskripsi",
+      "harga",
+      "waktu_pengerjaan",
+      "batas_revisi",
+      "thumbnail",
+      "gambar",
+      "rating_rata_rata",
+      "jumlah_rating",
+      "total_pesanan",
+      "jumlah_dilihat",
+      "status",
+      "created_at",
+      "updated_at",
+    ];
+
+    this.SORTABLE = new Set([
+      "created_at",
+      "harga",
+      "rating_rata_rata",
+      "total_pesanan",
+    ]);
   }
 
-  async create(serviceData) {
-    // TODO: Implement service creation
-    // Will create record in 'layanan' table
-    throw new Error('Not implemented yet - Service creation will be added in future sprint');
-  }
+  // ================= Utils =================
 
-  async findById(id) {
+  _parseRow(row) {
+    if (!row) return null;
+    const clone = { ...row };
     try {
-      const layanan = await this.LayananModel.findByPk(id, {
-        include: [
-          {
-            model: this.UserModel,
-            as: 'freelancer',
-            attributes: ['id', 'nama_depan', 'nama_belakang', 'email', 'no_telepon', 'avatar', 'bio', 'kota']
-          },
-          {
-            model: this.KategoriModel,
-            as: 'kategori',
-            attributes: ['id', 'nama', 'slug', 'icon']
-          }
-        ]
-      });
-
-      if (!layanan) {
-        return null;
+      if (clone.gambar && typeof clone.gambar === "string") {
+        clone.gambar = JSON.parse(clone.gambar);
       }
+    } catch {}
+    return clone;
+  }
 
-      return this.toDomainEntity(layanan);
-    } catch (error) {
-      throw new Error(`Error finding service by ID: ${error.message}`);
+  _toSlug(text) {
+    return String(text || "")
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 80);
+  }
+
+  async _generateUniqueSlug(baseTitle) {
+    const base = this._toSlug(baseTitle) || "service";
+    let slug = base;
+    let i = 0;
+    /* eslint-disable no-await-in-loop */
+    while (true) {
+      const [rows] = await this.sequelize.query(
+        "SELECT id FROM layanan WHERE slug = ? LIMIT 1",
+        { replacements: [slug] }
+      );
+      if (!rows || rows.length === 0) return slug;
+      i += 1;
+      slug = `${base}-${i}`;
     }
+  }
+
+  _buildWhere(filters = {}) {
+    const where = [];
+    const params = [];
+
+    if (filters.kategori_id) {
+      where.push("kategori_id = ?");
+      params.push(filters.kategori_id);
+    }
+    if (filters.status) {
+      where.push("status = ?");
+      params.push(filters.status);
+    }
+    if (filters.freelancer_id) {
+      where.push(`${this.USER_COL} = ?`);
+      params.push(filters.freelancer_id);
+    }
+    if (filters.user_id) {
+      where.push(`${this.USER_COL} = ?`);
+      params.push(filters.user_id);
+    }
+    if (Number.isFinite(filters.harga_min)) {
+      where.push("harga >= ?");
+      params.push(Number(filters.harga_min));
+    }
+    if (Number.isFinite(filters.harga_max)) {
+      where.push("harga <= ?");
+      params.push(Number(filters.harga_max));
+    }
+
+    return {
+      clause: where.length ? "WHERE " + where.join(" AND ") : "",
+      params,
+    };
+  }
+
+  _buildOrder(options = {}) {
+    const sortBy =
+      options.sortBy && this.SORTABLE.has(options.sortBy)
+        ? options.sortBy
+        : "created_at";
+    const sortDir =
+      (options.sortDir || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
+    return `ORDER BY ${sortBy} ${sortDir}`;
+  }
+
+  _buildPaging(options = {}) {
+    const page = Math.max(1, Number(options.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(options.limit) || 10));
+    const offset = (page - 1) * limit;
+    return { page, limit, offset, clause: `LIMIT ${limit} OFFSET ${offset}` };
+  }
+
+  async _count(whereClause, params) {
+    const [rows] = await this.sequelize.query(
+      `SELECT COUNT(*) AS cnt FROM layanan ${whereClause}`,
+      { replacements: params }
+    );
+    const r = Array.isArray(rows) ? rows[0] : rows;
+    return Number(r?.cnt || 0);
+  }
+
+  // ================= Guards / helpers =================
+
+  async existsFreelancer(userId) {
+    if (!userId) return false;
+    const [rows] = await this.sequelize.query(
+      `SELECT id FROM users WHERE id = ? AND role = 'freelancer' LIMIT 1`,
+      { replacements: [userId] }
+    );
+    const r = Array.isArray(rows) ? rows[0] : rows;
+    return Boolean(r?.id);
+  }
+
+  async existsKategori(kategoriId) {
+    if (!kategoriId) return false;
+    const [rows] = await this.sequelize.query(
+      `SELECT id FROM kategori WHERE id = ? LIMIT 1`,
+      { replacements: [kategoriId] }
+    );
+    const r = Array.isArray(rows) ? rows[0] : rows;
+    return Boolean(r?.id);
   }
 
   async findBySlug(slug) {
-    // TODO: Implement find by slug
-    throw new Error('Not implemented yet - Service search by slug will be added in future sprint');
+    const [rows] = await this.sequelize.query(
+      `SELECT ${this.columns.join(", ")} FROM layanan WHERE slug = ? LIMIT 1`,
+      { replacements: [slug] }
+    );
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return this._parseRow(row || null);
   }
 
-  async findByUserId(userId, filters = {}) {
-    // TODO: Implement find all services by user
-    throw new Error('Not implemented yet - User services listing will be added in future sprint');
-  }
+  // ================= CRUD & Status =================
 
-  async findAll(filters = {}, pagination = {}) {
-    try {
-      const { page = 1, limit = 20, sortBy = 'created_at', sortOrder = 'DESC' } = pagination;
-      const { kategori_id, harga_min, harga_max, rating_min, status = 'aktif' } = filters;
+  async create(arg1, arg2) {
+    if (typeof arg1 === "string" && arg2 && typeof arg2 === "object") {
+      const freelancerId = arg1;
+      const dto = arg2;
+      const id = uuidv4();
 
-      const offset = (page - 1) * limit;
-
-      // Build where clause
-      const whereClause = { status };
-
-      if (kategori_id) {
-        whereClause.kategori_id = kategori_id;
+      let slug =
+        dto.slug && String(dto.slug).trim()
+          ? this._toSlug(dto.slug)
+          : await this._generateUniqueSlug(dto.judul);
+      if (dto.slug && dto.slug !== slug) {
+        const [exists] = await this.sequelize.query(
+          "SELECT id FROM layanan WHERE slug = ? LIMIT 1",
+          { replacements: [slug] }
+        );
+        if (exists && exists.length) {
+          slug = await this._generateUniqueSlug(slug);
+        }
       }
 
-      if (harga_min || harga_max) {
-        whereClause.harga = {};
-        if (harga_min) whereClause.harga[Op.gte] = harga_min;
-        if (harga_max) whereClause.harga[Op.lte] = harga_max;
-      }
+      const gambarJson = Array.isArray(dto.gambar)
+        ? JSON.stringify(dto.gambar)
+        : typeof dto.gambar === "string"
+          ? dto.gambar
+          : null;
 
-      if (rating_min) {
-        whereClause.rating_rata_rata = { [Op.gte]: rating_min };
-      }
+      await this.sequelize.query(
+        `
+          INSERT INTO layanan
+            (id, ${this.USER_COL}, kategori_id, judul, slug, deskripsi,
+             harga, waktu_pengerjaan, batas_revisi, thumbnail, gambar, status, created_at, updated_at)
+          VALUES
+            (?,  ?,           ?,          ?,     ?,    ?, 
+             ?,     ?,                ?,             ?,        ?,     ?,      NOW(), NOW())
+        `,
+        {
+          replacements: [
+            id,
+            freelancerId,
+            dto.kategori_id,
+            dto.judul,
+            slug,
+            dto.deskripsi,
+            dto.harga,
+            dto.waktu_pengerjaan,
+            dto.batas_revisi ?? 1,
+            dto.thumbnail ?? null,
+            gambarJson,
+            dto.status || "draft",
+          ],
+        }
+      );
 
-      // Query with Sequelize ORM
-      const { count, rows } = await this.LayananModel.findAndCountAll({
-        where: whereClause,
-        include: [
-          {
-            model: this.UserModel,
-            as: 'freelancer',
-            attributes: ['id', 'nama_depan', 'nama_belakang', 'avatar', 'kota']
-          },
-          {
-            model: this.KategoriModel,
-            as: 'kategori',
-            attributes: ['id', 'nama', 'slug']
-          }
-        ],
-        limit: parseInt(limit),
-        offset: parseInt(offset),
-        order: [[sortBy, sortOrder]],
-        distinct: true
-      });
+      const [rows] = await this.sequelize.query(
+        `SELECT ${this.columns.join(", ")} FROM layanan WHERE id = ? LIMIT 1`,
+        { replacements: [id] }
+      );
+      const row = Array.isArray(rows) ? rows[0] : rows;
+      return this._parseRow(row || null);
+    }
 
-      // Convert to domain entities
-      const services = rows.map(layanan => this.toDomainEntity(layanan));
-
-      return {
-        services,
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
+    if (arg1 && typeof arg1 === "object" && !arg2) {
+      const svc = arg1;
+      const freelancerId = svc.freelancerId || svc.freelancer_id;
+      const dto = {
+        kategori_id: svc.kategoriId || svc.kategori_id,
+        judul: svc.judul,
+        slug: svc.slug,
+        deskripsi: svc.deskripsi,
+        harga: svc.harga,
+        waktu_pengerjaan: svc.waktuPengerjaan || svc.waktu_pengerjaan,
+        batas_revisi: svc.batasRevisi || svc.batas_revisi,
+        thumbnail: svc.thumbnail || null,
+        gambar: Array.isArray(svc.gambar) ? svc.gambar : svc.foto_layanan || [],
+        status: svc.status || "draft",
       };
-    } catch (error) {
-      throw new Error(`Error finding all services: ${error.message}`);
+      return this.create(freelancerId, dto);
     }
+
+    throw new Error(
+      "Invalid arguments for create(): expected (freelancerId, dto) or (serviceObject)"
+    );
   }
 
-  async update(id, serviceData) {
-    // TODO: Implement service update
-    throw new Error('Not implemented yet - Service update will be added in future sprint');
-  }
-
-  async delete(id) {
-    // TODO: Implement soft delete (set is_active = false)
-    throw new Error('Not implemented yet - Service deletion will be added in future sprint');
-  }
-
-  async search(keyword, filters = {}, pagination = {}) {
-    // TODO: Implement full-text search on judul and deskripsi
-    // Combined with filters (kategori, harga, lokasi, rating)
-    throw new Error('Not implemented yet - Service search will be added in future sprint');
-  }
-
-  async updateStatus(id, status, reason = null) {
-    // TODO: Implement status update (for admin approval/rejection)
-    throw new Error('Not implemented yet - Status management will be added in future sprint');
-  }
-
-  async updateRating(id, newRating, reviewCount) {
-    // TODO: Implement rating update when new review added
-    throw new Error('Not implemented yet - Rating update will be added in future sprint');
-  }
-
-  async incrementOrderCount(id) {
-    // TODO: Implement order counter increment
-    throw new Error('Not implemented yet - Order tracking will be added in future sprint');
-  }
-
-  /**
-   * Convert Sequelize model to Domain Entity
-   */
-  toDomainEntity(layananModel) {
-    const plain = layananModel.get({ plain: true });
-    
-    // Parse gambar JSON if needed
-    let gambar = [];
-    try {
-      gambar = plain.gambar ? (typeof plain.gambar === 'string' ? JSON.parse(plain.gambar) : plain.gambar) : [];
-    } catch (e) {
-      gambar = [];
+  async update(id, patch) {
+    if (!patch || Object.keys(patch).length === 0) {
+      return this.findById(id);
     }
-    
-    return new Service({
-      id: plain.id,
-      user_id: plain.freelancer_id,
-      kategori_id: plain.kategori_id,
-      sub_kategori_id: null,
-      judul: plain.judul,
-      slug: plain.slug,
-      deskripsi: plain.deskripsi,
-      harga_minimum: parseFloat(plain.harga),
-      harga_maksimum: parseFloat(plain.harga),
-      durasi_estimasi: plain.waktu_pengerjaan,
-      satuan_durasi: 'hari',
-      lokasi: null,
-      area_layanan: [],
-      foto_layanan: gambar,
-      status: plain.status === 'aktif' ? 'active' : plain.status,
-      alasan_ditolak: null,
-      rating_rata_rata: parseFloat(plain.rating_rata_rata) || 0,
-      jumlah_review: plain.jumlah_rating || 0,
-      total_pesanan: plain.total_pesanan || 0,
-      is_active: plain.status === 'aktif',
-      created_at: plain.created_at,
-      updated_at: plain.updated_at,
-      // Include relations
-      freelancer: plain.freelancer,
-      kategori: plain.kategori,
-      thumbnail: plain.thumbnail,
-      waktu_pengerjaan: plain.waktu_pengerjaan,
-      batas_revisi: plain.batas_revisi,
-      jumlah_dilihat: plain.jumlah_dilihat
-    });
+    const allowed = new Set([
+      "kategori_id",
+      "judul",
+      "slug",
+      "deskripsi",
+      "harga",
+      "waktu_pengerjaan",
+      "batas_revisi",
+      "thumbnail",
+      "gambar",
+    ]);
+
+    const sets = [];
+    const params = [];
+    for (const [k, v] of Object.entries(patch)) {
+      if (!allowed.has(k)) continue;
+      if (k === "slug") {
+        const normalized = this._toSlug(v);
+        sets.push(`${k} = ?`);
+        params.push(normalized || null);
+      } else if (k === "gambar") {
+        const gj = Array.isArray(v)
+          ? JSON.stringify(v)
+          : typeof v === "string"
+            ? v
+            : null;
+        sets.push(`${k} = ?`);
+        params.push(gj);
+      } else {
+        sets.push(`${k} = ?`);
+        params.push(v ?? null);
+      }
+    }
+    sets.push("updated_at = ?");
+    params.push(new Date());
+    params.push(id);
+
+    if (sets.length <= 1) return this.findById(id);
+
+    await this.sequelize.query(
+      `UPDATE layanan SET ${sets.join(", ")} WHERE id = ?`,
+      { replacements: params }
+    );
+    return this.findById(id);
+  }
+
+  async softDelete(id) {
+    await this.sequelize.query(
+      `UPDATE layanan SET status = 'nonaktif', updated_at = ? WHERE id = ?`,
+      { replacements: [new Date(), id] }
+    );
+    return { id, deleted: true };
+  }
+
+  async approve(id) {
+    await this.sequelize.query(
+      `UPDATE layanan SET status = 'aktif', updated_at = ? WHERE id = ?`,
+      { replacements: [new Date(), id] }
+    );
+    return this.findById(id);
+  }
+
+  // new: general setter to avoid enum mismatch bugs
+  async setStatus(id, statusValue) {
+    await this.sequelize.query(
+      `UPDATE layanan SET status = ?, updated_at = ? WHERE id = ?`,
+      { replacements: [statusValue, new Date(), id] }
+    );
+    return this.findById(id);
+  }
+
+  // ================= Queries =================
+
+  async findById(id) {
+    const [rows] = await this.sequelize.query(
+      `SELECT ${this.columns.join(", ")} FROM layanan WHERE id = ? LIMIT 1`,
+      { replacements: [id] }
+    );
+    const row = Array.isArray(rows) ? rows[0] : rows;
+    return this._parseRow(row || null);
+  }
+
+  async findAll(filters = {}, options = {}) {
+    const { clause, params } = this._buildWhere(filters);
+    const order = this._buildOrder(options);
+    const paging = this._buildPaging(options);
+
+    const [rows] = await this.sequelize.query(
+      `SELECT ${this.columns.join(", ")} FROM layanan ${clause} ${order} ${paging.clause}`,
+      { replacements: params }
+    );
+    const items = (rows || []).map((r) => this._parseRow(r));
+    const total = await this._count(clause, params);
+
+    return {
+      items,
+      pagination: {
+        page: paging.page,
+        limit: paging.limit,
+        total,
+        totalPages: Math.ceil(total / paging.limit) || 1,
+      },
+    };
+  }
+
+  async search(q, filters = {}, options = {}) {
+    const term = `%${q}%`;
+    const base = this._buildWhere(filters);
+    const whereClause = base.clause
+      ? `${base.clause} AND (judul LIKE ? OR deskripsi LIKE ?)`
+      : `WHERE (judul LIKE ? OR deskripsi LIKE ?)`;
+    const params = [...base.params, term, term];
+
+    const order = this._buildOrder(options);
+    const paging = this._buildPaging(options);
+
+    const [rows] = await this.sequelize.query(
+      `SELECT ${this.columns.join(", ")} FROM layanan ${whereClause} ${order} ${paging.clause}`,
+      { replacements: params }
+    );
+
+    const items = (rows || []).map((r) => this._parseRow(r));
+    const total = await this._count(whereClause, params);
+
+    return {
+      items,
+      pagination: {
+        page: paging.page,
+        limit: paging.limit,
+        total,
+        totalPages: Math.ceil(total / paging.limit) || 1,
+      },
+    };
+  }
+
+  async findByUserId(userId, filters = {}, options = {}) {
+    const merged = { ...filters, freelancer_id: userId };
+    return this.findAll(merged, options);
   }
 }
 

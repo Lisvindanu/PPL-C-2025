@@ -1,99 +1,122 @@
-/**
- * Get All Services Use Case
- * Business logic untuk listing dan search layanan
- */
+"use strict";
 
+/**
+ * Get All Services Use Case (FINAL)
+ * - Default publik: status 'aktif'
+ * - Normalisasi angka & sorting
+ * - Kompatibel dengan repository.findAll() yang mengembalikan:
+ *   { items: any[], pagination: { page, limit, total, totalPages } }
+ * - Tidak memaksa format entity baru (biar 1:1 dengan DB schema dari repo)
+ */
 class GetAllServices {
+  /**
+   * @param {Object} serviceRepository - instance repository
+   *  Wajib punya method: findAll(filters, options)
+   */
   constructor(serviceRepository) {
     this.serviceRepository = serviceRepository;
   }
 
-  async execute(filters = {}, pagination = { page: 1, limit: 20 }) {
+  /**
+   * @param {Object} filtersIn
+   * @param {Object} paginationIn
+   * @returns {Promise<{items: any[], pagination: {page:number,limit:number,total:number,totalPages:number}}>}
+   */
+  async execute(filtersIn = {}, paginationIn = {}) {
     try {
-      // Validate pagination
-      const page = parseInt(filters.page) || parseInt(pagination.page) || 1;
-      const limit = parseInt(filters.limit) || parseInt(pagination.limit) || 20;
+      // --- Normalisasi filter
+      const filters = { ...filtersIn };
 
-      if (page < 1) {
-        throw new Error('Page must be greater than 0');
+      // Publik: default hanya status aktif
+      if (!filters.status) filters.status = "aktif";
+
+      // angka aman untuk harga_min / harga_max
+      if (filters.harga_min != null) {
+        const v = Number(filters.harga_min);
+        if (!Number.isFinite(v) || v < 0) throw new Error("harga_min invalid");
+        filters.harga_min = v;
+      }
+      if (filters.harga_max != null) {
+        const v = Number(filters.harga_max);
+        if (!Number.isFinite(v) || v < 0) throw new Error("harga_max invalid");
+        filters.harga_max = v;
+      }
+      if (
+        filters.harga_min != null &&
+        filters.harga_max != null &&
+        Number(filters.harga_min) > Number(filters.harga_max)
+      ) {
+        throw new Error("Minimum price cannot be greater than maximum price");
       }
 
-      if (limit < 1 || limit > 100) {
-        throw new Error('Limit must be between 1 and 100');
-      }
+      // --- Normalisasi options (paging, sorting)
+      const allowedSort = new Set([
+        "created_at",
+        "harga",
+        "rating_rata_rata",
+        "total_pesanan",
+      ]);
 
-      // Validate filters
-      const validFilters = {
-        kategori_id: filters.kategori_id,
-        harga_min: filters.harga_min ? parseFloat(filters.harga_min) : undefined,
-        harga_max: filters.harga_max ? parseFloat(filters.harga_max) : undefined,
-        rating_min: filters.rating_min ? parseFloat(filters.rating_min) : undefined,
-        status: filters.status || 'aktif'
+      // Terima page/limit dari filters (swagger kirim via query) atau paginationIn
+      const pageIn = Number(filters.page ?? paginationIn.page);
+      const limitIn = Number(filters.limit ?? paginationIn.limit);
+
+      const options = {
+        page: Number.isFinite(pageIn) && pageIn >= 1 ? pageIn : 1,
+        limit:
+          Number.isFinite(limitIn) && limitIn >= 1 && limitIn <= 100
+            ? limitIn
+            : 10,
+        sortBy: allowedSort.has(filters.sortBy) ? filters.sortBy : "created_at",
+        // Repo kita pakai sortDir (bukan sortOrder)
+        sortDir:
+          String(
+            filters.sortDir || filters.sortOrder || "desc"
+          ).toLowerCase() === "asc"
+            ? "asc"
+            : "desc",
       };
 
-      // Validate price range
-      if (validFilters.harga_min && validFilters.harga_max && validFilters.harga_min > validFilters.harga_max) {
-        throw new Error('Minimum price cannot be greater than maximum price');
+      // --- Ambil data dari repository
+      const res = await this.serviceRepository.findAll(filters, options);
+
+      // Bentuk standar dari repo: { items, pagination }
+      if (res && Array.isArray(res.items)) {
+        const pg = res.pagination || {
+          page: options.page,
+          limit: options.limit,
+          total: res.items.length,
+          totalPages: 1,
+        };
+        return { items: res.items, pagination: pg };
       }
 
-      // Validate rating
-      if (validFilters.rating_min && (validFilters.rating_min < 0 || validFilters.rating_min > 5)) {
-        throw new Error('Rating must be between 0 and 5');
+      // Kalau implementasi repo lain sempat balikin array langsung, bungkus agar konsisten
+      if (Array.isArray(res)) {
+        return {
+          items: res,
+          pagination: {
+            page: options.page,
+            limit: options.limit,
+            total: res.length,
+            totalPages: Math.ceil(res.length / options.limit) || 1,
+          },
+        };
       }
 
-      // Setup pagination with sorting
-      const paginationOptions = {
-        page,
-        limit,
-        sortBy: filters.sortBy || 'created_at',
-        sortOrder: filters.sortOrder || 'DESC'
-      };
-
-      // Get services from repository
-      const result = await this.serviceRepository.findAll(validFilters, paginationOptions);
-
-      // Format response
+      // Fallback aman
       return {
-        services: result.services.map(service => this.formatServiceForList(service)),
+        items: [],
         pagination: {
-          total: result.total,
-          page: result.page,
-          limit: result.limit,
-          totalPages: result.totalPages
-        }
+          page: options.page,
+          limit: options.limit,
+          total: 0,
+          totalPages: 1,
+        },
       };
     } catch (error) {
       throw new Error(`Failed to get services: ${error.message}`);
     }
-  }
-
-  /**
-   * Format service entity for list response
-   */
-  formatServiceForList(service) {
-    return {
-      id: service.id,
-      judul: service.judul,
-      slug: service.slug,
-      deskripsi: service.deskripsi.substring(0, 150) + '...', // Truncate description
-      harga: service.harga_minimum,
-      thumbnail: service.thumbnail,
-      rating_rata_rata: service.rating_rata_rata,
-      jumlah_review: service.jumlah_review,
-      total_pesanan: service.total_pesanan,
-      waktu_pengerjaan: service.waktu_pengerjaan,
-      freelancer: service.freelancer ? {
-        id: service.freelancer.id,
-        nama_lengkap: `${service.freelancer.nama_depan || ''} ${service.freelancer.nama_belakang || ''}`.trim(),
-        avatar: service.freelancer.avatar,
-        kota: service.freelancer.kota
-      } : null,
-      kategori: service.kategori ? {
-        id: service.kategori.id,
-        nama_kategori: service.kategori.nama,
-        slug: service.kategori.slug
-      } : null
-    };
   }
 }
 
