@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
@@ -21,6 +21,15 @@ export default function RegisterFreelancerPage() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      toast.show("Anda sudah login", "info");
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, toast]);
 
   const submit = async (e) => {
     e.preventDefault();

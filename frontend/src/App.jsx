@@ -27,6 +27,9 @@ import NewPasswordPage from "./pages/NewPasswordPage";
 import OrderListPage from "./pages/OrderListPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import FavoritePage from "./pages/FavoritePage";
+import RiwayatPesananPage from "./pages/RiwayatPesananPage";
 
 export default function App() {
   return (
@@ -104,6 +107,22 @@ export default function App() {
         }
       />
       <Route
+        path="/favorit"
+        element={
+          <ProtectedRoute>
+            <FavoritePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/riwayat-pesanan"
+        element={
+          <ProtectedRoute>
+            <RiwayatPesananPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/freelance/service"
         element={
           <ProtectedRoute>
@@ -137,19 +156,11 @@ export default function App() {
       />
       <Route
         path="/services/:id"
-        element={
-          <ProtectedRoute>
-            <ServiceDetailPage />
-          </ProtectedRoute>
-        }
+        element={<ServiceDetailPage />}
       />
       <Route
         path="/jobs"
-        element={
-          <ProtectedRoute>
-            <ServiceDetailPage />
-          </ProtectedRoute>
-        }
+        element={<ServiceDetailPage />}
       />
       <Route
         path="/create-order/:id"
@@ -173,7 +184,7 @@ export default function App() {
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   )
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
@@ -24,6 +24,7 @@ const mapServiceToFrontend = (backendService) => {
 
 const ServiceListPage = () => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [services, setServices] = useState([])
   const [categories, setCategories] = useState([])
@@ -110,6 +111,33 @@ const ServiceListPage = () => {
       cancelled = true;
     };
   }, [])
+
+  // Handle URL category parameter
+  useEffect(() => {
+    const categorySlug = searchParams.get('category')
+    if (categorySlug && categories.length > 0) {
+      // Helper function to slugify category name
+      const slugify = (text) => {
+        return text
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/&/g, '')
+          .replace(/[^\w-]+/g, '')
+      }
+
+      // Find matching category
+      const matchingCategory = categories.find(cat =>
+        slugify(cat.nama) === categorySlug
+      )
+
+      if (matchingCategory) {
+        setSelectedCategory(matchingCategory.id)
+      }
+    } else if (!categorySlug) {
+      // Clear selection if no category in URL
+      setSelectedCategory(null)
+    }
+  }, [searchParams, categories])
 
   // Filter services by category
   const filteredServices = selectedCategory

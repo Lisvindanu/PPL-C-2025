@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ResetPasswordLayout from '../components/organisms/ResetPasswordLayout'
 import ResetPasswordCard from '../components/organisms/ResetPasswordCard'
@@ -15,6 +15,15 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState('')
   const navigate = useNavigate()
   const toast = useToast()
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      toast.show("Anda sudah login", "info");
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, toast]);
 
   const handleSubmit = async (e) => {
     e.preventDefault()

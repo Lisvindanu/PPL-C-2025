@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
 import FormGroup from "../components/molecules/FormGroup";
@@ -18,6 +18,15 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      toast.show("Anda sudah login", "info");
+      navigate('/dashboard', { replace: true });
+    }
+  }, [navigate, toast]);
   const handleSubmit = async (e) => {
     e.preventDefault();
     const emailErr = validateEmail(form.email);
