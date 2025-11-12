@@ -30,44 +30,50 @@ class SendMessage {
     this.notificationService = notificationService;
   }
 
+  /**
+   * @param {string} userId - ID user yang mengirim
+   * @param {string} percakapanId - ID percakapan
+   * @param {object} messageData - { pesan, tipe, lampiran (opsional) }
+   */
+
   async execute(userId, percakapanId, messageData) {
-    // messageData: { isi_pesan, tipe_pesan, attachment_url }
+    // 1. Validasi percakapan
+    const conversation = await this.conversationRepository.findById(percakapanId);
+    if (!conversation) {
+      throw new Error('Percakapan tidak ditemukan');
+    }
 
-    // TODO: Validasi percakapan exist
-    // const conversation = await this.conversationRepository.findById(percakapanId);
-    // if (!conversation) {
-    //   throw new Error('Percakapan not found');
-    // }
+    // 2. Validasi user adalah participant
+    if (!conversation.isParticipant(userId)) {
+      throw new Error('Anda bukan bagian dari percakapan ini');
+    }
 
-    // TODO: Validasi user adalah participant
-    // if (conversation.user1_id !== userId && conversation.user2_id !== userId) {
-    //   throw new Error('Lu bukan participant percakapan ini, jangan nyolong chat orang');
-    // }
+    // 3. Validasi content
+    if (messageData.tipe === 'text' && !messageData.pesan) {
+      throw new Error('Pesan teks tidak boleh kosong');
+    }
 
-    // TODO: Validasi content
-    // if (messageData.tipe_pesan === 'text' && !messageData.isi_pesan) {
-    //   throw new Error('Pesan text ga boleh kosong');
-    // }
-    // if (['image', 'file'].includes(messageData.tipe_pesan) && !messageData.attachment_url) {
-    //   throw new Error('Attachment URL wajib diisi kalo kirim file');
-    // }
+    // 4. Create message
+    const newMessage = await this.messageRepository.create({
+      percakapan_id: percakapanId,
+      pengirim_id: userId,
+      pesan: messageData.pesan || '',
+      tipe: messageData.tipe || 'text',
+      lampiran: messageData.lampiran || null,
+      is_read: false
+    });
 
-    // TODO: Create message
-    // const message = await this.messageRepository.create({
-    //   percakapan_id: percakapanId,
-    //   pengirim_id: userId,
-    //   isi_pesan: messageData.isi_pesan || '',
-    //   tipe_pesan: messageData.tipe_pesan || 'text',
-    //   attachment_url: messageData.attachment_url,
-    //   is_read: false
-    // });
+    // 5. Update last_message di conversation
+    await this.conversationRepository.update(percakapanId, {
+      pesan_terakhir: newMessage.pesan || `[${newMessage.tipe}]`,
+      pesan_terakhir_pada: newMessage.created_at
+    });
 
-    // TODO: Update last_message di conversation
-    // await this.conversationRepository.update(percakapanId, {
-    //   last_message: messageData.isi_pesan || '[File]',
-    //   last_message_at: new Date(),
-    //   unread_count: conversation.getUnreadCountFor(getOtherUserId(userId))
-    // });
+    // 6. BARU: Emit socket event buat real-time (C-2)
+    if (this.socketService) {
+      // Panggil method dari SocketService yang kita buat
+      this.socketService.emitNewMessage(percakapanId, newMessage);
+    }
 
     // TODO: Emit socket event buat real-time (kalo pake Socket.IO)
     // if (this.socketService) {
@@ -80,9 +86,8 @@ class SendMessage {
     //   await this.notificationService.sendNewMessageNotification(receiverId, message);
     // }
 
-    // return message;
+    return newMessage;
 
-    throw new Error('Not implemented yet - Kerjain, chat penting buat komunikasi buyer-seller');
   }
 }
 

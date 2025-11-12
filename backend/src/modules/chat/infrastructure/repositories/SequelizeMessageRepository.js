@@ -13,20 +13,50 @@ const { Op } = require('sequelize');
 class SequelizeMessageRepository {
   constructor(sequelize) {
     this.sequelize = sequelize;
+    this.Pesan = sequelize.models.pesan;
+    this.User = sequelize.models.users;
   }
+
+  /**
+   * Membuat pesan baru di database
+   * @param {object} messageData - Data untuk pesan baru
+   * @returns {Promise<Message>}
+   */
 
   async create(messageData) {
     // TODO: Implementasi create message
-    // const result = await this.sequelize.models.Pesan.create(messageData);
-    // return new Message(result.toJSON());
-
-    throw new Error('Not implemented - Standard create operation');
+    const result = await this.Pesan.create(messageData);
+    return new Message(result.toJSON());
   }
 
-  async findByConversationId(percakapanId, options = {}) {
+  /**
+   * Temukan pesan berdasarkan ID percakapan dengan paginasi
+   * @param {string} percakapanId
+   * @param {object} options - { page, limit }
+   * @returns {Promise<{rows: Pesan[], count: number}>}
+   */
+
+  async findByConversationId(percakapanId, { page = 1, limit = 20 }) {
     // TODO: Implementasi get messages dengan pagination
-    // Support cursor-based pagination untuk infinite scroll
-    //
+    const offset = (page - 1) * limit;
+
+    return this.Pesan.findAndCountAll({
+      where: {
+        percakapan_id: percakapanId,
+      },
+      include: [
+        {
+          model: this.User,
+          as: 'Pengirim',
+          attributes: ['id', 'nama', 'foto_profil'],
+        },
+      ],
+
+      order: [['created_at', 'DESC']],
+      limit: parseInt(limit, 10),
+      offset: parseInt(offset, 10),
+    })
+
     // const where = { percakapan_id: percakapanId };
     //
     // // Cursor-based pagination (load older messages)
@@ -43,63 +73,56 @@ class SequelizeMessageRepository {
     //
     // return result.map(r => new Message(r.toJSON())).reverse(); // Reverse untuk oldest first
 
-    throw new Error('Not implemented - Pagination dengan cursor (before_id)');
   }
 
   async markAsRead(percakapanId, userId) {
     // TODO: Implementasi mark messages sebagai read
     // Update semua unread messages dari user lain
     //
-    // await this.sequelize.models.Pesan.update(
-    //   {
-    //     is_read: true,
-    //     dibaca_pada: new Date()
-    //   },
-    //   {
-    //     where: {
-    //       percakapan_id: percakapanId,
-    //       pengirim_id: { [Op.ne]: userId }, // Not equal userId (message dari lawan)
-    //       is_read: false
-    //     }
-    //   }
-    // );
 
-    throw new Error('Not implemented - Bulk update dengan where condition');
+    await this.Pesan.update(
+      {
+        is_read: true,
+        dibaca_pada: new Date()
+      },
+      {
+        where: {
+          percakapan_id: percakapanId,
+          pengirim_id: { [Op.ne]: userId },
+          is_read: false
+        }
+      }
+    );
   }
 
   async countUnread(percakapanId, userId) {
     // TODO: Implementasi count unread messages
-    // const count = await this.sequelize.models.Pesan.count({
-    //   where: {
-    //     percakapan_id: percakapanId,
-    //     pengirim_id: { [Op.ne]: userId }, // Messages dari lawan
-    //     is_read: false
-    //   }
-    // });
-    //
-    // return count;
+    const count = await this.Pesan.count({
+      where: {
+        percakapan_id: percakapanId,
+        pengirim_id: { [Op.ne]: userId }, // Messages dari lawan
+        is_read: false
+      }
+    });
 
-    throw new Error('Not implemented - count() method dengan where');
+    return count;
+
   }
 
   async delete(id, userId) {
     // TODO: Implementasi delete message
     // Validasi ownership terlebih dahulu
     //
-    // const message = await this.sequelize.models.Pesan.findByPk(id);
-    // if (!message) return false;
-    //
-    // if (message.pengirim_id !== userId) {
-    //   throw new Error('Tidak dapat menghapus pesan user lain');
-    // }
-    //
-    // // Soft delete atau hard delete?
-    // // Soft: await message.update({ deleted_at: new Date() });
-    // // Hard: await message.destroy();
-    //
-    // return true;
+    const message = await this.Pesan.findByPk(id);
+    if (!message) return false;
 
-    throw new Error('Not implemented - Validasi ownership lalu delete');
+    if (message.pengirim_id !== userId) {
+      throw new Error('Tidak dapat menghapus pesan user lain');
+    }
+
+    await message.destroy();
+    return true;
+
   }
 }
 
