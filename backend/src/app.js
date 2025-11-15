@@ -5,6 +5,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const http = require('http');
 
 // ================================
 // 🔐 Import Middleware
@@ -17,6 +18,7 @@ const adminMiddleware = require('./shared/middleware/adminMiddleware');
 // ================================
 const app = express();
 const PORT = process.env.PORT || 5000;
+const httpServer = http.createServer(app);
 
 // ================================
 // 🧩 Middleware Global
@@ -40,10 +42,19 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // 🗄️ Database Connection
 // ================================
 const { sequelize, connectDatabase } = require('./shared/database/connection');
+const initModels = require('./shared/database/models');
+
+require('./shared/database/models');
 
 connectDatabase()
   .then(() => console.log('✅ Database authenticated successfully'))
   .catch((err) => console.error('❌ Database connection error:', err.message));
+
+// ================================
+// 🔌 Inisialisasi Socket.IO
+// ================================
+const socketService = require('./modules/chat/infrastructure/services/SocketService');
+socketService.init(httpServer);
 
 // ================================
 // 🚀 Initialize Dependencies
@@ -59,6 +70,7 @@ const adminRoutes = require('./modules/admin/presentation/routes/adminRoutes');
 const adminLogRoutes = require('./modules/admin/presentation/routes/adminLogRoutes');
 const kategoriRoutes = require('./modules/service/presentation/routes/kategoriRoutes');
 const subKategoriRoutes = require('./modules/service/presentation/routes/subKategoriRoutes');
+const chatRoutes = require('./modules/chat/presentation/routes/chatRoutes');
 
 // ================================
 // 🚀 Initialize Service Module Controllers (Kategori & Sub-Kategori)
@@ -68,6 +80,9 @@ const kategoriController = new KategoriController(sequelize);
 
 const SubKategoriController = require('./modules/service/presentation/controllers/SubKategoriController');
 const subKategoriController = new SubKategoriController(sequelize);
+
+const ChatController = require('./modules/chat/presentation/controllers/ChatController');
+const chatController = new ChatController(sequelize, socketService);
 
 // ================================
 // 🛣️ Register Routes
@@ -83,6 +98,8 @@ app.use('/api/sub-kategori', subKategoriRoutes(subKategoriController));
 // Protected admin routes (memerlukan auth + admin role)
 app.use('/api/admin', authMiddleware, adminMiddleware, adminRoutes(adminController));
 app.use('/api/admin/logs', authMiddleware, adminMiddleware, adminLogRoutes(adminLogController));
+app.use('/api/chat', authMiddleware, chatRoutes(chatController));
+
 
 // Test DB (untuk development)
 if (process.env.NODE_ENV === 'development') {
@@ -130,16 +147,17 @@ app.use((err, req, res, next) => {
 // ================================
 // 🚀 Jalankan Server
 // ================================
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════╗
-║     SkillConnect Server Started     ║
+║     SkillConnect Server Started    ║
+║    (HTTP + Sockets Real-time)      ║
 ╠════════════════════════════════════╣
-║  Port: ${PORT}
-║  Environment: ${process.env.NODE_ENV}
-║  Database: ${process.env.DB_NAME}
+║  Port: ${PORT}                        ║
+║  Environment: ${process.env.NODE_ENV}          ║
+║  Database: ${process.env.DB_NAME}            ║
 ╚════════════════════════════════════╝
   `);
 });
 
-module.exports = app;
+module.exports = { app, httpServer };

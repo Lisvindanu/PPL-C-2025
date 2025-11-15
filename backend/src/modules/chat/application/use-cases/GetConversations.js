@@ -16,32 +16,48 @@ class GetConversations {
     this.conversationRepository = conversationRepository;
   }
 
+  /**
+   * @param {string} userId - ID user yang sedang login
+   * @param {object} filters - { page, limit }
+   */
+
   async execute(userId, filters = {}) {
-    // filters: { page, limit }
+    const { page = 1, limit = 20 } = filters;
 
-    // TODO: Ambil conversations
-    // const conversations = await this.conversationRepository.findByUserId(userId, {
-    //   page: filters.page || 1,
-    //   limit: filters.limit || 20,
-    //   includeLastMessage: true,
-    //   includeOtherUser: true, // Include info user lawan bicara
-    //   sortBy: 'last_message_at',
-    //   order: 'DESC'
-    // });
+    const conversation = await this.conversationRepository.findByUserId(userId, {
+      page,
+      limit,
+      order: 'DESC'
+    });
 
-    // TODO: Map ke format yang user-friendly
-    // const result = conversations.map(conv => ({
-    //   id: conv.id,
-    //   other_user: conv.getOtherUser(userId), // Helper method di entity
-    //   last_message: conv.last_message,
-    //   last_message_at: conv.last_message_at,
-    //   unread_count: conv.getUnreadCountFor(userId),
-    //   created_at: conv.created_at
-    // }));
+    const result = conversation.map(conv => {
+      const otherUser = conv.user1_id === userId ? conv.user2 : conv.user1;
 
-    // return result;
+      // Format data lawan bicara
+      const participant = {
+        userId: otherUser.id,
+        name: `${otherUser.nama_depan} ${otherUser.nama_belakang}`,
+        avatar: otherUser.avatar
+      };
 
-    throw new Error('Not implemented yet - Tinggal query database doang kok');
+      // Format pesan terakhir
+      const lastMessage = {
+        text: conv.pesan_terakhir,
+        timestamp: conv.pesan_terakhir_pada,
+        // Read akan diimplementasikan nanti
+      };
+
+      const unreadCount = 0;
+
+      return {
+        conversationId: conv.id,
+        participant: participant,
+        lastMessage: lastMessage,
+        unreadCount: unreadCount
+      };
+    });
+
+    return result;
   }
 }
 
