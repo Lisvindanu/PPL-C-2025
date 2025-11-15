@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
@@ -5,7 +6,7 @@ import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
 
-function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onSaved, onOrders, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -83,7 +84,7 @@ function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard,
               <button
                 type="button"
                 role="menuitem"
-                onClick={onSaved}
+                onClick={onBookmarks}
                 className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50"
               >
                 Disimpan
@@ -138,7 +139,7 @@ export default function NavHeader() {
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
   const handleFavorites = () => navigate("/favorit");
-  const handleSaved = () => navigate("/disimpan");
+  const handleBookmarks = () => navigate("/bookmarks");
   const handleOrders = () => navigate("/riwayat-pesanan");
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -154,9 +155,9 @@ export default function NavHeader() {
         <div className="flex items-center">
           <a href="/" className="flex items-center" aria-label="Ke beranda">
             <img
-              src="/LogoSkillConnect.png"
+              src="/assets/logo.png"
               alt="SkillConnect Logo"
-              className="h-8 w-auto object-contain"
+              className="h-12 w-auto object-contain"
             />
           </a>
         </div>
@@ -179,7 +180,7 @@ export default function NavHeader() {
               onProfile={handleProfile}
               onDashboard={handleDashboard}
               onFavorites={handleFavorites}
-              onSaved={handleSaved}
+              onBookmarks={handleBookmarks}
               onOrders={handleOrders}
               onLogout={handleLogout}
             />

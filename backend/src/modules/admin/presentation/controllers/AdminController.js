@@ -467,21 +467,15 @@ async exportReport(req, res) {
       userAgent
     );
 
-    if (format === 'csv' || format === 'excel') {
+    if (format === 'csv' || format === 'excel' || format === 'pdf') {
       if (report && report.filepath) {
-        return res.download(report.filepath, report.filename || 'report.csv');
+        return res.download(report.filepath, report.filename || `report.${format}`);
       } else {
         return res.status(500).json({
           success: false,
           error: 'Report file not generated'
         });
       }
-    } else if (format === 'pdf') {
-      return res.json({
-        success: true,
-        message: 'PDF report generation in progress',
-        data: report
-      });
     } else {
       return res.json({
         success: true,
@@ -516,76 +510,65 @@ async exportReport(req, res) {
     }
   }
 
-async getActivityLogs(req, res) {
+async getAllLogs(req, res) {
   try {
-    const { adminId, limit, offset } = req.query;
-
-    const filters = {};
-    if (adminId) filters.adminId = adminId;
-    if (limit) filters.limit = parseInt(limit, 10);
-    if (offset) filters.offset = parseInt(offset, 10);
-
-    const logs = await this.adminLogService.getLogs(filters);
-
-    if (!logs || logs.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'No logs found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Logs retrieved successfully',
-      data: logs
-    });
-  } catch (error) {
-    console.error('❌ Error in getActivityLogs:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
-
-
-
-async getActivityLogDetail(req, res) {
-  try {
-    const { id } = req.query; // ambil dari query param
-
-    const log = await this.adminLogService.getLogDetail(id);
-
-    if (!log) {
-      return res.status(404).json({
-        success: false,
-        error: 'Log not found'
-      });
-    }
-
-    res.json({
-      success: true,
-      message: 'Activity log detail retrieved',
-      data: log
-    });
-  } catch (error) {
-    console.error('Error in getActivityLogDetail:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-}
-
-
-async getActivityLogsByAdmin(req, res) {
-  try {
-    const { adminId } = req.params; // ✅ ambil dari params
     const { limit = 50, offset = 0 } = req.query;
 
-    console.log('🎯 Controller: getActivityLogsByAdmin called');
-    console.log('📋 Params:', { adminId });
-    console.log('📋 Query:', { limit, offset });
+    const filters = {
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    };
+
+    const result = await this.getActivityLogsUseCase.execute(filters);
+
+    if (!result.data || result.data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Belum ada log'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Semua log berhasil diambil',
+      data: result.data,
+      pagination: {
+        limit: result.limit,
+        offset: result.offset,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit)
+      }
+    });
+  } catch (error) {
+    console.error('❌ Error in getAllLogs:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+}
+
+
+async getLogsByAdminId(req, res) {
+  try {
+    const { adminId } = req.params;
+    const { limit = 50, offset = 0 } = req.query;
+
+    // Validasi admin exist
+    const [adminExists] = await this.sequelize.query(
+      'SELECT id FROM users WHERE id = ? AND role = ?',
+      {
+        replacements: [adminId, 'admin'],
+        type: this.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!adminExists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Admin tidak ditemukan'
+      });
+    }
 
     const filters = {
       adminId,
@@ -593,43 +576,394 @@ async getActivityLogsByAdmin(req, res) {
       offset: parseInt(offset)
     };
 
-    const logs = await this.getActivityLogsUseCase.execute(filters);
+    const result = await this.getActivityLogsUseCase.execute(filters);
 
-    if (!logs.data || logs.data.length === 0) {
+    if (!result.data || result.data.length === 0) {
       return res.status(404).json({
         success: false,
-        error: 'No logs found for this admin'
+        message: 'Log tidak ditemukan untuk admin ini'
       });
     }
 
     res.json({
       success: true,
-      message: 'Admin activity logs retrieved',
-      data: logs.data,
+      message: 'Log admin berhasil diambil',
+      data: result.data,
       pagination: {
-        limit: logs.limit,
-        offset: logs.offset,
-        total: logs.total
+        limit: result.limit,
+        offset: result.offset,
+        total: result.total,
+        totalPages: Math.ceil(result.total / result.limit)
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    console.error('❌ Error in getLogsByAdminId:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
   }
 }
 
+  async getLogDetail(req, res) {
+    try {
+      const { id } = req.query;
 
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          message: 'Log ID harus diisi'
+        });
+      }
+
+      const log = await this.adminLogService.getLogDetail(id);
+
+      if (!log) {
+        return res.status(404).json({
+          success: false,
+          message: 'Log tidak ditemukan'
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Detail log berhasil diambil',
+        data: log
+      });
+    } catch (error) {
+      console.error('❌ Error in getLogDetail:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getUserDetails(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          error: 'User ID is required'
+        });
+      }
+
+      // Get user data
+      const [user] = await this.sequelize.query(
+        `SELECT 
+          id, email, nama_depan, nama_belakang, role, 
+          is_active, created_at, updated_at
+        FROM users 
+        WHERE id = ?`,
+        {
+          replacements: [id],
+          raw: true,
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      // Get block reason from activity log if user is blocked
+      let blockLog = null;
+      if (!user.is_active || user.is_active === 0) {
+        const [blockLogData] = await this.sequelize.query(
+          `SELECT 
+            l.id,
+            l.aksi,
+            l.detail,
+            l.created_at,
+            u.nama_depan as admin_nama_depan,
+            u.nama_belakang as admin_nama_belakang,
+            u.email as admin_email
+          FROM log_aktivitas_admin l
+          LEFT JOIN users u ON l.admin_id = u.id
+          WHERE l.target_type = 'user' 
+            AND l.target_id = ? 
+            AND l.aksi = 'block_user'
+          ORDER BY l.created_at DESC
+          LIMIT 1`,
+          {
+            replacements: [id],
+            raw: true,
+            type: this.sequelize.QueryTypes.SELECT
+          }
+        );
+
+        if (blockLogData) {
+          const detail = typeof blockLogData.detail === 'string' 
+            ? JSON.parse(blockLogData.detail) 
+            : blockLogData.detail;
+          
+          blockLog = {
+            reason: detail?.reason || 'Tidak ada alasan tersedia',
+            blockedAt: blockLogData.created_at,
+            adminName: blockLogData.admin_nama_depan && blockLogData.admin_nama_belakang
+              ? `${blockLogData.admin_nama_depan} ${blockLogData.admin_nama_belakang}`
+              : blockLogData.admin_email || 'Admin'
+          };
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'User details retrieved',
+        data: {
+          ...user,
+          blockLog,
+          block_reason: blockLog?.reason || null,
+          blockReason: blockLog?.reason || null
+        }
+      });
+    } catch (error) {
+      console.error('Error in getUserDetails:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getServiceDetails(req, res) {
+    try {
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({
+          success: false,
+          error: 'Service ID is required'
+        });
+      }
+
+      // Get service data with freelancer info
+      const [service] = await this.sequelize.query(
+        `SELECT 
+          l.id,
+          l.judul,
+          l.deskripsi,
+          l.freelancer_id,
+          l.kategori_id,
+          l.status,
+          l.harga,
+          l.waktu_pengerjaan,
+          l.batas_revisi,
+          l.rating_rata_rata,
+          l.jumlah_rating,
+          l.total_pesanan,
+          l.created_at,
+          l.updated_at,
+          u.id as freelancer_user_id,
+          u.email as freelancer_email,
+          u.nama_depan as freelancer_nama_depan,
+          u.nama_belakang as freelancer_nama_belakang,
+          k.nama as kategori_nama
+        FROM layanan l
+        LEFT JOIN users u ON l.freelancer_id = u.id
+        LEFT JOIN kategori k ON l.kategori_id = k.id
+        WHERE l.id = ?`,
+        {
+          replacements: [id],
+          raw: true,
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+
+      if (!service) {
+        return res.status(404).json({
+          success: false,
+          error: 'Service not found'
+        });
+      }
+
+      // Get block reason from activity log if service is blocked/nonaktif
+      let blockLog = null;
+      if (service.status === 'nonaktif') {
+        const [blockLogData] = await this.sequelize.query(
+          `SELECT 
+            l.id,
+            l.aksi,
+            l.detail,
+            l.created_at,
+            u.nama_depan as admin_nama_depan,
+            u.nama_belakang as admin_nama_belakang,
+            u.email as admin_email
+          FROM log_aktivitas_admin l
+          LEFT JOIN users u ON l.admin_id = u.id
+          WHERE l.target_type = 'layanan' 
+            AND l.target_id = ? 
+            AND l.aksi = 'block_service'
+          ORDER BY l.created_at DESC
+          LIMIT 1`,
+          {
+            replacements: [id],
+            raw: true,
+            type: this.sequelize.QueryTypes.SELECT
+          }
+        );
+
+        if (blockLogData) {
+          const detail = typeof blockLogData.detail === 'string' 
+            ? JSON.parse(blockLogData.detail) 
+            : blockLogData.detail;
+          
+          blockLog = {
+            reason: detail?.reason || 'Tidak ada alasan tersedia',
+            blockedAt: blockLogData.created_at,
+            adminName: blockLogData.admin_nama_depan && blockLogData.admin_nama_belakang
+              ? `${blockLogData.admin_nama_depan} ${blockLogData.admin_nama_belakang}`
+              : blockLogData.admin_email || 'Admin'
+          };
+        }
+      }
+
+      // Format response
+      const formattedService = {
+        id: service.id,
+        judul: service.judul,
+        deskripsi: service.deskripsi,
+        freelancer_id: service.freelancer_id,
+        kategori_id: service.kategori_id,
+        status: service.status,
+        harga: service.harga,
+        waktu_pengerjaan: service.waktu_pengerjaan,
+        batas_revisi: service.batas_revisi,
+        rating_rata_rata: service.rating_rata_rata,
+        jumlah_rating: service.jumlah_rating,
+        total_pesanan: service.total_pesanan,
+        created_at: service.created_at,
+        updated_at: service.updated_at,
+        freelancer: service.freelancer_user_id ? {
+          id: service.freelancer_user_id,
+          email: service.freelancer_email,
+          nama_depan: service.freelancer_nama_depan,
+          nama_belakang: service.freelancer_nama_belakang,
+          full_name: `${service.freelancer_nama_depan || ''} ${service.freelancer_nama_belakang || ''}`.trim() || service.freelancer_email
+        } : null,
+        kategori: service.kategori_nama ? {
+          id: service.kategori_id,
+          nama: service.kategori_nama
+        } : null,
+        blockLog,
+        block_reason: blockLog?.reason || null,
+        blockReason: blockLog?.reason || null
+      };
+
+      res.json({
+        success: true,
+        message: 'Service details retrieved',
+        data: formattedService
+      });
+    } catch (error) {
+      console.error('Error in getServiceDetails:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 
   async getServices(req, res) {
     try {
-      const services = await this.sequelize.query(
-        'SELECT id, judul, freelancer_id, kategori_id, status, created_at FROM layanan LIMIT 50',
-        { raw: true, type: this.sequelize.QueryTypes.SELECT }
-      );
+      const { page = 1, limit = 10, status, kategori } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+      
+      let query = `
+        SELECT 
+          l.id,
+          l.judul,
+          l.freelancer_id,
+          l.kategori_id,
+          l.status,
+          l.harga,
+          l.rating_rata_rata,
+          l.jumlah_rating,
+          l.total_pesanan,
+          l.created_at,
+          u.id as freelancer_user_id,
+          u.email as freelancer_email,
+          u.nama_depan as freelancer_nama_depan,
+          u.nama_belakang as freelancer_nama_belakang,
+          u.is_active as freelancer_is_active,
+          k.nama as kategori_nama
+        FROM layanan l
+        LEFT JOIN users u ON l.freelancer_id = u.id
+        LEFT JOIN kategori k ON l.kategori_id = k.id
+        WHERE 1=1
+      `;
+      
+      const replacements = [];
+      
+      if (status && status !== 'all') {
+        query += ' AND l.status = ?';
+        replacements.push(status);
+      }
+      
+      if (kategori && kategori !== 'all') {
+        query += ' AND l.kategori_id = ?';
+        replacements.push(kategori);
+      }
+      
+      // Get total count
+      const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) as total FROM');
+      const [countResult] = await this.sequelize.query(countQuery, {
+        replacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+      
+      // Add pagination
+      query += ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
+      replacements.push(parseInt(limit), offset);
+      
+      const services = await this.sequelize.query(query, {
+        replacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+      
+      // Format response with freelancer data
+      const formattedServices = services.map(service => ({
+        id: service.id,
+        judul: service.judul,
+        freelancer_id: service.freelancer_id,
+        kategori_id: service.kategori_id,
+        status: service.status,
+        harga: service.harga,
+        rating_rata_rata: service.rating_rata_rata,
+        jumlah_rating: service.jumlah_rating,
+        total_pesanan: service.total_pesanan,
+        created_at: service.created_at,
+        freelancer: service.freelancer_user_id ? {
+          id: service.freelancer_user_id,
+          email: service.freelancer_email,
+          nama_depan: service.freelancer_nama_depan,
+          nama_belakang: service.freelancer_nama_belakang,
+          is_active: service.freelancer_is_active,
+          full_name: `${service.freelancer_nama_depan || ''} ${service.freelancer_nama_belakang || ''}`.trim() || service.freelancer_email
+        } : null,
+        kategori: service.kategori_nama ? {
+          id: service.kategori_id,
+          nama: service.kategori_nama
+        } : null
+      }));
       
       res.json({
         success: true,
         message: 'Services retrieved',
-        data: services
+        data: formattedServices,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: countResult.total,
+          totalPages: Math.ceil(countResult.total / parseInt(limit))
+        }
       });
     } catch (error) {
       console.error('Error in getServices:', error);

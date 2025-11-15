@@ -1,9 +1,15 @@
-export default function Label({ children, className = '', ...props }) {
+export default function Label({ children, className = "", ...props }) {
   return (
-    <label className={`block text-sm text-[#6C5A55] mb-2 ${className}`} {...props}>
+    <label
+      className={`
+        block text-sm font-title font-medium
+        text-[#112D4E] 
+        mb-2 tracking-wide
+        ${className}
+      `}
+      {...props}
+    >
       {children}
     </label>
-  )
+  );
 }
-
-

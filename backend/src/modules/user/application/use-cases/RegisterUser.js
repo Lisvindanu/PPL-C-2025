@@ -11,7 +11,13 @@ class RegisterUser {
     this.userTokenModel = UserTokenModel;
   }
 
-  async execute({ email, password, firstName, lastName, role = 'client' }) {
+  async execute({ email, password, firstName, lastName, termsAccepted }) {
+    console.log('Terms accepted in use case:', termsAccepted);
+    if (termsAccepted !== true) {
+      const error = new Error('Terms and conditions must be accepted');
+      error.statusCode = 400;
+      throw error;
+    }
     const emailVo = new Email(email);
     const passwordVo = new Password(password);
 
@@ -27,7 +33,7 @@ class RegisterUser {
     const created = await this.userRepository.create({
       email: emailVo.value,
       password: hashedPassword,
-      role,
+      role: 'client', // All new registrations are clients by default
       nama_depan: firstName || null,
       nama_belakang: lastName || null
     });
