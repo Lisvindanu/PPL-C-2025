@@ -1,235 +1,321 @@
-/**
- * Service Routes
- * API routes untuk layanan/jasa
- */
+"use strict";
 
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const authMiddleware = require('../../../../shared/middleware/authMiddleware');
-const adminMiddleware = require('../../../../shared/middleware/adminMiddleware');
+
+const authMiddleware = require("../../../../shared/middleware/authMiddleware");
+const adminMiddleware = require("../../../../shared/middleware/adminMiddleware");
+
+const {
+  createServiceValidator,
+  updateServiceValidator,
+  updateStatusValidator,
+  listServicesQueryValidator,
+  searchServicesQueryValidator,
+  myServicesQueryValidator,
+} = require("../../../../shared/middleware/serviceValidators");
+
+const {
+  taxonomyValidateCreate,
+  taxonomyValidateUpdate,
+} = require("../../../../shared/middleware/serviceTaxonomyGuard");
+
+// helper buat jaga-jaga handler undefined
+function assertFn(fn, name) {
+  if (typeof fn !== "function") {
+    throw new Error(
+      `[serviceRoutes] Missing or invalid middleware/handler: ${name}`
+    );
+  }
+}
 
 module.exports = (serviceController) => {
+  assertFn(
+    serviceController.getAllServices,
+    "serviceController.getAllServices"
+  );
+  assertFn(
+    serviceController.searchServices,
+    "serviceController.searchServices"
+  );
+  assertFn(
+    serviceController.getServiceById,
+    "serviceController.getServiceById"
+  );
+  assertFn(serviceController.getMyServices, "serviceController.getMyServices");
+  assertFn(serviceController.createService, "serviceController.createService");
+  assertFn(serviceController.updateService, "serviceController.updateService");
+  assertFn(serviceController.deleteService, "serviceController.deleteService");
+  assertFn(
+    serviceController.updateServiceStatus,
+    "serviceController.updateServiceStatus"
+  );
+
   /**
    * @swagger
    * /api/services:
    *   get:
    *     tags: [Services]
-   *     summary: Get all services with filters
-   *     description: List layanan dengan filter kategori, lokasi, harga, rating (Dalam Pengembangan)
+   *     summary: List services (public, default hanya status aktif)
    *     parameters:
    *       - in: query
    *         name: kategori_id
-   *         schema:
-   *           type: string
+   *         schema: { type: string, format: uuid }
    *       - in: query
-   *         name: sub_kategori_id
-   *         schema:
-   *           type: string
-   *       - in: query
-   *         name: lokasi
-   *         schema:
-   *           type: string
+   *         name: status
+   *         schema: { type: string, enum: [draft, aktif, nonaktif] }
    *       - in: query
    *         name: harga_min
-   *         schema:
-   *           type: number
+   *         description: Filter minimum harga (DECIMAL(12,2))
+   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
    *       - in: query
    *         name: harga_max
-   *         schema:
-   *           type: number
-   *       - in: query
-   *         name: rating_min
-   *         schema:
-   *           type: number
+   *         description: Filter maksimum harga (DECIMAL(12,2))
+   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
    *       - in: query
    *         name: page
-   *         schema:
-   *           type: number
-   *           default: 1
+   *         schema: { type: integer, minimum: 1 }
    *       - in: query
    *         name: limit
-   *         schema:
-   *           type: number
-   *           default: 20
+   *         schema: { type: integer, minimum: 1, maximum: 100 }
+   *       - in: query
+   *         name: sortBy
+   *         schema: { type: string, enum: [created_at, harga, rating_rata_rata, total_pesanan] }
+   *       - in: query
+   *         name: sortOrder
+   *         schema: { type: string, enum: [ASC, DESC] }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       200:
-   *         description: Success
+   *       200: { description: Success }
    */
-  router.get('/', (req, res) => serviceController.getAllServices(req, res));
+  router.get("/", listServicesQueryValidator, serviceController.getAllServices);
 
   /**
    * @swagger
    * /api/services/search:
    *   get:
    *     tags: [Services]
-   *     summary: Search services
-   *     description: Pencarian layanan berdasarkan keyword (Dalam Pengembangan)
+   *     summary: Search services (public)
    *     parameters:
    *       - in: query
    *         name: q
    *         required: true
-   *         schema:
-   *           type: string
+   *         schema: { type: string, minLength: 2 }
+   *       - in: query
+   *         name: kategori_id
+   *         schema: { type: string, format: uuid }
+   *       - in: query
+   *         name: status
+   *         schema: { type: string, enum: [draft, aktif, nonaktif] }
+   *       - in: query
+   *         name: harga_min
+   *         description: Filter minimum harga (DECIMAL(12,2))
+   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *       - in: query
+   *         name: harga_max
+   *         description: Filter maksimum harga (DECIMAL(12,2))
+   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
    *       - in: query
    *         name: page
-   *         schema:
-   *           type: number
-   *           default: 1
+   *         schema: { type: integer, minimum: 1 }
    *       - in: query
    *         name: limit
-   *         schema:
-   *           type: number
-   *           default: 20
+   *         schema: { type: integer, minimum: 1, maximum: 100 }
+   *       - in: query
+   *         name: sortBy
+   *         schema: { type: string, enum: [created_at, harga, rating_rata_rata, total_pesanan] }
+   *       - in: query
+   *         name: sortOrder
+   *         schema: { type: string, enum: [ASC, DESC] }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
+   *       200: { description: Success }
+   *       400: { description: Bad request }
    */
-  router.get('/search', (req, res) => serviceController.searchServices(req, res));
+  router.get(
+    "/search",
+    searchServicesQueryValidator,
+    serviceController.searchServices
+  );
 
   /**
    * @swagger
    * /api/services/my:
    *   get:
    *     tags: [Services]
-   *     summary: Get my services
-   *     description: Ambil semua layanan milik user yang login (Dalam Pengembangan)
-   *     security:
-   *       - bearerAuth: []
+   *     summary: List my services (freelancer, semua status)
+   *     security: [{ bearerAuth: [] }]
+   *     parameters:
+   *       - in: query
+   *         name: status
+   *         schema: { type: string, enum: [draft, aktif, nonaktif] }
+   *       - in: query
+   *         name: page
+   *         schema: { type: integer, minimum: 1 }
+   *       - in: query
+   *         name: limit
+   *         schema: { type: integer, minimum: 1, maximum: 100 }
+   *       - in: query
+   *         name: sortBy
+   *         schema: { type: string, enum: [created_at, harga, rating_rata_rata, total_pesanan, updated_at] }
+   *       - in: query
+   *         name: sortOrder
+   *         schema: { type: string, enum: [ASC, DESC] }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       401:
-   *         $ref: '#/components/responses/UnauthorizedError'
+   *       200: { description: Success }
+   *       403: { description: Forbidden }
    */
-  router.get('/my', authMiddleware, (req, res) => serviceController.getMyServices(req, res));
+  router.get(
+    "/my",
+    authMiddleware,
+    myServicesQueryValidator,
+    serviceController.getMyServices
+  );
 
   /**
    * @swagger
    * /api/services/{id}:
    *   get:
    *     tags: [Services]
-   *     summary: Get service by ID
-   *     description: Ambil detail layanan berdasarkan ID (Dalam Pengembangan)
+   *     summary: Get service detail by id (public, hanya aktif)
    *     parameters:
    *       - in: path
    *         name: id
    *         required: true
-   *         schema:
-   *           type: string
+   *         schema: { type: string, format: uuid }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
+   *       200: { description: Success }
+   *       404: { description: Not found }
    */
-  router.get('/:id', (req, res) => serviceController.getServiceById(req, res));
-
-  /**
-   * @swagger
-   * /api/services/slug/{slug}:
-   *   get:
-   *     tags: [Services]
-   *     summary: Get service by slug
-   *     description: Ambil detail layanan berdasarkan slug (Dalam Pengembangan)
-   *     parameters:
-   *       - in: path
-   *         name: slug
-   *         required: true
-   *         schema:
-   *           type: string
-   *     responses:
-   *       501:
-   *         description: Not implemented yet
-   */
-  router.get('/slug/:slug', (req, res) => serviceController.getServiceBySlug(req, res));
+  router.get("/:id", serviceController.getServiceById);
 
   /**
    * @swagger
    * /api/services:
    *   post:
    *     tags: [Services]
-   *     summary: Create new service
-   *     description: Buat layanan baru (Dalam Pengembangan)
-   *     security:
-   *       - bearerAuth: []
+   *     summary: Create service (freelancer, status draft)
+   *     security: [{ bearerAuth: [] }]
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [judul, deskripsi, kategori_id, harga, waktu_pengerjaan]
+   *             properties:
+   *               judul: { type: string, minLength: 5, maxLength: 255 }
+   *               deskripsi: { type: string, minLength: 30 }
+   *               kategori_id: { type: string, format: uuid }
+   *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$', example: "149999.99" }
+   *               waktu_pengerjaan: { type: integer, minimum: 1, description: 'dalam hari' }
+   *               batas_revisi: { type: integer, minimum: 0, default: 1 }
+   *               thumbnail: { type: string }
+   *               gambar: { type: array, items: { type: string }, description: 'JSON[] URL' }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       401:
-   *         $ref: '#/components/responses/UnauthorizedError'
+   *       201: { description: Created (draft) }
+   *       400: { description: Bad request }
+   *       403: { description: Forbidden }
    */
-  router.post('/', authMiddleware, (req, res) => serviceController.createService(req, res));
+  router.post(
+    "/",
+    authMiddleware,
+    createServiceValidator,
+    taxonomyValidateCreate,
+    serviceController.createService
+  );
 
   /**
    * @swagger
    * /api/services/{id}:
    *   put:
    *     tags: [Services]
-   *     summary: Update service
-   *     description: Update layanan (Dalam Pengembangan)
-   *     security:
-   *       - bearerAuth: []
+   *     summary: Update service (freelancer, owner)
+   *     security: [{ bearerAuth: [] }]
    *     parameters:
    *       - in: path
    *         name: id
    *         required: true
-   *         schema:
-   *           type: string
+   *         schema: { type: string, format: uuid }
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             properties:
+   *               judul: { type: string, minLength: 5, maxLength: 255 }
+   *               deskripsi: { type: string, minLength: 30 }
+   *               kategori_id: { type: string, format: uuid }
+   *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *               waktu_pengerjaan: { type: integer, minimum: 1 }
+   *               batas_revisi: { type: integer, minimum: 0 }
+   *               thumbnail: { type: string }
+   *               gambar: { type: array, items: { type: string } }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       401:
-   *         $ref: '#/components/responses/UnauthorizedError'
+   *       200: { description: Updated }
+   *       403: { description: Forbidden }
+   *       404: { description: Not found }
    */
-  router.put('/:id', authMiddleware, (req, res) => serviceController.updateService(req, res));
+  router.put(
+    "/:id",
+    authMiddleware,
+    updateServiceValidator,
+    taxonomyValidateUpdate,
+    serviceController.updateService
+  );
 
   /**
    * @swagger
    * /api/services/{id}:
    *   delete:
    *     tags: [Services]
-   *     summary: Delete service
-   *     description: Hapus layanan (soft delete) (Dalam Pengembangan)
-   *     security:
-   *       - bearerAuth: []
+   *     summary: Delete service (set nonaktif, freelancer owner)
+   *     security: [{ bearerAuth: [] }]
    *     parameters:
    *       - in: path
    *         name: id
    *         required: true
-   *         schema:
-   *           type: string
+   *         schema: { type: string, format: uuid }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       401:
-   *         $ref: '#/components/responses/UnauthorizedError'
+   *       200: { description: Deleted (nonaktif) }
+   *       403: { description: Forbidden }
+   *       404: { description: Not found }
    */
-  router.delete('/:id', authMiddleware, (req, res) => serviceController.deleteService(req, res));
+  router.delete("/:id", authMiddleware, serviceController.deleteService);
 
   /**
    * @swagger
    * /api/services/{id}/status:
    *   patch:
    *     tags: [Services]
-   *     summary: Update service status (Admin only)
-   *     description: Approve/reject layanan (Dalam Pengembangan)
-   *     security:
-   *       - bearerAuth: []
+   *     summary: Update service status (admin) → approve (aktif) / deactivate (nonaktif)
+   *     security: [{ bearerAuth: [] }]
    *     parameters:
    *       - in: path
    *         name: id
    *         required: true
-   *         schema:
-   *           type: string
+   *         schema: { type: string, format: uuid }
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             type: object
+   *             required: [action]
+   *             properties:
+   *               action: { type: string, enum: [approve, deactivate] }
    *     responses:
-   *       501:
-   *         description: Not implemented yet
-   *       401:
-   *         $ref: '#/components/responses/UnauthorizedError'
-   *       403:
-   *         $ref: '#/components/responses/ForbiddenError'
+   *       200: { description: Status updated }
+   *       400: { description: Bad request }
+   *       403: { description: Forbidden }
+   *       404: { description: Not found }
    */
-  router.patch('/:id/status', authMiddleware, adminMiddleware, (req, res) => serviceController.updateServiceStatus(req, res));
+  router.patch(
+    "/:id/status",
+    authMiddleware,
+    adminMiddleware,
+    updateStatusValidator,
+    serviceController.updateServiceStatus
+  );
 
   return router;
 };

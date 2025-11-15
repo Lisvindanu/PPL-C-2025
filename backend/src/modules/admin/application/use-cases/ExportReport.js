@@ -23,18 +23,24 @@ class ExportReport {
         throw new Error('Failed to generate report');
       }
 
-      // Log activity
-      const log = new AdminActivityLog({
-        adminId,
-        action: 'export_report',
-        targetType: 'system',
-        targetId: null,
-        detail: { reportType, format, filters },
-        ipAddress,
-        userAgent,
-      });
+      // Log activity (non-blocking - don't fail export if logging fails)
+      try {
+        const log = new AdminActivityLog({
+          adminId,
+          action: 'export_report',
+          targetType: 'system',
+          targetId: null,
+          detail: { reportType, format, filters },
+          ipAddress,
+          userAgent,
+        });
 
-      await this.adminLogRepository.save(log);
+        await this.adminLogRepository.save(log);
+      } catch (logError) {
+        // Log error but don't fail the export
+        console.warn('Failed to save export report log:', logError.message);
+      }
+      
       return report;
     } catch (error) {
       console.error('Error in ExportReport.execute:', error);

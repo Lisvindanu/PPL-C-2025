@@ -59,12 +59,22 @@ async getLogs(filters = {}) {
     const conditions = [];
     const replacements = [];
 
+    // ✅ Filter by adminId kalau ada
     if (filters.adminId) {
       conditions.push('l.admin_id = ?');
       replacements.push(filters.adminId);
     }
 
     const whereClause = conditions.length > 0 ? ' WHERE ' + conditions.join(' AND ') : '';
+    
+    // ✅ Query untuk hitung total
+    const countQuery = `SELECT COUNT(*) as total FROM log_aktivitas_admin l ${whereClause}`;
+    const [countResult] = await this.sequelize.query(countQuery, {
+      replacements: [...replacements],
+      type: this.sequelize.QueryTypes.SELECT
+    });
+
+    // Query untuk data dengan pagination
     query += whereClause + ' ORDER BY l.created_at DESC LIMIT ? OFFSET ?';
     replacements.push(limit, offset);
 
@@ -74,7 +84,13 @@ async getLogs(filters = {}) {
       type: this.sequelize.QueryTypes.SELECT
     });
 
-    return logs;
+    // ✅ Return object dengan data, total, limit, offset
+    return {
+      data: logs,
+      total: countResult.total,
+      limit,
+      offset
+    };
   } catch (error) {
     console.error('❌ getLogs error:', error);
     throw new Error(`Failed to get logs: ${error.message}`);

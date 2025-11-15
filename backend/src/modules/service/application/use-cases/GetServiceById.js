@@ -1,49 +1,47 @@
-/**
- * Get Service By ID Use Case
- *
- * Use case paling gampang, cuma ambil data doang.
- * Tapi tetep perlu validasi, jangan asal return null anjir.
- *
- * Yang perlu lo lakuin:
- * 1. Ambil service dari database by ID
- * 2. Include relations (user/penyedia, kategori, sub_kategori, reviews)
- * 3. Hitung average rating (kalo review module udah jadi)
- * 4. Return lengkap dengan semua relasi nya
- *
- * Bonus points kalo lo bikin view counter buat analytics
- */
+"use strict";
 
+/**
+ * Get Service By ID (FINAL)
+ * - Ambil detail service by ID
+ * - Hanya expose status 'aktif' untuk endpoint publik
+ * - Kompatibel dengan repository yang mengembalikan plain object (bukan Entity)
+ */
 class GetServiceById {
   constructor(serviceRepository) {
     this.serviceRepository = serviceRepository;
   }
 
-  async execute(serviceId, options = {}) {
-    // TODO: Ambil service dari database
-    // const service = await this.serviceRepository.findById(serviceId, {
-    //   includeUser: true,      // Include data penyedia
-    //   includeKategori: true,  // Include kategori & sub_kategori
-    //   includeReviews: options.includeReviews || false
-    // });
+  /**
+   * @param {string} id
+   * @param {object} [options]
+   * @returns {Promise<object>}
+   */
+  async execute(id, _options = {}) {
+    if (!id || typeof id !== "string") {
+      const e = new Error("Invalid service id");
+      e.status = 400;
+      throw e;
+    }
 
-    // TODO: Validasi service exist
-    // if (!service) {
-    //   throw new Error('Service not found, salah ID kali lu');
-    // }
+    // Ambil dari repo (plain object)
+    const svc = await this.serviceRepository.findById(id);
+    if (!svc) {
+      const e = new Error("Service not found");
+      e.status = 404;
+      throw e;
+    }
 
-    // TODO: Cek status - kalo draft cuma owner yang bisa liat
-    // if (service.status === 'draft' && options.userId !== service.user_id) {
-    //   throw new Error('Service ini masih draft, ga bisa diliat orang');
-    // }
+    // Endpoint publik: hanya tampilkan yang 'aktif'
+    if ((svc.status || "").toLowerCase() !== "aktif") {
+      const e = new Error("Service not found");
+      e.status = 404;
+      throw e;
+    }
 
-    // TODO: (Optional) Increment view counter buat analytics
-    // if (options.trackView) {
-    //   await this.serviceRepository.incrementViewCount(serviceId);
-    // }
+    // (Opsional) increment views? Repository kita belum expose method itu, skip dulu.
+    // await this.serviceRepository.incrementViews?.(id).catch(() => {});
 
-    // return service;
-
-    throw new Error('Not implemented yet - Kerjain dong, tinggal query doang kok');
+    return svc;
   }
 }
 

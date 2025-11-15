@@ -1,6 +1,15 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Eye, LayoutDashboard, LogOut } from 'lucide-react'; 
+import { 
+  LayoutDashboard, 
+  LogOut, 
+  UserPen, 
+  Wrench, 
+  ArrowLeftRight, 
+  Eye, 
+  Star, 
+  FileText 
+} from 'lucide-react'; 
 import Logo from '../atoms/Logo';
 import { NavItem } from '../molecules/NavItem';
 import { Text } from '../atoms/Text';
@@ -17,8 +26,13 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
   };
 
   const menuItems = [
-    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Operasional', path: '/dashboard'},
-    { id: 'review', icon: <Eye size={18} />, label: 'review', path: '/admin/review'}, 
+    { id: 'dashboard', icon: <LayoutDashboard size={18} />, label: 'Operasional', path: '/admin/dashboardadmin'}, 
+    { id: 'users', icon: <UserPen size={18} />, label: 'Manajemen Pengguna', path: '/admin/users'}, 
+    { id: 'services', icon: <Wrench size={18} />, label: 'Manajemen Layanan', path: '/admin/services'}, 
+    { id: 'transactions', icon: <ArrowLeftRight size={18} />, label: 'Daftar Transaksi', path: '/admin/transactions'}, 
+    { id: 'reviews', icon: <Eye size={18} />, label: 'Review', path: '/admin/reviews'}, 
+    { id: 'recommendations', icon: <Star size={18} />, label: 'Rekomendasi', path: '/admin/recommendations'}, 
+    { id: 'reports', icon: <FileText size={18} />, label: 'Tinjauan Laporan', path: '/admin/reports'}, 
   ];
 
   return (

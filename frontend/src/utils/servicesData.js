@@ -496,3 +496,47 @@ export const allServices = [
 export const getServiceById = (id) => {
   return allServices.find(s => s.id === id);
 };
+
+// Helper function to get service from categoriesWithServices (numeric ID)
+// This is used by ServiceListPage and BookmarkPage
+export const getServiceFromCategories = (id, categoriesWithServices) => {
+  if (!categoriesWithServices || !id) return null;
+  
+  // Flatten all services from categories
+  const allServicesFromCategories = categoriesWithServices.flatMap(cat => cat.services);
+  
+  // Find service by numeric ID
+  const service = allServicesFromCategories.find(s => s.id === parseInt(id) || s.id === id);
+  
+  if (!service) return null;
+  
+  // Add default values for missing fields to match ServiceDetailPage expectations
+  return {
+    ...service,
+    description: service.description || `${service.title} - Layanan profesional berkualitas tinggi dengan pengalaman freelancer terpercaya.`,
+    features: service.features || [
+      "Kualitas Profesional",
+      "Pengerjaan Tepat Waktu",
+      "Support & Konsultasi",
+      "Revisi Sesuai Permintaan",
+      "Garansi Kepuasan"
+    ],
+    orders: service.orders || service.reviews || 0,
+    estimasi: service.estimasi || "7-14 hari",
+    revisi: service.revisi || "2x Revisi"
+  };
+};
+
+// Universal function to get service from either source
+export const getServiceByIdUniversal = (id, categoriesWithServices = null) => {
+  // First try to get from servicesData.js (UUID)
+  const serviceFromData = getServiceById(id);
+  if (serviceFromData) return serviceFromData;
+  
+  // If not found and categoriesWithServices is provided, try from categories
+  if (categoriesWithServices) {
+    return getServiceFromCategories(id, categoriesWithServices);
+  }
+  
+  return null;
+};

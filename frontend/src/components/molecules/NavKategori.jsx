@@ -37,7 +37,7 @@ export default function NavKategori() {
   const navigate = useNavigate();
 
   const handleCategoryClick = (slug) => {
-    navigate(`/kategori/${slug}`);
+    navigate(`/services?category=${slug}`);
   };
 
   return (

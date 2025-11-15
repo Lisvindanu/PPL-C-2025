@@ -20,16 +20,15 @@ const options = {
         // ===== User Schemas =====
         RegisterRequest: {
           type: 'object',
-          required: ['email', 'password', 'nama', 'no_hp'],
+          required: ['email', 'password', 'nama_depan', 'nama_belakang', 'terms_accepted'],
           properties: {
             email: { type: 'string', format: 'email', example: 'user@example.com' },
             password: { type: 'string', minLength: 6, example: 'password123' },
-            nama: { type: 'string', example: 'John Doe' },
-            no_hp: { type: 'string', example: '081234567890' },
-            alamat: { type: 'string', example: 'Jakarta' },
-            foto_profil: { type: 'string', example: 'https://example.com/photo.jpg' },
-            bio: { type: 'string', example: 'Software Developer' }
-          }
+            nama_depan: { type: 'string', example: 'John' },
+            nama_belakang: { type: 'string', example: 'Doe' },
+            terms_accepted: { type: 'boolean', example: true, description: 'User must accept terms and conditions' }
+          },
+          description: 'All new registrations are automatically assigned the client role'
         },
         LoginRequest: {
           type: 'object',
