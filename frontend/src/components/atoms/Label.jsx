@@ -1,4 +1,4 @@
-export default function Label({ children, className = '', ...props }) {
+export default function Label({ children, className = "", ...props }) {
   return (
     <label
       className={`
@@ -11,5 +11,5 @@ export default function Label({ children, className = '', ...props }) {
     >
       {children}
     </label>
-  )
+  );
 }

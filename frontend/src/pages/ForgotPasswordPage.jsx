@@ -26,86 +26,69 @@ export default function ForgotPasswordPage() {
   }, [navigate, toast]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    
-    const emailError = validateEmail(email)
+    e.preventDefault();
+
+    const emailError = validateEmail(email);
     if (emailError) {
-      setError(emailError)
-      return
+      setError(emailError);
+      return;
     }
 
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError("");
 
     try {
       // Use hybrid service (mock + real API)
-      const result = await hybridResetPasswordService.forgotPassword(email)
+      const result = await hybridResetPasswordService.forgotPassword(email);
 
       if (result.success) {
-        toast.show('Kode OTP telah dikirim ke email Anda', 'success')
-        
+        toast.show("Kode OTP telah dikirim ke email Anda", "success");
+
         // Show OTP in console for development
         if (result.data.otpCode) {
-          console.log('🔧 Mock OTP Code:', result.data.otpCode)
-          toast.show(`Mock OTP: ${result.data.otpCode}`, 'info')
+          console.log("🔧 Mock OTP Code:", result.data.otpCode);
+          toast.show(`Mock OTP: ${result.data.otpCode}`, "info");
         }
-        
-        navigate('/reset-password/otp', { 
+
+        navigate("/reset-password/otp", {
           state: { email, token: result.data?.token },
-          replace: true 
-        })
+          replace: true,
+        });
       } else {
-        setError(result.message || 'Terjadi kesalahan saat mengirim kode OTP')
+        setError(result.message || "Terjadi kesalahan saat mengirim kode OTP");
       }
     } catch (err) {
-      console.error('Error:', err)
-      setError('Terjadi kesalahan saat mengirim kode OTP')
+      console.error("Error:", err);
+      setError("Terjadi kesalahan saat mengirim kode OTP");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const footer = (
     <div className="mt-6 text-center">
-      <button 
-        onClick={() => navigate('/login')}
-        className="text-[#3A2B2A] underline hover:no-underline"
-      >
+      <button onClick={() => navigate("/login")} className="text-[#1B1B1B] underline hover:no-underline">
         Kembali ke Login
       </button>
     </div>
-  )
+  );
 
   return (
     <>
       <HybridModeController />
-      <ResetPasswordLayout
-        title="Reset Password"
-        bottom={footer}
-      >
+      <ResetPasswordLayout title="Reset Password" bottom={footer}>
         <div className="w-full max-w-md">
           <ResetPasswordCard title="Atur Ulang Kata Sandi">
             <form onSubmit={handleSubmit}>
-              <ResetPasswordFormGroup
-                label="Alamat Email"
-                name="email"
-                type="email"
-                placeholder=""
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                error={error}
-              />
+              <ResetPasswordFormGroup label="Alamat Email" name="email" type="email" placeholder="" value={email} onChange={(e) => setEmail(e.target.value)} error={error} />
 
-              <ResetPasswordButton 
-                type="submit" 
-                disabled={loading}
-              >
-                {loading ? 'Mengirim...' : 'Kirim'}
+              <ResetPasswordButton type="submit" disabled={loading}>
+                {loading ? "Mengirim..." : "Kirim"}
               </ResetPasswordButton>
             </form>
           </ResetPasswordCard>
         </div>
       </ResetPasswordLayout>
     </>
-  )
+  );
 }

@@ -1,24 +1,18 @@
 export default function AuthLayout({ children, bottom, title, showCorner = true }) {
   return (
-    <div className="min-h-screen bg-[#DBE2EF] flex flex-col">
+    <div className="min-h-screen bg-[#D8E3F3] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-3">
-          <img src="/assets/logo.png" alt="Skill Connect Logo" className="w-24 md:w-32 lg:w-40 h-auto" />
+          <img src="/assets/logo.png" alt="Skill Connect Logo" className="h-16 w-auto object-contain" />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 relative overflow-hidden gap-6">
-        {children}
+      <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">{children}</div>
 
-        {/* Bottom */}
-        {bottom && (
-          <div className="w-full flex items-center justify-center">
-            <div className="w-full max-w-md">{bottom}</div>
-          </div>
-        )}
-      </div>
+      {/* Bottom */}
+      <div className="pb-8 pt-4 flex items-center justify-center">{bottom}</div>
     </div>
   );
 }

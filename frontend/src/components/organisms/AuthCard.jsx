@@ -8,5 +8,5 @@ export default function AuthCard({ title, children, footer, headerRight }) {
       {children}
       {footer}
     </div>
-  )
+  );
 }

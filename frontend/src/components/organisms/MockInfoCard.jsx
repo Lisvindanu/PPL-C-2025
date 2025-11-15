@@ -1,24 +1,24 @@
-import { useState, useEffect } from 'react'
-import hybridResetPasswordService from '../../services/hybridResetPasswordService'
+import { useState, useEffect } from "react";
+import hybridResetPasswordService from "../../services/hybridResetPasswordService";
 
 export default function MockInfoCard({ email }) {
-  const [currentOTP, setCurrentOTP] = useState(null)
-  const [userInfo, setUserInfo] = useState(null)
-  const [showInfo, setShowInfo] = useState(false)
+  const [currentOTP, setCurrentOTP] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+  const [showInfo, setShowInfo] = useState(false);
 
   useEffect(() => {
     if (email) {
-      const otp = hybridResetPasswordService.getCurrentOTP(email)
-      setCurrentOTP(otp)
-      
-      // Get user info from mock data
-      const mockData = hybridResetPasswordService.getMockData()
-      const user = mockData.users.find(u => u.email === email)
-      setUserInfo(user)
-    }
-  }, [email])
+      const otp = hybridResetPasswordService.getCurrentOTP(email);
+      setCurrentOTP(otp);
 
-  if (!currentOTP) return null
+      // Get user info from mock data
+      const mockData = hybridResetPasswordService.getMockData();
+      const user = mockData.users.find((u) => u.email === email);
+      setUserInfo(user);
+    }
+  }, [email]);
+
+  if (!currentOTP) return null;
 
   return (
     <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
@@ -34,14 +34,11 @@ export default function MockInfoCard({ email }) {
             </p>
           )}
         </div>
-        <button
-          onClick={() => setShowInfo(!showInfo)}
-          className="text-blue-600 hover:text-blue-800 text-sm underline"
-        >
-          {showInfo ? 'Hide' : 'Show'} Details
+        <button onClick={() => setShowInfo(!showInfo)} className="text-blue-600 hover:text-blue-800 text-sm underline">
+          {showInfo ? "Hide" : "Show"} Details
         </button>
       </div>
-      
+
       {showInfo && (
         <div className="mt-3 pt-3 border-t border-blue-200">
           <p className="text-xs text-blue-600 mb-2">
@@ -56,8 +53,8 @@ export default function MockInfoCard({ email }) {
           <div className="mt-2 flex gap-2">
             <button
               onClick={() => {
-                navigator.clipboard.writeText(currentOTP)
-                alert('OTP copied to clipboard!')
+                navigator.clipboard.writeText(currentOTP);
+                alert("OTP copied to clipboard!");
               }}
               className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded"
             >
@@ -65,8 +62,8 @@ export default function MockInfoCard({ email }) {
             </button>
             <button
               onClick={() => {
-                hybridResetPasswordService.clearMockData()
-                window.location.reload()
+                hybridResetPasswordService.clearMockData();
+                window.location.reload();
               }}
               className="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded"
             >
@@ -76,5 +73,5 @@ export default function MockInfoCard({ email }) {
         </div>
       )}
     </div>
-  )
+  );
 }
