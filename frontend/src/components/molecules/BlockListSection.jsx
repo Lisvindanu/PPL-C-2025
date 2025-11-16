@@ -1,129 +1,115 @@
 import { useState } from "react";
 import ServiceCard from "./ServiceCard";
-
-const SAMPLE = [
-  {
-    id: 1,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 2,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 3,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 4,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 5,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 6,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 7,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-  {
-    id: 8,
-    title: "Figma Designer",
-    description:
-      "We are looking for figma designers who can help designing the entire mobile application ...",
-    logo: "https://images.unsplash.com/photo-1589571894960-20bbe2828d0a?w=80&h=80&fit=crop&crop=faces",
-    tags: ["UI Designer", "Figma", "Landing Page"],
-    type: "Paruh Waktu",
-    updated: "1 Hari Lalu",
-    location: "Remote",
-    price: "$2500/month",
-  },
-];
+import Pagination from "../atoms/Pagination";
+import ConfirmDeleteModal from "./ConfirmDeleteModal";
+import ResultModal from "./ResultModal";
+import { useMyServices, useDeleteService } from "../../hooks/useMyServices";
 
 export default function BlockListSection() {
-  const [showAll, setShowAll] = useState(false);
+  const [page, setPage] = useState(1);
+  const limit = 6;
 
-  const data = showAll ? SAMPLE : SAMPLE.slice(0, 6);
+  const { data, isLoading, isError } = useMyServices({ page, limit });
+  const services = data?.services ?? [];
+  const pagination = data?.pagination ?? { page: 1, totalPages: 1 };
+
+  // modal states
+  const [selectedId, setSelectedId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [result, setResult] = useState({ open: false, ok: true, msg: "" });
+
+  // mutation
+  const { mutateAsync: deleteService, isLoading: isDeleting } =
+    useDeleteService();
+
+  const askDelete = (id) => {
+    setSelectedId(id);
+    setConfirmOpen(true);
+  };
+
+  const doDelete = async () => {
+    if (!selectedId) return;
+    try {
+      await deleteService(selectedId);
+      setConfirmOpen(false);
+      setResult({
+        open: true,
+        ok: true,
+        msg: "Layanan berhasil dihapus (status diset Nonaktif).",
+      });
+    } catch (e) {
+      setConfirmOpen(false);
+      setResult({
+        open: true,
+        ok: false,
+        msg: e?.message || "Gagal menghapus layanan.",
+      });
+    } finally {
+      setSelectedId(null);
+    }
+  };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-neutral-900">Block List</h2>
-        <button
-          type="button"
-          onClick={() => setShowAll(true)}
-          className="text-sm font-medium text-neutral-700 underline-offset-2 hover:underline"
-          aria-label="View All"
-        >
-          View All
-        </button>
-      </div>
+    <section className="mx-auto max-w-7xl px-4 py-6">
+      <h2 className="mb-4 text-lg font-semibold text-neutral-900">
+        Daftar Layanan
+      </h2>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {data.map((item) => (
-          <ServiceCard key={item.id} item={item} />
-        ))}
-      </div>
-    </div>
+      {isError ? (
+        <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          Gagal memuat data layanan.
+        </div>
+      ) : null}
+
+      {isLoading ? (
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="h-40 animate-pulse rounded-2xl border border-neutral-200 bg-neutral-100"
+            />
+          ))}
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {services.map((item) => (
+              <ServiceCard
+                key={item.id}
+                item={item}
+                onEdit={() => console.log("edit", item.id)}
+                onDelete={() => askDelete(item.id)}
+                disabledActions={isDeleting}
+              />
+            ))}
+          </div>
+
+          <Pagination
+            page={pagination.page || page}
+            totalPages={pagination.totalPages || 1}
+            onChange={setPage}
+          />
+        </>
+      )}
+
+      {/* Confirm */}
+      <ConfirmDeleteModal
+        open={confirmOpen}
+        onCancel={() => {
+          if (!isDeleting) setConfirmOpen(false);
+        }}
+        onConfirm={doDelete}
+        loading={isDeleting}
+      />
+
+      {/* Result */}
+      <ResultModal
+        open={result.open}
+        onClose={() => setResult((r) => ({ ...r, open: false }))}
+        title={result.ok ? "Berhasil Dihapus" : "Gagal Menghapus"}
+        description={result.msg}
+        variant={result.ok ? "success" : "error"}
+      />
+    </section>
   );
 }
