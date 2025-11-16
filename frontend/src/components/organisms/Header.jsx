@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CircleUser, Bell } from 'lucide-react'; 
 import { Text } from '../atoms/Text';
 
-export const Header = () => {
+export const Header = ({ title = 'Ringkasan Operasional', subtitle = 'Ringkasan statistik dan aktivitas platform Skill Connect' }) => {
   const [user, setUser] = useState({ name: 'User', role: 'admin', email: 'admin@skillconnect.com' });
   
   useEffect(() => {
@@ -19,14 +19,17 @@ export const Header = () => {
     }
   }, []);
   
-  return (
+ return (
     <div className="bg-white px-6 py-5 flex justify-between items-start border-b border-[#D8E3F3]">
       <div>
-        <Text variant="h1" className="text-gray-900 mb-1">Ringkasan Operasional</Text> 
+        {}
+        <Text variant="h1" className="text-gray-900 mb-1">{title}</Text> 
+        {}
         <Text variant="caption" className="text-gray-600">
-          Ringkasan statistik dan aktivitas platform Skill Connect
+          {subtitle}
         </Text>
       </div>
+      {}
       <div className="flex items-center gap-5"> 
         <button className="flex items-center justify-center hover:text-[#4782BE] transition-colors">
           <Bell size={20} className="text-gray-800" />

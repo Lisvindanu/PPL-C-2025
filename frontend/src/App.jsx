@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
+import AdminReviewPage from "./pages/AdminReviewPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
@@ -95,6 +96,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminServiceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/reviews"
+        element={
+          <ProtectedRoute>
+            <AdminReviewPage />
           </ProtectedRoute>
         }
       />
