@@ -2,8 +2,8 @@
 
 /**
  * Service Controller (FINAL)
- * - Bind semua handler supaya aman dipakai langsung di router
- * - Normalisasi query: map sortOrder -> sortDir (kompatibel dengan repo)
+ * - Bind semua handler
+ * - Normalisasi query: map sortOrder -> sortDir
  * - Konsisten response { status, message, data }
  */
 class ServiceController {
@@ -41,12 +41,10 @@ class ServiceController {
   }
   err(res, error, fallback = 500) {
     const code = error.status || error.statusCode || fallback;
-    return res
-      .status(code)
-      .json({
-        status: "error",
-        message: error.message || "Internal Server Error",
-      });
+    return res.status(code).json({
+      status: "error",
+      message: error.message || "Internal Server Error",
+    });
   }
   getUserId(req) {
     const u = req.user || {};
@@ -88,9 +86,8 @@ class ServiceController {
         page: req.query.page,
         limit: req.query.limit,
         sortBy: req.query.sortBy,
-        // map sortOrder -> sortDir agar kompatibel dengan repo
         sortDir: this.toSortDir(req.query),
-        status: req.query.status, // biarkan kosong => default 'aktif' di use-case
+        status: req.query.status,
       };
 
       const result = await this.getAllServicesUseCase.execute(filters);
@@ -106,7 +103,6 @@ class ServiceController {
    */
   async searchServices(req, res) {
     try {
-      // use-case SearchServices kita sudah meng-handle query req.query apa adanya
       const result = await this.searchServicesUseCase.execute(req.query || {});
       return this.ok(res, "Services search retrieved successfully", result);
     } catch (error) {
@@ -144,26 +140,37 @@ class ServiceController {
   async getMyServices(req, res) {
     try {
       const userId = this.getUserId(req);
-      if (!userId)
+      if (!userId) {
         return res
           .status(401)
           .json({ status: "error", message: "Unauthorized" });
+      }
 
-      // gunakan repo yang sama untuk konsistensi; filter owner via freelancer_id
+      // Interpretasi parameter status:
+      // - "aktif" | "draft" | "nonaktif" => filter spesifik
+      // - "all" atau tidak diisi
+      const rawStatus = (req.query.status || "").toLowerCase().trim();
+      const allow = new Set(["aktif", "draft", "nonaktif"]);
+      const filters = { freelancer_id: userId };
+      if (allow.has(rawStatus)) {
+        filters.status = rawStatus;
+      }
+      // jika rawStatus 'all' atau kosong -> biarkan tanpa filters.status
+
       const result = await this.getAllServicesUseCase.serviceRepository.findAll(
-        {
-          status: req.query.status || "aktif", // default aktif
-          freelancer_id: userId,
-        },
+        filters,
         {
           page: Number(req.query.page || 1),
-          limit: Number(req.query.limit || 50),
-          sortBy: req.query.sortBy || "updated_at",
-          sortDir: this.toSortDir(req.query) || "desc",
+          limit: Number(req.query.limit || 6),
+          sortBy: req.query.sortBy || "created_at",
+          sortOrder: req.query.sortOrder || "DESC",
         }
       );
 
-      return this.ok(res, "My services retrieved successfully", result);
+      return this.ok(res, "My services retrieved successfully", {
+        services: result.items || [],
+        pagination: result.pagination || {},
+      });
     } catch (error) {
       return this.err(res, error);
     }

@@ -8,11 +8,10 @@ class SequelizeServiceRepository {
    */
   constructor(sequelize) {
     this.sequelize = sequelize;
-
     this.USER_COL = process.env.SERVICE_USER_COLUMN || "freelancer_id";
     this.columns = [
       "id",
-      this.USER_COL + " AS freelancer_id",
+      `${this.USER_COL} AS freelancer_id`,
       "kategori_id",
       "judul",
       "slug",
@@ -36,10 +35,26 @@ class SequelizeServiceRepository {
       "harga",
       "rating_rata_rata",
       "total_pesanan",
+      "updated_at",
     ]);
   }
 
-  // ================= Utils =================
+  // =========================================================
+  // Utils
+  // =========================================================
+  _selectColumnsWithJoin() {
+    const layananCols = this.columns.map((c) => {
+      if (c.includes(" AS ")) {
+        const [left, right] = c.split(/\s+AS\s+/i);
+        return `l.${left} AS ${right}`;
+      }
+      return `l.${c}`;
+    });
+
+    // expose nama kategori
+    layananCols.push("k.nama AS nama_kategori");
+    return layananCols.join(", ");
+  }
 
   _parseRow(row) {
     if (!row) return null;
@@ -82,27 +97,27 @@ class SequelizeServiceRepository {
     const params = [];
 
     if (filters.kategori_id) {
-      where.push("kategori_id = ?");
+      where.push("l.kategori_id = ?");
       params.push(filters.kategori_id);
     }
     if (filters.status) {
-      where.push("status = ?");
+      where.push("l.status = ?");
       params.push(filters.status);
     }
     if (filters.freelancer_id) {
-      where.push(`${this.USER_COL} = ?`);
+      where.push(`l.${this.USER_COL} = ?`);
       params.push(filters.freelancer_id);
     }
     if (filters.user_id) {
-      where.push(`${this.USER_COL} = ?`);
+      where.push(`l.${this.USER_COL} = ?`);
       params.push(filters.user_id);
     }
     if (Number.isFinite(filters.harga_min)) {
-      where.push("harga >= ?");
+      where.push("l.harga >= ?");
       params.push(Number(filters.harga_min));
     }
     if (Number.isFinite(filters.harga_max)) {
-      where.push("harga <= ?");
+      where.push("l.harga <= ?");
       params.push(Number(filters.harga_max));
     }
 
@@ -118,8 +133,10 @@ class SequelizeServiceRepository {
         ? options.sortBy
         : "created_at";
     const sortDir =
-      (options.sortDir || "desc").toLowerCase() === "asc" ? "ASC" : "DESC";
-    return `ORDER BY ${sortBy} ${sortDir}`;
+      (options.sortDir || options.sortOrder || "desc").toLowerCase() === "asc"
+        ? "ASC"
+        : "DESC";
+    return `ORDER BY l.${sortBy} ${sortDir}`;
   }
 
   _buildPaging(options = {}) {
@@ -131,14 +148,16 @@ class SequelizeServiceRepository {
 
   async _count(whereClause, params) {
     const [rows] = await this.sequelize.query(
-      `SELECT COUNT(*) AS cnt FROM layanan ${whereClause}`,
+      `SELECT COUNT(*) AS cnt FROM layanan l ${whereClause}`,
       { replacements: params }
     );
     const r = Array.isArray(rows) ? rows[0] : rows;
     return Number(r?.cnt || 0);
   }
 
-  // ================= Guards / helpers =================
+  // =========================================================
+  // Guards / helpers
+  // =========================================================
 
   async existsFreelancer(userId) {
     if (!userId) return false;
@@ -162,16 +181,25 @@ class SequelizeServiceRepository {
 
   async findBySlug(slug) {
     const [rows] = await this.sequelize.query(
-      `SELECT ${this.columns.join(", ")} FROM layanan WHERE slug = ? LIMIT 1`,
+      `
+      SELECT ${this._selectColumnsWithJoin()}
+      FROM layanan l
+      LEFT JOIN kategori k ON k.id = l.kategori_id
+      WHERE l.slug = ?
+      LIMIT 1
+      `,
       { replacements: [slug] }
     );
     const row = Array.isArray(rows) ? rows[0] : rows;
     return this._parseRow(row || null);
   }
 
-  // ================= CRUD & Status =================
+  // =========================================================
+  // CRUD & Status
+  // =========================================================
 
   async create(arg1, arg2) {
+    // Pola (freelancerId, dto)
     if (typeof arg1 === "string" && arg2 && typeof arg2 === "object") {
       const freelancerId = arg1;
       const dto = arg2;
@@ -225,13 +253,19 @@ class SequelizeServiceRepository {
       );
 
       const [rows] = await this.sequelize.query(
-        `SELECT ${this.columns.join(", ")} FROM layanan WHERE id = ? LIMIT 1`,
+        `
+        SELECT ${this._selectColumnsWithJoin()}
+        FROM layanan l
+        LEFT JOIN kategori k ON k.id = l.kategori_id
+        WHERE l.id = ? LIMIT 1
+        `,
         { replacements: [id] }
       );
       const row = Array.isArray(rows) ? rows[0] : rows;
       return this._parseRow(row || null);
     }
 
+    // Pola (serviceObject)
     if (arg1 && typeof arg1 === "object" && !arg2) {
       const svc = arg1;
       const freelancerId = svc.freelancerId || svc.freelancer_id;
@@ -321,7 +355,7 @@ class SequelizeServiceRepository {
     return this.findById(id);
   }
 
-  // new: general setter to avoid enum mismatch bugs
+  // General setter utk menghindari mismatch enum
   async setStatus(id, statusValue) {
     await this.sequelize.query(
       `UPDATE layanan SET status = ?, updated_at = ? WHERE id = ?`,
@@ -330,11 +364,19 @@ class SequelizeServiceRepository {
     return this.findById(id);
   }
 
-  // ================= Queries =================
+  // =========================================================
+  // Queries
+  // =========================================================
 
   async findById(id) {
     const [rows] = await this.sequelize.query(
-      `SELECT ${this.columns.join(", ")} FROM layanan WHERE id = ? LIMIT 1`,
+      `
+      SELECT ${this._selectColumnsWithJoin()}
+      FROM layanan l
+      LEFT JOIN kategori k ON k.id = l.kategori_id
+      WHERE l.id = ?
+      LIMIT 1
+      `,
       { replacements: [id] }
     );
     const row = Array.isArray(rows) ? rows[0] : rows;
@@ -347,7 +389,12 @@ class SequelizeServiceRepository {
     const paging = this._buildPaging(options);
 
     const [rows] = await this.sequelize.query(
-      `SELECT ${this.columns.join(", ")} FROM layanan ${clause} ${order} ${paging.clause}`,
+      `
+      SELECT ${this._selectColumnsWithJoin()}
+      FROM layanan l
+      LEFT JOIN kategori k ON k.id = l.kategori_id
+      ${clause} ${order} ${paging.clause}
+      `,
       { replacements: params }
     );
     const items = (rows || []).map((r) => this._parseRow(r));
@@ -368,15 +415,20 @@ class SequelizeServiceRepository {
     const term = `%${q}%`;
     const base = this._buildWhere(filters);
     const whereClause = base.clause
-      ? `${base.clause} AND (judul LIKE ? OR deskripsi LIKE ?)`
-      : `WHERE (judul LIKE ? OR deskripsi LIKE ?)`;
+      ? `${base.clause} AND (l.judul LIKE ? OR l.deskripsi LIKE ?)`
+      : `WHERE (l.judul LIKE ? OR l.deskripsi LIKE ?)`;
     const params = [...base.params, term, term];
 
     const order = this._buildOrder(options);
     const paging = this._buildPaging(options);
 
     const [rows] = await this.sequelize.query(
-      `SELECT ${this.columns.join(", ")} FROM layanan ${whereClause} ${order} ${paging.clause}`,
+      `
+      SELECT ${this._selectColumnsWithJoin()}
+      FROM layanan l
+      LEFT JOIN kategori k ON k.id = l.kategori_id
+      ${whereClause} ${order} ${paging.clause}
+      `,
       { replacements: params }
     );
 
