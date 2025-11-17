@@ -202,6 +202,10 @@ const chatController = new ChatController(sequelize);
 const chatRoutes = require("./modules/chat/presentation/routes/chatRoutes");
 app.use("/api/chat", chatRoutes(chatController));
 
+// ===== Modul 7: DashboardAdmin) =====
+const adminKategoriRoutes = require('./modules/admin/presentation/routes/adminKategoriRoutes');
+app.use('/api/admin', adminKategoriRoutes);
+
 // ===== Modul 8: Recommendation & Personalization (Dalam Pengembangan) =====
 const RecommendationController = require("./modules/recommendation/presentation/controllers/RecommendationController");
 const FavoriteController = require("./modules/recommendation/presentation/controllers/FavoriteController");
