@@ -1,4 +1,4 @@
-import api from '../utils/axiosConfig'
+import api from "../utils/axiosConfig";
 
 export const serviceService = {
   // Get all services with filters
@@ -13,42 +13,52 @@ export const serviceService = {
         ...(filters.rating_min && { rating_min: filters.rating_min }),
         ...(filters.sortBy && { sortBy: filters.sortBy }),
         ...(filters.sortOrder && { sortOrder: filters.sortOrder }),
-        ...(filters.status && { status: filters.status })
-      }
+        ...(filters.status && { status: filters.status }),
+      };
 
       // Only log in development
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Fetching services with params:', params)
+        console.log("[serviceService] Fetching services with params:", params);
       }
-      const response = await api.get('/services', { params })
+      const response = await api.get("/services", { params });
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Response:', response.data)
+        console.log("[serviceService] Response:", response.data);
       }
-      
-      if (response.data.status === 'success') {
+
+      if (response.data.status === "success" || response.data.success) {
+        // Normalisasi: dukung data.items maupun data.services
+        const payload = response.data.data || {};
+        const services = Array.isArray(payload.services)
+          ? payload.services
+          : Array.isArray(payload.items)
+          ? payload.items
+          : [];
         return {
           success: true,
-          services: response.data.data.services || [],
-          pagination: response.data.data.pagination || {}
-        }
+          services,
+          pagination: payload.pagination || {},
+        };
       }
-      
+
       return {
         success: false,
-        message: response.data.message || 'Failed to get services',
+        message: response.data.message || "Failed to get services",
         services: [],
-        pagination: {}
-      }
+        pagination: {},
+      };
     } catch (error) {
-      console.error('[serviceService] Error fetching services:', error)
-      console.error('[serviceService] Error response:', error.response?.data)
-      console.error('[serviceService] Error config:', error.config)
+      console.error("[serviceService] Error fetching services:", error);
+      console.error("[serviceService] Error response:", error.response?.data);
+      console.error("[serviceService] Error config:", error.config);
       return {
         success: false,
-        message: error.response?.data?.message || error.message || 'Failed to get services',
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to get services",
         services: [],
-        pagination: {}
-      }
+        pagination: {},
+      };
     }
   },
 
@@ -56,44 +66,47 @@ export const serviceService = {
   async getServiceById(serviceId) {
     try {
       // Validate serviceId
-      if (!serviceId || serviceId === 'undefined') {
+      if (!serviceId || serviceId === "undefined") {
         return {
           success: false,
-          message: 'Service ID is required',
-          service: null
-        }
+          message: "Service ID is required",
+          service: null,
+        };
       }
 
       // Only log in development
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Fetching service by ID:', serviceId)
+        console.log("[serviceService] Fetching service by ID:", serviceId);
       }
-      const response = await api.get(`/services/${serviceId}`)
+      const response = await api.get(`/services/${serviceId}`);
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Service response:', response.data)
+        console.log("[serviceService] Service response:", response.data);
       }
-      
-      if (response.data.status === 'success') {
+
+      if (response.data.status === "success" || response.data.success) {
         return {
           success: true,
-          service: response.data.data
-        }
+          service: response.data.data,
+        };
       }
-      
+
       return {
         success: false,
-        message: response.data.message || 'Service not found',
-        service: null
-      }
+        message: response.data.message || "Service not found",
+        service: null,
+      };
     } catch (error) {
-      console.error('[serviceService] Error fetching service:', error)
-      console.error('[serviceService] Error response:', error.response?.data)
-      console.error('[serviceService] Error config:', error.config)
+      console.error("[serviceService] Error fetching service:", error);
+      console.error("[serviceService] Error response:", error.response?.data);
+      console.error("[serviceService] Error config:", error.config);
       return {
         success: false,
-        message: error.response?.data?.message || error.message || 'Failed to get service',
-        service: null
-      }
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to get service",
+        service: null,
+      };
     }
   },
 
@@ -101,108 +114,130 @@ export const serviceService = {
   async getServiceBySlug(slug) {
     try {
       // Validate slug
-      if (!slug || slug === 'undefined') {
+      if (!slug || slug === "undefined") {
         return {
           success: false,
-          message: 'Slug is required',
-          service: null
-        }
+          message: "Slug is required",
+          service: null,
+        };
       }
 
       // Only log in development
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Fetching service by slug:', slug)
+        console.log("[serviceService] Fetching service by slug:", slug);
       }
-      
+
       // Try to fetch by slug endpoint first
       try {
-        const response = await api.get(`/services/slug/${slug}`)
+        const response = await api.get(`/services/slug/${slug}`);
         if (import.meta.env.DEV) {
-          console.log('[serviceService] Service by slug response:', response.data)
+          console.log(
+            "[serviceService] Service by slug response:",
+            response.data
+          );
         }
-        
-        if (response.data.status === 'success') {
+
+        if (response.data.status === "success" || response.data.success) {
           return {
             success: true,
-            service: response.data.data
-          }
+            service: response.data.data,
+          };
         }
       } catch (slugError) {
         // If slug endpoint not implemented (501), fallback to fetch all and filter
-        if (slugError.response?.status === 501 || slugError.response?.status === 404) {
+        if (
+          slugError.response?.status === 501 ||
+          slugError.response?.status === 404
+        ) {
           if (import.meta.env.DEV) {
-            console.log('[serviceService] Slug endpoint not available (501), fetching all services and filtering by slug')
+            console.log(
+              "[serviceService] Slug endpoint not available (501/404), fallback scan list by slug"
+            );
           }
-          
+
           // Fetch all services and filter by slug
-          let allServices = []
-          let currentPage = 1
-          let hasMore = true
-          const limit = 100
-          const maxPages = 10
+          let allServices = [];
+          let currentPage = 1;
+          let hasMore = true;
+          const limit = 100;
+          const maxPages = 10;
 
           while (hasMore && currentPage <= maxPages) {
-            const allServicesResult = await this.getAllServices({ 
-              page: currentPage, 
-              limit: limit,
-              status: 'aktif'
-            })
-            
+            const allServicesResult = await this.getAllServices({
+              page: currentPage,
+              limit,
+              status: "aktif",
+            });
+
             if (allServicesResult.success && allServicesResult.services) {
-              allServices = [...allServices, ...allServicesResult.services]
-              
+              allServices = [...allServices, ...allServicesResult.services];
+
               // Check if we found the service
-              const foundService = allServices.find(s => s.slug === slug)
+              const foundService = allServices.find((s) => s.slug === slug);
               if (foundService) {
                 if (import.meta.env.DEV) {
-                  console.log('[serviceService] Service found by slug, fetching full detail by ID:', foundService.id)
+                  console.log(
+                    "[serviceService] Found by slug, fetch full by ID:",
+                    foundService.id
+                  );
                 }
                 // Fetch full detail by ID
-                return await this.getServiceById(foundService.id)
+                return await this.getServiceById(foundService.id);
               }
-              
+
               // Check if there are more pages
-              const pagination = allServicesResult.pagination || {}
-              if (pagination.totalPages && currentPage < pagination.totalPages) {
-                currentPage++
+              const pagination = allServicesResult.pagination || {};
+              if (
+                pagination.totalPages &&
+                currentPage < pagination.totalPages
+              ) {
+                currentPage++;
               } else {
-                hasMore = false
+                hasMore = false;
               }
             } else {
-              hasMore = false
+              hasMore = false;
             }
           }
-          
+
           // If we've checked all pages and didn't find the service
           if (import.meta.env.DEV) {
-            console.log('[serviceService] Service not found by slug after checking all pages')
+            console.log(
+              "[serviceService] Service not found by slug after paginated scan"
+            );
           }
           return {
             success: false,
-            message: 'Service not found',
-            service: null
-          }
+            message: "Service not found",
+            service: null,
+          };
         }
-        
+
         // If it's not a 501 or 404, throw the error
-        throw slugError
+        throw slugError;
       }
-      
+
       return {
         success: false,
-        message: 'Service not found',
-        service: null
-      }
+        message: "Service not found",
+        service: null,
+      };
     } catch (error) {
       // Only log if it's not a handled 501 error
       if (error.response?.status !== 501) {
-        console.error('[serviceService] Error fetching service by slug:', error)
+        console.error(
+          "[serviceService] Error fetching service by slug:",
+          error
+        );
       }
       return {
         success: false,
-        message: error.response?.data?.message || error.message || 'Failed to get service',
-        service: null
-      }
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to get service",
+        service: null,
+      };
     }
   },
 
@@ -211,34 +246,37 @@ export const serviceService = {
     try {
       // Only log in development
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Fetching categories...')
+        console.log("[serviceService] Fetching categories...");
       }
-      const response = await api.get('/kategori')
+      const response = await api.get("/kategori");
       if (import.meta.env.DEV) {
-        console.log('[serviceService] Categories response:', response.data)
+        console.log("[serviceService] Categories response:", response.data);
       }
-      
-      if (response.data.success) {
+
+      if (response.data.success || response.data.status === "success") {
         return {
           success: true,
-          categories: response.data.data || []
-        }
+          categories: response.data.data || [],
+        };
       }
-      
+
       return {
         success: false,
-        message: response.data.message || 'Failed to get categories',
-        categories: []
-      }
+        message: response.data.message || "Failed to get categories",
+        categories: [],
+      };
     } catch (error) {
-      console.error('[serviceService] Error fetching categories:', error)
-      console.error('[serviceService] Error response:', error.response?.data)
-      console.error('[serviceService] Error config:', error.config)
+      console.error("[serviceService] Error fetching categories:", error);
+      console.error("[serviceService] Error response:", error.response?.data);
+      console.error("[serviceService] Error config:", error.config);
       return {
         success: false,
-        message: error.response?.data?.message || error.message || 'Failed to get categories',
-        categories: []
-      }
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to get categories",
+        categories: [],
+      };
     }
   },
 
@@ -249,33 +287,134 @@ export const serviceService = {
         q: query,
         page: filters.page || 1,
         limit: filters.limit || 20,
-        ...(filters.kategori_id && { kategori_id: filters.kategori_id })
-      }
+        ...(filters.kategori_id && { kategori_id: filters.kategori_id }),
+      };
 
-      const response = await api.get('/services/search', { params })
-      
-      if (response.data.status === 'success') {
+      const response = await api.get("/services/search", { params });
+
+      if (response.data.status === "success" || response.data.success) {
+        // Normalisasi list
+        const payload = response.data.data || {};
+        const services = Array.isArray(payload.services)
+          ? payload.services
+          : Array.isArray(payload.items)
+          ? payload.items
+          : [];
         return {
           success: true,
-          services: response.data.data.services || [],
-          pagination: response.data.data.pagination || {}
-        }
+          services,
+          pagination: payload.pagination || {},
+        };
       }
-      
+
       return {
         success: false,
-        message: response.data.message || 'Failed to search services',
+        message: response.data.message || "Failed to search services",
         services: [],
-        pagination: {}
-      }
+        pagination: {},
+      };
     } catch (error) {
-      console.error('Error searching services:', error)
+      console.error("Error searching services:", error);
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to search services',
+        message: error.response?.data?.message || "Failed to search services",
         services: [],
-        pagination: {}
-      }
+        pagination: {},
+      };
     }
-  }
-}
+  },
+
+  // =========================================================
+  // List layanan milik freelancer (semua status)
+  // =========================================================
+  async getMyServices(filters = {}) {
+    try {
+      const params = {
+        page: filters.page || 1,
+        limit: filters.limit || 6,
+        ...(filters.sortBy && { sortBy: filters.sortBy }),
+        ...(filters.sortOrder && { sortOrder: filters.sortOrder }),
+      };
+
+      if (import.meta.env.DEV) {
+        console.log(
+          "[serviceService] Fetching MY services with params:",
+          params
+        );
+      }
+      const response = await api.get("/services/my", { params });
+      if (import.meta.env.DEV) {
+        console.log("[serviceService] /services/my Response:", response.data);
+      }
+
+      if (response.data.status === "success" || response.data.success) {
+        const payload = response.data.data || {};
+        const services = Array.isArray(payload.services)
+          ? payload.services
+          : Array.isArray(payload.items)
+          ? payload.items
+          : [];
+        return {
+          success: true,
+          services,
+          pagination: payload.pagination || {},
+        };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || "Failed to get my services",
+        services: [],
+        pagination: {},
+      };
+    } catch (error) {
+      console.error("[serviceService] Error fetching MY services:", error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to get my services",
+        services: [],
+        pagination: {},
+      };
+    }
+  },
+
+  // =========================================================
+  // Hapus layanan milik freelancer
+  // =========================================================
+  async deleteMyService(serviceId) {
+    try {
+      if (!serviceId) {
+        return { success: false, message: "Service ID is required" };
+      }
+
+      if (import.meta.env.DEV) {
+        console.log("[serviceService] Deleting service:", serviceId);
+      }
+      const response = await api.delete(`/services/${serviceId}`);
+      if (import.meta.env.DEV) {
+        console.log("[serviceService] Delete response:", response.data);
+      }
+
+      if (response.data.status === "success" || response.data.success) {
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        message: response.data.message || "Failed to delete service",
+      };
+    } catch (error) {
+      console.error("[serviceService] Error deleting service:", error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to delete service",
+      };
+    }
+  },
+};
