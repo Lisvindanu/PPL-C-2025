@@ -1,13 +1,13 @@
+import React, { useState } from 'react'; 
 import Navbar from '../organisms/Navbar'
 import InfoCard from '../molecules/InfoCard'
 import ProfileInfo from '../organisms/ProfileInfo'
 import SkillsSection from '../organisms/SkillsSection'
 import PortfolioSection from '../organisms/PortfolioSection'
 import EditForm from '../organisms/EditForm'
-
-// Impor komponen baru untuk Umpan Balik Klien
 import FeedbackCard from '../molecules/FeedbackCard' 
 import Pagination from '../molecules/Pagination'
+import ReportModal from '../organisms/ReportModal' 
 
 export default function ProfileLayout({
   profile,
@@ -19,11 +19,27 @@ export default function ProfileLayout({
   onLogout,
   onProfileChange
 }) {
+
+  // State untuk mengontrol modal laporan
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [selectedReviewId, setSelectedReviewId] = useState(null);
+
+  // Fungsi untuk membuka modal
+  const handleOpenReportModal = (reviewId) => {
+    setSelectedReviewId(reviewId); // Simpan ID review yang akan dilaporkan
+    setIsReportModalOpen(true);
+  };
+
+  // Fungsi untuk menutup modal
+  const handleCloseReportModal = () => {
+    setIsReportModalOpen(false);
+    setSelectedReviewId(null);
+  };
   
   // Data statis untuk umpan balik (ini hanya contoh)
   const feedbackData = [
     {
-      id: 1,
+      id: 1, // Ini adalah 'reviewId'
       name: 'Albert',
       company: 'Perusahaan Pemasaran Verizon',
       date: 'Agustus 17, 2025',
@@ -31,7 +47,7 @@ export default function ProfileLayout({
       reviewText: 'Pekerjaan yang bagus dengan komunikasi yang jelas dan pengiriman tepat waktu.',
     },
     {
-      id: 2,
+      id: 2, // Ini adalah 'reviewId'
       name: 'Jason S.',
       company: 'Perusahaan Pemasaran Verizon',
       date: 'Agustus 17, 2025',
@@ -66,19 +82,11 @@ export default function ProfileLayout({
             />
           </div>
 
-          {/* Logika TAMPIL/SEMBUNYIKAN */}
           {!isEditing ? (
-            // JIKA TIDAK SEDANG EDIT: Tampilkan Portofolio & Umpan Balik
             <>
               <PortfolioSection isEditing={isEditing} />
               
-              {/* --- Awal Blok Umpan Balik Klien --- */}
               <div className="mt-12">
-
-                {/* Tidak ada <Pagination /> di sini. 
-                  Kita letakkan HANYA di bawah.
-                */}
-                
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">
                   Umpan Balik Klien
                 </h2>
@@ -92,22 +100,18 @@ export default function ProfileLayout({
                       date={feedback.date}
                       rating={feedback.rating}
                       reviewText={feedback.reviewText}
+                      // PERUBAHAN DI SINI: Kirim 'handler' ke FeedbackCard
+                      onReportClick={() => handleOpenReportModal(feedback.id)}
                     />
                   ))}
                 </div>
 
-                {/* INI DIA! Satu-satunya penomoran halaman,
-                  berada di bagian paling bawah.
-                */}
                 <div className="mt-12">
                   <Pagination />
                 </div>
-
               </div>
-              {/* --- Akhir Blok Umpan Balik Klien --- */}
             </>
           ) : (
-            // JIKA SEDANG EDIT: Tampilkan Form Edit
             <EditForm 
               isEditing={isEditing}
               loading={loading}
@@ -117,6 +121,15 @@ export default function ProfileLayout({
           )}
         </div>
       </div>
+
+      {/* BARIS BARU: Tampilkan ReportModal secara kondisional */}
+      {isReportModalOpen && (
+        <ReportModal 
+          reviewId={selectedReviewId} 
+          onClose={handleCloseReportModal} 
+        />
+      )}
+
     </div>
   )
 }
