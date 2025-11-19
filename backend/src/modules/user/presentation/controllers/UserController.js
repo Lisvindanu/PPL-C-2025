@@ -9,6 +9,8 @@ const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
 const VerifyOTP = require('../../application/use-cases/VerifyOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
+const CreateFreelancerProfile = require('../../application/use-cases/CreateFreelancerProfile');
+const UpdateFreelancerProfile = require('../../application/use-cases/UpdateFreelancerProfile');
 
 class UserController {
   constructor() {
@@ -24,6 +26,8 @@ class UserController {
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
     this.verifyOTPUseCase = new VerifyOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
+    this.createFreelancerProfileUseCase = new CreateFreelancerProfile({ userRepository });
+    this.updateFreelancerProfileUseCase = new UpdateFreelancerProfile({ userRepository });
   }
 
   register = async (req, res, next) => {
@@ -81,7 +85,11 @@ class UserController {
         avatar: user.avatar,
         bio: user.bio,
         kota: user.kota,
-        provinsi: user.provinsi
+        provinsi: user.provinsi,
+        // Additional client profile fields added to match updateProfile response
+        foto_latar: user.foto_latar ,
+        anggaran: user.anggaran,
+        tipe_proyek: user.tipe_proyek
       }});
     } catch (err) {
       next(err);
@@ -190,6 +198,40 @@ class UserController {
 
       const { role } = req.body;
       const result = await this.changeUserRoleUseCase.execute(userId, role);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createFreelancerProfile = async (req, res, next) => {
+    try {
+      const userId = req.user && req.user.userId;
+      if (!userId) {
+        const err = new Error('Unauthorized');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const profileData = req.body || {};
+      const result = await this.createFreelancerProfileUseCase.execute(userId, profileData);
+      res.status(201).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateFreelancerProfile = async (req, res, next) => {
+    try {
+      const userId = req.user && req.user.userId;
+      if (!userId) {
+        const err = new Error('Unauthorized');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const profileData = req.body || {};
+      const result = await this.updateFreelancerProfileUseCase.execute(userId, profileData);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

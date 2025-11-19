@@ -47,6 +47,18 @@ module.exports = {
         type: Sequelize.TEXT,
         comment: 'User bio'
       },
+      foto_latar: {
+        type: Sequelize.STRING(255),
+        comment: 'Cover/banner photo URL (client profile)'
+      },
+      anggaran: {
+        type: Sequelize.STRING(100),
+        comment: 'Preferred budget or budget range provided by client'
+      },
+      tipe_proyek: {
+        type: Sequelize.STRING(100),
+        comment: 'Project type (e.g., desain, development, konsultasi)'
+      },
       kota: {
         type: Sequelize.STRING(100),
         comment: 'City'

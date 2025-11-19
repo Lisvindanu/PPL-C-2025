@@ -383,4 +383,127 @@ router.post('/logout', authMiddleware, userController.logout);
  */
 router.put('/role', authMiddleware, userController.changeRole);
 
+/**
+ * @swagger
+ * /api/users/freelancer-profile:
+ *   post:
+ *     tags: [Users]
+ *     summary: Create freelancer profile
+ *     description: Create freelancer profile for authenticated user and set role to `freelancer`.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nama_lengkap:
+ *                 type: string
+ *                 description: Nama lengkap freelancer (akan dipecah menjadi nama_depan / nama_belakang)
+ *               gelar:
+ *                 type: string
+ *                 description: Gelar atau ringkasan singkat (jika tidak menyediakan judul_profesi)
+ *               no_telepon:
+ *                 type: string
+ *               deskripsi:
+ *                 type: string
+ *                 description: Ringkasan/bio singkat untuk profil
+ *               judul_profesi:
+ *                 type: string
+ *               keahlian:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               portfolio_url:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Freelancer profile created and role updated
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/freelancer-profile', authMiddleware, userController.createFreelancerProfile);
+
+/**
+ * @swagger
+ * /api/users/freelancer-profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update freelancer profile
+ *     description: Update freelancer profile information including skills, education, licenses, and portfolio.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nama_lengkap:
+ *                 type: string
+ *               nama_depan:
+ *                 type: string
+ *               nama_belakang:
+ *                 type: string
+ *               no_telepon:
+ *                 type: string
+ *               kota:
+ *                 type: string
+ *               provinsi:
+ *                 type: string
+ *               gelar:
+ *                 type: string
+ *               deskripsi_lengkap:
+ *                 type: string
+ *               judul_profesi:
+ *                 type: string
+ *               keahlian:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               bahasa:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               edukasi:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               lisensi:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               judul_portfolio:
+ *                 type: string
+ *               deskripsi_portfolio:
+ *                 type: string
+ *               portfolio_url:
+ *                 type: string
+ *               file_portfolio:
+ *                 type: array
+ *               avatar:
+ *                 type: string
+ *               foto_latar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Freelancer profile updated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         description: Freelancer profile not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/freelancer-profile', authMiddleware, userController.updateFreelancerProfile);
+
 module.exports = router;
