@@ -9,6 +9,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import MessagesPage from "./pages/MessagesPage";
 
 export default function App() {
   return (
@@ -57,6 +58,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/chat/messages" element={<MessagesPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
