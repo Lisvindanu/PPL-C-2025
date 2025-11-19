@@ -34,8 +34,30 @@ class UpdateFreelancerProfile {
     }
     if (profileData.no_telepon) userUpdates.no_telepon = profileData.no_telepon;
     if (profileData.bio || profileData.deskripsi) userUpdates.bio = profileData.bio || profileData.deskripsi;
-    if (profileData.kota) userUpdates.kota = profileData.kota;
-    if (profileData.provinsi) userUpdates.provinsi = profileData.provinsi;
+    // Map `lokasi` -> kota / provinsi (accept formats like 'Kota, Provinsi' or 'Kota/Provinsi')
+    if (profileData.lokasi !== undefined && profileData.lokasi !== null) {
+      const loc = String(profileData.lokasi).trim();
+      let city = null;
+      let province = null;
+      if (loc.includes(',')) {
+        const parts = loc.split(',').map(s => s.trim()).filter(Boolean);
+        city = parts[0] || null;
+        province = parts[1] || null;
+      } else if (loc.includes('/')) {
+        const parts = loc.split('/').map(s => s.trim()).filter(Boolean);
+        city = parts[0] || null;
+        province = parts[1] || null;
+      } else {
+        // If only one value provided, put it into kota
+        city = loc || null;
+      }
+      if (city) userUpdates.kota = city;
+      if (province) userUpdates.provinsi = province;
+    } else {
+      // Backwards compatibility: accept kota/provinsi separately
+      if (profileData.kota) userUpdates.kota = profileData.kota;
+      if (profileData.provinsi) userUpdates.provinsi = profileData.provinsi;
+    }
     if (profileData.avatar) userUpdates.avatar = profileData.avatar;
 
     // Apply user updates
