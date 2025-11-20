@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ServiceCard from "./ServiceCard";
 import Pagination from "../atoms/Pagination";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
@@ -8,6 +9,8 @@ import { useMyServices, useDeleteService } from "../../hooks/useMyServices";
 export default function BlockListSection() {
   const [page, setPage] = useState(1);
   const limit = 6;
+
+  const navigate = useNavigate();
 
   const { data, isLoading, isError } = useMyServices({ page, limit });
   const services = data?.services ?? [];
@@ -49,6 +52,12 @@ export default function BlockListSection() {
     }
   };
 
+  // handler edit → redirect ke halaman Edit Layanan
+  const handleEdit = (service) => {
+    if (!service?.id) return;
+    navigate(`/freelance/service/${service.id}/edit`);
+  };
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-6">
       <h2 className="mb-4 text-lg font-semibold text-neutral-900">
@@ -77,7 +86,7 @@ export default function BlockListSection() {
               <ServiceCard
                 key={item.id}
                 item={item}
-                onEdit={() => console.log("edit", item.id)}
+                onEdit={handleEdit} // ⬅️ EDIT DI SINI
                 onDelete={() => askDelete(item.id)}
                 disabledActions={isDeleting}
               />

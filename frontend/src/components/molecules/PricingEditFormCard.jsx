@@ -4,7 +4,7 @@ import Input from "../atoms/Input";
 import SelectBox from "../atoms/SelectBox";
 import Button from "../atoms/Button";
 
-export default function PricingFormCard({
+export default function PricingEditFormCard({
   values,
   onChange,
   onCancel,
@@ -23,21 +23,17 @@ export default function PricingFormCard({
 
   function handleHargaChange(e) {
     const raw = e.target.value || "";
-    // hanya digit + titik
     let cleaned = raw.replace(/[^0-9.]/g, "");
 
-    // pisah integer & decimal
     const parts = cleaned.split(".");
     let intPart = parts[0] || "";
     let decPart = parts[1] || "";
 
-    // batasi panjang integer & decimal
     intPart = intPart.slice(0, 10);
     decPart = decPart.slice(0, 2);
 
     let result = intPart;
     if (raw.includes(".")) {
-      // user sudah ngetik titik → izinkan "123." sementara
       result = decPart.length ? `${intPart}.${decPart}` : `${intPart}.`;
     }
 
@@ -48,7 +44,7 @@ export default function PricingFormCard({
     <Card
       className="h-full flex flex-col"
       title="Harga"
-      subtitle="Izinkan Pelanggan membayar sesuai keinginan mereka"
+      subtitle="Sesuaikan detail harga layanan Anda"
     >
       <div className="flex-1 space-y-4">
         {/* Waktu Pengerjaan (hari, INT) */}
@@ -114,7 +110,7 @@ export default function PricingFormCard({
         <div className="flex items-center justify-between gap-3">
           <Button
             variant="outline"
-            className="w-full sm:w-auto  border-[#102d4f] hover:bg-[#3B82F6]/5"
+            className="w-full sm:w-auto border-[#102d4f] hover:bg-[#3B82F6]/5"
             onClick={onCancel}
             disabled={loading}
           >
@@ -126,7 +122,7 @@ export default function PricingFormCard({
             onClick={onSubmit}
             disabled={loading}
           >
-            {loading ? "Menyimpan..." : "Menambahkan"}
+            {loading ? "Menyimpan..." : "Mengubah"}
           </Button>
         </div>
       </div>

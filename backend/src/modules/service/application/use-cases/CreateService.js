@@ -57,7 +57,7 @@ class CreateService {
       judul: payload.judul,
       slug: finalSlug,
       deskripsi: payload.deskripsi,
-      harga: payload.harga, // string DECIMAL ok; biarkan ke DB
+      harga: payload.harga,
       waktu_pengerjaan:
         payload.waktu_pengerjaan != null
           ? Number(payload.waktu_pengerjaan)

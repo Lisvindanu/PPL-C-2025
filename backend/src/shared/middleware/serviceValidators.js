@@ -43,7 +43,13 @@ const updateServiceValidator = [
   body("waktu_pengerjaan").optional().isInt({ min: 1 }),
   body("batas_revisi").optional({ nullable: true }).isInt({ min: 0 }),
   body("thumbnail").optional({ nullable: true }).isString(),
-  body("gambar").optional({ nullable: true }).isArray(),
+  body("gambar")
+    .optional({ nullable: true })
+    .custom((value) => {
+      if (Array.isArray(value)) return true;
+      if (typeof value === "string") return true;
+      return false;
+    }),
   body("gambar.*").optional().isString(),
   handleValidation,
 ];

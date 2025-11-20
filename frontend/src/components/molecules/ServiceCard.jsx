@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "../atoms/Icon";
 import TagPill from "../atoms/TagPill";
 import KebabButton from "../atoms/KebabButton";
+import { buildMediaUrl } from "../../utils/mediaUrl";
 
 function StatusBadge({ status }) {
   const label = (status || "").toLowerCase();
@@ -27,6 +29,7 @@ export default function ServiceCard({
 }) {
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const close = (e) => {
@@ -38,15 +41,60 @@ export default function ServiceCard({
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  const thumbnailUrl = item?.thumbnail ? buildMediaUrl(item.thumbnail) : null;
+
+  // Harga: tampilkan apa adanya, jangan paksa parse biar nggak NaN
+  let formattedHarga = "-";
+  if (item?.harga !== undefined && item.harga !== null && item.harga !== "") {
+    const raw = String(item.harga).trim();
+    // kalau sudah ada "Rp" di depan, biarin
+    formattedHarga = /^rp/i.test(raw) ? raw : `Rp ${raw}`;
+  }
+
+  function handleEditClick() {
+    setOpenMenu(false);
+
+    if (disabledActions) return;
+
+    if (typeof onEdit === "function") {
+      // Kasih item biar parent bisa pakai id dsb
+      onEdit(item);
+      return;
+    }
+
+    // Fallback: langsung navigate ke halaman edit layanan
+    if (item?.id) {
+      navigate(`/freelance/service/${item.id}/edit`);
+    } else {
+      console.warn("[ServiceCard] item.id tidak tersedia untuk navigasi edit");
+    }
+  }
+
+  function handleDeleteClick() {
+    setOpenMenu(false);
+    if (disabledActions) return;
+    if (typeof onDelete === "function") {
+      onDelete(item);
+    }
+  }
+
   return (
     <div className="relative rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:shadow-md">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <img
-            src={item.thumbnail}
-            alt={item.judul}
-            className="h-10 w-10 rounded-md border object-cover"
-          />
+          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-100">
+            {thumbnailUrl ? (
+              <img
+                src={thumbnailUrl}
+                alt={item.judul || "Thumbnail layanan"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[11px] text-neutral-400">
+                <Icon name="image" className="h-4 w-4" />
+              </div>
+            )}
+          </div>
           <div>
             <p className="text-sm font-semibold text-neutral-900">
               {item.judul}
@@ -63,11 +111,8 @@ export default function ServiceCard({
             <div className="absolute right-0 z-20 mt-1 w-28 overflow-hidden rounded-md border border-neutral-200 bg-white text-sm shadow-lg">
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-neutral-50"
-                onClick={() => {
-                  setOpenMenu(false);
-                  onEdit && onEdit();
-                }}
+                className="block w-full px-3 py-2 text-left hover:bg-neutral-50 disabled:opacity-50"
+                onClick={handleEditClick}
                 disabled={disabledActions}
               >
                 Edit
@@ -75,10 +120,7 @@ export default function ServiceCard({
               <button
                 type="button"
                 className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 disabled:opacity-50"
-                onClick={() => {
-                  setOpenMenu(false);
-                  onDelete && onDelete();
-                }}
+                onClick={handleDeleteClick}
                 disabled={disabledActions}
               >
                 Hapus
@@ -101,7 +143,7 @@ export default function ServiceCard({
 
       <div className="flex items-center">
         <h3 className="text-base font-semibold text-neutral-900">
-          {item.harga}
+          {formattedHarga}
         </h3>
         <StatusBadge status={item.status} />
       </div>

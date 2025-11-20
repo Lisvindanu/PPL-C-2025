@@ -1,15 +1,40 @@
+import { useRef } from "react";
 import Icon from "./Icon";
 
-export default function UploadDropzone({ onChange, className = "" }) {
+export default function UploadDropzone({
+  onChange,
+  accept,
+  multiple = false,
+  label = "Gambar",
+  ...rest
+}) {
+  const fileInputRef = useRef(null);
+
+  function handleClick() {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }
+
   return (
-    <label className={"flex h-28 w-28 cursor-pointer items-center justify-center rounded-xl border border-[#B3B3B3] bg-[#F5F0EB] text-[#6C5A55] transition hover:bg-[#EFE8E1] focus-within:ring-2 focus-within:ring-[#696969] " + className}>
-      <input type="file" accept="image/*" onChange={onChange} className="sr-only" />
-      <div className="flex flex-col items-center gap-1">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white border border-[#B3B3B3]">
-          <Icon name="plus" />
-        </div>
-        <span className="text-xs">Gambar</span>
-      </div>
-    </label>
+    <div {...rest}>
+      <button
+        type="button"
+        onClick={handleClick}
+        className="flex h-24 w-24 flex-col items-center justify-center rounded-xl border border-dashed border-[#E5D5CC] bg-[#F5F0EB] text-xs text-[#6B5B53]"
+      >
+        <Icon name="image-plus" size="xl" className="text-[#111827]" />
+        <span className="mt-1">{label}</span>
+      </button>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={onChange}
+        accept={accept}
+        multiple={multiple}
+      />
+    </div>
   );
 }

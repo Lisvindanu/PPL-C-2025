@@ -12,22 +12,29 @@ const PORT = process.env.PORT || 5001;
 
 // ==================== MIDDLEWARE ====================
 // Helmet security headers - with custom CSP for mock-payment
+const baseHelmet = helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+});
+
+const mockPaymentHelmet = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr: ["'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+    },
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+});
+
 app.use((req, res, next) => {
   if (req.path.startsWith("/mock-payment")) {
-    // Relaxed CSP for mock payment page (allows inline scripts)
-    helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrcAttr: ["'unsafe-inline'"],
-          styleSrc: ["'self'", "'unsafe-inline'"],
-        },
-      },
-    })(req, res, next);
+    mockPaymentHelmet(req, res, next);
   } else {
-    // Strict CSP for other routes
-    helmet()(req, res, next);
+    baseHelmet(req, res, next);
   }
 });
 
@@ -52,6 +59,8 @@ app.use(morgan("dev")); // Logging
 
 // Serve static files (mock payment gateway)
 app.use("/mock-payment", express.static("public/mock-payment"));
+// Serve static files umum (misal: thumbnail & gambar layanan)
+app.use("/public", express.static("public"));
 
 // ==================== API DOCUMENTATION ====================
 // Serve spec with cache busting
@@ -67,7 +76,7 @@ app.get("/api-docs.json", (req, res) => {
 
 const swaggerOptions = {
   swaggerOptions: {
-    url: `/api-docs.json?v=${Date.now()}`, // Cache busting with timestamp
+    url: `/api-docs.json?v=${Date.now()}`,
     persistAuthorization: true,
   },
   customSiteTitle: "SkillConnect API Documentation",
@@ -203,8 +212,8 @@ const chatRoutes = require("./modules/chat/presentation/routes/chatRoutes");
 app.use("/api/chat", chatRoutes(chatController));
 
 // ===== Modul 7: DashboardAdmin) =====
-const adminKategoriRoutes = require('./modules/admin/presentation/routes/adminKategoriRoutes');
-app.use('/api/admin', adminKategoriRoutes);
+const adminKategoriRoutes = require("./modules/admin/presentation/routes/adminKategoriRoutes");
+app.use("/api/admin", adminKategoriRoutes);
 
 // ===== Modul 8: Recommendation & Personalization (Dalam Pengembangan) =====
 const RecommendationController = require("./modules/recommendation/presentation/controllers/RecommendationController");
@@ -318,4 +327,4 @@ connectDatabase()
     process.exit(1);
   });
 
-module.exports = app; // Export untuk testing
+module.exports = app;
