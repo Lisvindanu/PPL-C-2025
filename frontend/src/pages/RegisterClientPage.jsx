@@ -15,6 +15,7 @@ export default function RegisterClientPage() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("client");
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const onChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
 
   const { register, loading, error } = useAuth();
@@ -24,10 +25,10 @@ export default function RegisterClientPage() {
 
   // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       toast.show("Anda sudah login", "info");
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate, toast]);
 
@@ -42,8 +43,13 @@ export default function RegisterClientPage() {
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
+    if (!termsAccepted) {
+      toast.show("Anda harus menyetujui ketentuan dan kebijakan privasi", "error");
+      return;
+    }
+
     try {
-      await register({ email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, role: "client" });
+      await register({ email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, ketentuan_agree: true });
       toast.show("Account created. Please login.", "success");
       navigate("/login", { replace: true });
     } catch (_) {
@@ -111,7 +117,7 @@ export default function RegisterClientPage() {
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
           <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
           <div className="text-sm text-[#112D4E] mb-4">
-            <input type="checkbox" className="mr-2" /> Dengan membuat akun, saya setuju dengan{" "}
+            <input type="checkbox" className="mr-2" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} /> Dengan membuat akun, saya setuju dengan{" "}
             <a href="#" className="underline">
               Ketentuan
             </a>{" "}

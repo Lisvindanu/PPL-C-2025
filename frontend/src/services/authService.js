@@ -30,14 +30,14 @@ export const authService = {
     }
   },
 
-  async register({ email, password, firstName, lastName, role = 'client' }) {
+  async register({ email, password, firstName, lastName, ketentuan_agree = false }) {
     try {
       const response = await api.post('/users/register', { 
         email, 
         password, 
-        firstName, 
-        lastName, 
-        role 
+        nama_depan: firstName, 
+        nama_belakang: lastName, 
+        ketentuan_agree: ketentuan_agree === true
       })
       
       return response.data
