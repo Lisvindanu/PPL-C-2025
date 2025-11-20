@@ -241,7 +241,7 @@ module.exports = (serviceController) => {
    *     requestBody:
    *       required: true
    *       content:
-   *         application/json:
+   *         multipart/form-data:
    *           schema:
    *             type: object
    *             properties:
@@ -251,8 +251,11 @@ module.exports = (serviceController) => {
    *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
    *               waktu_pengerjaan: { type: integer, minimum: 1 }
    *               batas_revisi: { type: integer, minimum: 0 }
-   *               thumbnail: { type: string }
-   *               gambar: { type: array, items: { type: string } }
+   *               thumbnail: { type: string, format: binary }
+   *               gambar:
+   *                 type: array
+   *                 items: { type: string, format: binary }
+   *                 description: 'maks 5 file gambar'
    *     responses:
    *       200: { description: Updated }
    *       403: { description: Forbidden }
@@ -261,6 +264,7 @@ module.exports = (serviceController) => {
   router.put(
     "/:id",
     authMiddleware,
+    serviceMediaUpload,
     updateServiceValidator,
     taxonomyValidateUpdate,
     serviceController.updateService
@@ -305,13 +309,13 @@ module.exports = (serviceController) => {
    *             type: object
    *             required: [action]
    *             properties:
-               action: { type: string, enum: [approve, deactivate] }
-     *     responses:
-     *       200: { description: Status updated }
-     *       400: { description: Bad request }
-     *       403: { description: Forbidden }
-     *       404: { description: Not found }
-     */
+   *               action: { type: string, enum: [approve, deactivate] }
+   *     responses:
+   *       200: { description: Status updated }
+   *       400: { description: Bad request }
+   *       403: { description: Forbidden }
+   *       404: { description: Not found }
+   */
   router.patch(
     "/:id/status",
     authMiddleware,

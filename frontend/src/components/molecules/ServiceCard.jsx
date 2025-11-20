@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Icon from "../atoms/Icon";
 import TagPill from "../atoms/TagPill";
 import KebabButton from "../atoms/KebabButton";
@@ -28,6 +29,7 @@ export default function ServiceCard({
 }) {
   const [openMenu, setOpenMenu] = useState(false);
   const menuRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const close = (e) => {
@@ -47,6 +49,33 @@ export default function ServiceCard({
     const raw = String(item.harga).trim();
     // kalau sudah ada "Rp" di depan, biarin
     formattedHarga = /^rp/i.test(raw) ? raw : `Rp ${raw}`;
+  }
+
+  function handleEditClick() {
+    setOpenMenu(false);
+
+    if (disabledActions) return;
+
+    if (typeof onEdit === "function") {
+      // Kasih item biar parent bisa pakai id dsb
+      onEdit(item);
+      return;
+    }
+
+    // Fallback: langsung navigate ke halaman edit layanan
+    if (item?.id) {
+      navigate(`/freelance/service/${item.id}/edit`);
+    } else {
+      console.warn("[ServiceCard] item.id tidak tersedia untuk navigasi edit");
+    }
+  }
+
+  function handleDeleteClick() {
+    setOpenMenu(false);
+    if (disabledActions) return;
+    if (typeof onDelete === "function") {
+      onDelete(item);
+    }
   }
 
   return (
@@ -82,11 +111,8 @@ export default function ServiceCard({
             <div className="absolute right-0 z-20 mt-1 w-28 overflow-hidden rounded-md border border-neutral-200 bg-white text-sm shadow-lg">
               <button
                 type="button"
-                className="block w-full px-3 py-2 text-left hover:bg-neutral-50"
-                onClick={() => {
-                  setOpenMenu(false);
-                  onEdit && onEdit();
-                }}
+                className="block w-full px-3 py-2 text-left hover:bg-neutral-50 disabled:opacity-50"
+                onClick={handleEditClick}
                 disabled={disabledActions}
               >
                 Edit
@@ -94,10 +120,7 @@ export default function ServiceCard({
               <button
                 type="button"
                 className="block w-full px-3 py-2 text-left text-red-600 hover:bg-red-50 disabled:opacity-50"
-                onClick={() => {
-                  setOpenMenu(false);
-                  onDelete && onDelete();
-                }}
+                onClick={handleDeleteClick}
                 disabled={disabledActions}
               >
                 Hapus

@@ -201,9 +201,45 @@ class ServiceController {
    */
   async updateService(req, res) {
     try {
+      const basePayload = { ...(req.body || {}) };
+
+      // Normalisasi gambar dari text fields (existing paths)
+      let existingGallery = [];
+      if (basePayload.gambar != null) {
+        if (Array.isArray(basePayload.gambar)) {
+          existingGallery = basePayload.gambar.filter(Boolean);
+        } else if (typeof basePayload.gambar === "string") {
+          if (basePayload.gambar) {
+            existingGallery = [basePayload.gambar];
+          }
+        }
+      }
+
+      // File dari multer (serviceMediaUpload)
+      const thumbnailFile = req.files?.thumbnail?.[0] || null;
+      const gambarFiles = Array.isArray(req.files?.gambar)
+        ? req.files.gambar
+        : [];
+
+      if (thumbnailFile) {
+        basePayload.thumbnail = `layanan/${thumbnailFile.filename}`;
+      } else if (basePayload.thumbnail === "") {
+        // explicit empty string → hapus thumbnail
+        basePayload.thumbnail = null;
+      }
+
+      if (gambarFiles.length > 0) {
+        const newGalleryPaths = gambarFiles.map(
+          (file) => `layanan/${file.filename}`
+        );
+        basePayload.gambar = [...existingGallery, ...newGalleryPaths];
+      } else if (basePayload.gambar != null) {
+        basePayload.gambar = existingGallery;
+      }
+
       const result = await this.updateServiceUseCase.execute(
         req.params.id,
-        req.body,
+        basePayload,
         req.user || {}
       );
       return this.ok(res, "Service updated successfully", result);

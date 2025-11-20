@@ -11,6 +11,7 @@ import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
+import ServiceEditPage from "./pages/freelance/ServiceEditPage";
 import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
 import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
 import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
@@ -40,7 +41,10 @@ export default function App() {
       <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
-      <Route path="/reset-password/new-password" element={<NewPasswordPage />} />
+      <Route
+        path="/reset-password/new-password"
+        element={<NewPasswordPage />}
+      />
       <Route path="/services" element={<ServiceListPage />} />
       <Route
         path="/dashboard"
@@ -139,6 +143,14 @@ export default function App() {
         }
       />
       <Route
+        path="/freelance/service/:id/edit"
+        element={
+          <ProtectedRoute>
+            <ServiceEditPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/freelance/orders"
         element={
           <ProtectedRoute>
@@ -154,14 +166,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/services/:id"
-        element={<ServiceDetailPage />}
-      />
-      <Route
-        path="/jobs"
-        element={<ServiceDetailPage />}
-      />
+      <Route path="/services/:id" element={<ServiceDetailPage />} />
+      <Route path="/jobs" element={<ServiceDetailPage />} />
       <Route
         path="/create-order/:id"
         element={
@@ -179,7 +185,10 @@ export default function App() {
         }
       />
       <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
-      <Route path="/payment/processing/:paymentId" element={<PaymentProcessingPage />} />
+      <Route
+        path="/payment/processing/:paymentId"
+        element={<PaymentProcessingPage />}
+      />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
