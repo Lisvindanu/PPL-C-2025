@@ -1,4 +1,3 @@
-// src/hooks/useCategories.js
 import { useEffect, useState } from "react";
 import api from "../utils/axiosConfig";
 

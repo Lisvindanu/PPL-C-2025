@@ -12,7 +12,6 @@ const PORT = process.env.PORT || 5001;
 
 // ==================== MIDDLEWARE ====================
 // Helmet security headers - with custom CSP for mock-payment
-// dan relax CORP agar file gambar bisa di-load dari origin frontend (3000)
 const baseHelmet = helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" },
   crossOriginEmbedderPolicy: false,
@@ -33,10 +32,8 @@ const mockPaymentHelmet = helmet({
 
 app.use((req, res, next) => {
   if (req.path.startsWith("/mock-payment")) {
-    // Relaxed CSP untuk mock payment page (allows inline scripts)
     mockPaymentHelmet(req, res, next);
   } else {
-    // Helmet standar tapi CORP sudah di-relax
     baseHelmet(req, res, next);
   }
 });
@@ -79,7 +76,7 @@ app.get("/api-docs.json", (req, res) => {
 
 const swaggerOptions = {
   swaggerOptions: {
-    url: `/api-docs.json?v=${Date.now()}`, // Cache busting with timestamp
+    url: `/api-docs.json?v=${Date.now()}`,
     persistAuthorization: true,
   },
   customSiteTitle: "SkillConnect API Documentation",
@@ -330,4 +327,4 @@ connectDatabase()
     process.exit(1);
   });
 
-module.exports = app; // Export untuk testing
+module.exports = app;

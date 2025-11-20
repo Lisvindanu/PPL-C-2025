@@ -24,7 +24,7 @@ class ServiceController {
     this.searchServicesUseCase = searchServicesUseCase;
     this.approveServiceUseCase = approveServiceUseCase;
 
-    // bind semua method agar "this" tetap ke instance controller
+    // bind semua method
     this.createService = this.createService.bind(this);
     this.getAllServices = this.getAllServices.bind(this);
     this.searchServices = this.searchServices.bind(this);

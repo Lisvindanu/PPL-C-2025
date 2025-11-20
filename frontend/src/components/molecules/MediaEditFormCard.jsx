@@ -74,7 +74,6 @@ export default function MediaEditFormCard({
 
     onChange({
       thumbnailFile: file,
-      // biarkan values.thumbnail tetap, supaya kalau user batal edit tanpa submit masih lihat preview lama
     });
   }
 

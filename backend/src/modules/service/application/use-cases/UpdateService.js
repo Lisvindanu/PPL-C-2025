@@ -3,8 +3,6 @@
 /**
  * Update Service Use Case (OWNER only)
  * - Owner: user.id === service.freelancer_id
- * - Field yang bisa diubah: judul, deskripsi, kategori_id, harga, waktu_pengerjaan, batas_revisi, thumbnail, gambar, slug (otomatis dari judul)
- * - Status tidak bisa diubah di sini (tetap lewat endpoint /status)
  */
 
 function boom(msg, status = 400) {
@@ -58,7 +56,6 @@ class UpdateService {
       let finalSlug =
         base || toSlug(current.slug || j) || `service-${id.slice(0, 6)}`;
       // Cek bentrok slug sederhana (pakai repository.search/findById raw)
-      // Aman juga kalau DB enforce unique
       if (finalSlug !== current.slug) {
         // coba 5 variasi
         for (let i = 0; i < 5; i++) {
@@ -121,7 +118,6 @@ class UpdateService {
       patch.gambar = arr;
     }
 
-    // Jangan izinkan ubah status via PUT
     delete patch.status;
 
     const updated = await this.serviceRepository.update(id, patch);
