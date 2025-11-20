@@ -62,8 +62,27 @@ class ServiceController {
    */
   async createService(req, res) {
     try {
+      const basePayload = { ...req.body };
+
+      // File dari multer (serviceMediaUpload)
+      const thumbnailFile = req.files?.thumbnail?.[0] || null;
+      const gambarFiles = Array.isArray(req.files?.gambar)
+        ? req.files.gambar
+        : [];
+
+      if (thumbnailFile) {
+        // path relatif dari /public
+        basePayload.thumbnail = `layanan/${thumbnailFile.filename}`;
+      }
+
+      if (gambarFiles.length > 0) {
+        basePayload.gambar = gambarFiles.map(
+          (file) => `layanan/${file.filename}`
+        );
+      }
+
       const result = await this.createServiceUseCase.execute(
-        req.body,
+        basePayload,
         req.user || {}
       );
       return this.ok(res, "Service created successfully", result, 201);

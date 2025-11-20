@@ -1,28 +1,34 @@
-import Icon from "./Icon";
+export default function SelectBox({
+  children,
+  leftIcon,
+  className = "",
+  ...props
+}) {
+  const base =
+    "w-full rounded-xl border border-[#E5D5CC] bg-[#F5F0EB] px-3 py-2 text-sm " +
+    "text-[#3E2723] placeholder:text-[#B29A8F] focus:outline-none " +
+    "focus:ring-2 focus:ring-[#2563EB] focus:ring-offset-0";
 
-export default function SelectBox({ leftIcon = null, className = "", children, ...props }) {
   return (
-    <div className={"relative " + className}>
-      {leftIcon ? (
-        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9C8C84]">
+    <div className="relative flex items-center">
+      {leftIcon && (
+        <div className="pointer-events-none absolute left-3 text-[#9C8C84]">
           {leftIcon}
-        </span>
-      ) : null}
+        </div>
+      )}
 
       <select
-        className={
-          "w-full rounded-md bg-[#F5F0EB] text-[#2E2A28] placeholder-[#9C8C84] border border-[#B3B3B3] focus:outline-none focus:ring-2 focus:ring-[#696969] " +
-          (leftIcon ? "pl-9 pr-9 py-3" : "px-4 pr-9 py-3")
-        }
+        className={`${base} ${
+          leftIcon ? "pl-10" : ""
+        } appearance-none pr-10 ${className}`}
         {...props}
       >
         {children}
       </select>
 
-      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9C8C84]">
-        <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor">
-          <path d="M6 9l6 6 6-6" strokeWidth="2" strokeLinecap="round" />
-        </svg>
+      {/* 1 ikon dropdown custom di kanan */}
+      <span className="pointer-events-none absolute right-3 text-xs text-[#9C8C84]">
+        ▾
       </span>
     </div>
   );

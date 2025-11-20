@@ -10,28 +10,57 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
 
   const icons = {
     edit: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+        />
       </svg>
     ),
     camera: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={2}
           d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
         />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+        />
       </svg>
     ),
     check: (
       <svg fill="currentColor" viewBox="0 0 20 20" className={cls}>
-        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        <path
+          fillRule="evenodd"
+          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+          clipRule="evenodd"
+        />
       </svg>
     ),
     share: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -41,29 +70,76 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
       </svg>
     ),
     plus: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v12M6 12h12" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 6v12M6 12h12"
+        />
       </svg>
     ),
     home: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" d="M3 10.5l9-7 9 7V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 10.5l9-7 9 7V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1v-9.5z"
+        />
       </svg>
     ),
     box: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeWidth={2} strokeLinejoin="round" d="M12 3l9 4.5-9 4.5L3 7.5 12 3z" />
-        <path strokeWidth={2} strokeLinejoin="round" d="M21 7.5v9L12 21l-9-4.5v-9" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeWidth={2}
+          strokeLinejoin="round"
+          d="M12 3l9 4.5-9 4.5L3 7.5 12 3z"
+        />
+        <path
+          strokeWidth={2}
+          strokeLinejoin="round"
+          d="M21 7.5v9L12 21l-9-4.5v-9"
+        />
         <path strokeWidth={2} d="M12 12v9" />
       </svg>
     ),
     chart: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeWidth={2} strokeLinecap="round" d="M4 20V6m6 14V4m6 16v-8m4 8H2" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeWidth={2}
+          strokeLinecap="round"
+          d="M4 20V6m6 14V4m6 16v-8m4 8H2"
+        />
       </svg>
     ),
     settings: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
         <path strokeWidth={2} d="M12 15a3 3 0 100-6 3 3 0 000 6z" />
         <path
           strokeWidth={2}
@@ -73,20 +149,38 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
       </svg>
     ),
     time: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
         <path strokeWidth={2} strokeLinecap="round" d="M12 6v6l4 2" />
         <circle cx="12" cy="12" r="9" strokeWidth={2} />
       </svg>
     ),
     bag: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
         <path strokeWidth={2} strokeLinejoin="round" d="M6 8h12l1 12H5L6 8z" />
         <path strokeWidth={2} d="M9 8V6a3 3 0 016 0v2" />
       </svg>
     ),
     location: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={cls}>
-        <path strokeWidth={2} d="M12 21s7-4.5 7-10a7 7 0 10-14 0c0 5.5 7 10 7 10z" />
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={cls}
+      >
+        <path
+          strokeWidth={2}
+          d="M12 21s7-4.5 7-10a7 7 0 10-14 0c0 5.5 7 10 7 10z"
+        />
         <circle cx="12" cy="11" r="2" strokeWidth={2} />
       </svg>
     ),
@@ -98,15 +192,36 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
       </svg>
     ),
     google: (
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className={sizes[size]}>
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+      <svg
+        viewBox="0 0 24 24"
+        xmlns="http://www.w3.org/2000/svg"
+        className={sizes[size]}
+      >
+        <path
+          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+          fill="#4285F4"
+        />
+        <path
+          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+          fill="#34A853"
+        />
+        <path
+          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+          fill="#FBBC05"
+        />
+        <path
+          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+          fill="#EA4335"
+        />
       </svg>
     ),
     palette: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={sizes[size]}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={sizes[size]}
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -116,13 +231,43 @@ export default function Icon({ name, size = "md", className = "", ...props }) {
       </svg>
     ),
     briefcase: (
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" className={sizes[size]}>
+      <svg
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        className={sizes[size]}
+      >
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
           strokeWidth={2}
           d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
         />
+      </svg>
+    ),
+
+    // ========= NEW: icon image dengan plus sesuai desain upload =========
+    "image-plus": (
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        className={cls}
+      >
+        {/* frame foto */}
+        <rect x="4" y="4" width="12" height="12" rx="2" strokeWidth={1.6} />
+        {/* "gunung" */}
+        <path
+          d="M6.5 13.5L9.2 10.5L11.2 12.5L13 10L15.5 13.5"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* matahari */}
+        <circle cx="9" cy="8" r="1.1" strokeWidth={1.5} />
+        {/* tanda plus di kanan atas */}
+        <path d="M17 6h3" strokeWidth={1.7} strokeLinecap="round" />
+        <path d="M18.5 4.5v3" strokeWidth={1.7} strokeLinecap="round" />
       </svg>
     ),
   };

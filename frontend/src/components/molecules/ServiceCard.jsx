@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Icon from "../atoms/Icon";
 import TagPill from "../atoms/TagPill";
 import KebabButton from "../atoms/KebabButton";
+import { buildMediaUrl } from "../../utils/mediaUrl";
 
 function StatusBadge({ status }) {
   const label = (status || "").toLowerCase();
@@ -38,15 +39,33 @@ export default function ServiceCard({
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
+  const thumbnailUrl = item?.thumbnail ? buildMediaUrl(item.thumbnail) : null;
+
+  // Harga: tampilkan apa adanya, jangan paksa parse biar nggak NaN
+  let formattedHarga = "-";
+  if (item?.harga !== undefined && item.harga !== null && item.harga !== "") {
+    const raw = String(item.harga).trim();
+    // kalau sudah ada "Rp" di depan, biarin
+    formattedHarga = /^rp/i.test(raw) ? raw : `Rp ${raw}`;
+  }
+
   return (
     <div className="relative rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition hover:shadow-md">
       <div className="mb-3 flex items-start justify-between">
         <div className="flex items-start gap-3">
-          <img
-            src={item.thumbnail}
-            alt={item.judul}
-            className="h-10 w-10 rounded-md border object-cover"
-          />
+          <div className="h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border bg-neutral-100">
+            {thumbnailUrl ? (
+              <img
+                src={thumbnailUrl}
+                alt={item.judul || "Thumbnail layanan"}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-[11px] text-neutral-400">
+                <Icon name="image" className="h-4 w-4" />
+              </div>
+            )}
+          </div>
           <div>
             <p className="text-sm font-semibold text-neutral-900">
               {item.judul}
@@ -101,7 +120,7 @@ export default function ServiceCard({
 
       <div className="flex items-center">
         <h3 className="text-base font-semibold text-neutral-900">
-          {item.harga}
+          {formattedHarga}
         </h3>
         <StatusBadge status={item.status} />
       </div>
