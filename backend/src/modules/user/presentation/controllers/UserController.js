@@ -68,29 +68,53 @@ class UserController {
         throw err;
       }
 
-      const user = await this.loginUser.userRepository.findById(userId);
+      const user = await this.loginUser.userRepository.findByIdWithProfile(userId);
       if (!user) {
         const error = new Error('User not found');
         error.statusCode = 404;
         throw error;
       }
+      const profile = user.freelancerProfile || null;
 
-      res.json({ success: true, data: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        nama_depan: user.nama_depan,
-        nama_belakang: user.nama_belakang,
-        no_telepon: user.no_telepon,
-        avatar: user.avatar,
-        bio: user.bio,
-        kota: user.kota,
-        provinsi: user.provinsi,
-        // Additional client profile fields added to match updateProfile response
-        foto_latar: user.foto_latar ,
-        anggaran: user.anggaran,
-        tipe_proyek: user.tipe_proyek
-      }});
+      res.json({
+        success: true,
+        data: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          nama_depan: user.nama_depan,
+          nama_belakang: user.nama_belakang,
+          no_telepon: user.no_telepon,
+          avatar: user.avatar,
+          bio: user.bio,
+          kota: user.kota,
+          provinsi: user.provinsi,
+          foto_latar: user.foto_latar,
+          anggaran: user.anggaran,
+          tipe_proyek: user.tipe_proyek,
+          freelancerProfile: profile
+            ? {
+                id: profile.id,
+                user_id: profile.user_id,
+                judul_profesi: profile.judul_profesi,
+                keahlian: profile.keahlian,
+                bahasa: profile.bahasa,
+                edukasi: profile.edukasi,
+                lisensi: profile.lisensi,
+                deskripsi_lengkap: profile.deskripsi_lengkap,
+                portfolio_url: profile.portfolio_url,
+                judul_portfolio: profile.judul_portfolio,
+                deskripsi_portfolio: profile.deskripsi_portfolio,
+                file_portfolio: profile.file_portfolio,
+                avatar: profile.avatar,
+                foto_latar: profile.foto_latar,
+                total_pekerjaan_selesai: profile.total_pekerjaan_selesai,
+                rating_rata_rata: profile.rating_rata_rata,
+                total_ulasan: profile.total_ulasan
+              }
+            : null
+        }
+      });
     } catch (err) {
       next(err);
     }
