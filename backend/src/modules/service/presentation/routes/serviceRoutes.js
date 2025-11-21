@@ -20,6 +20,8 @@ const {
   taxonomyValidateUpdate,
 } = require("../../../../shared/middleware/serviceTaxonomyGuard");
 
+const serviceMediaUpload = require("../../infrastructure/upload/serviceMediaUpload");
+
 // helper buat jaga-jaga handler undefined
 function assertFn(fn, name) {
   if (typeof fn !== "function") {
@@ -197,7 +199,7 @@ module.exports = (serviceController) => {
    *     requestBody:
    *       required: true
    *       content:
-   *         application/json:
+   *         multipart/form-data:
    *           schema:
    *             type: object
    *             required: [judul, deskripsi, kategori_id, harga, waktu_pengerjaan]
@@ -208,8 +210,8 @@ module.exports = (serviceController) => {
    *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$', example: "149999.99" }
    *               waktu_pengerjaan: { type: integer, minimum: 1, description: 'dalam hari' }
    *               batas_revisi: { type: integer, minimum: 0, default: 1 }
-   *               thumbnail: { type: string }
-   *               gambar: { type: array, items: { type: string }, description: 'JSON[] URL' }
+   *               thumbnail: { type: string, format: binary }
+   *               gambar: { type: array, items: { type: string, format: binary }, description: 'maks 5 file gambar' }
    *     responses:
    *       201: { description: Created (draft) }
    *       400: { description: Bad request }
@@ -218,6 +220,7 @@ module.exports = (serviceController) => {
   router.post(
     "/",
     authMiddleware,
+    serviceMediaUpload,
     createServiceValidator,
     taxonomyValidateCreate,
     serviceController.createService
@@ -238,7 +241,7 @@ module.exports = (serviceController) => {
    *     requestBody:
    *       required: true
    *       content:
-   *         application/json:
+   *         multipart/form-data:
    *           schema:
    *             type: object
    *             properties:
@@ -248,8 +251,11 @@ module.exports = (serviceController) => {
    *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
    *               waktu_pengerjaan: { type: integer, minimum: 1 }
    *               batas_revisi: { type: integer, minimum: 0 }
-   *               thumbnail: { type: string }
-   *               gambar: { type: array, items: { type: string } }
+   *               thumbnail: { type: string, format: binary }
+   *               gambar:
+   *                 type: array
+   *                 items: { type: string, format: binary }
+   *                 description: 'maks 5 file gambar'
    *     responses:
    *       200: { description: Updated }
    *       403: { description: Forbidden }
@@ -258,6 +264,7 @@ module.exports = (serviceController) => {
   router.put(
     "/:id",
     authMiddleware,
+    serviceMediaUpload,
     updateServiceValidator,
     taxonomyValidateUpdate,
     serviceController.updateService
