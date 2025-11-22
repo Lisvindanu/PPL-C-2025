@@ -7,6 +7,7 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
+import TransactionTrendsPage from "./pages/TransactionTrendsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
@@ -99,6 +100,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminServiceManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/transaction-trends"
+        element={
+          <ProtectedRoute>
+            <TransactionTrendsPage />
           </ProtectedRoute>
         }
       />

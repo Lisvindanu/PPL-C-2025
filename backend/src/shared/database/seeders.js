@@ -263,6 +263,7 @@ async function runSeeders() {
 
     await seedUsers();
     await seedKategori();
+    // (previous targeted fraud seeder removed)
 
     console.log('\n✅ All seeders completed successfully!');
     process.exit(0);

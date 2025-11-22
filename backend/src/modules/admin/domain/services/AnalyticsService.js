@@ -41,12 +41,20 @@ class AnalyticsService {
     return await this.analyticsRepository.getUserStatusDistribution();
   }
 
-  async getOrderTrends() {
-    return await this.analyticsRepository.getOrderTrends();
+  async getOrderTrends(month = null, year = null) {
+    return await this.analyticsRepository.getOrderTrends(month, year);
   }
 
-  async getRevenueAnalytics(startDate, endDate) {
-    return await this.analyticsRepository.getRevenueTrend(startDate, endDate);
+  async getOrderCategoryTrends(month = null, year = null) {
+    return await this.analyticsRepository.getOrderCategoryTrends(month, year);
+  }
+
+  async getOrderCategoryTrendsByTime(month = null, year = null) {
+    return await this.analyticsRepository.getOrderCategoryTrendsByTime(month, year);
+  }
+
+  async getRevenueAnalytics(startDate, endDate, month = null, year = null) {
+    return await this.analyticsRepository.getRevenueTrend(startDate, endDate, month, year);
   }
 
   async getOrderAnalytics() {

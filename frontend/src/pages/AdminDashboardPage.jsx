@@ -118,7 +118,7 @@ export default function AdminDashboardPage() {
       <div className="flex items-center justify-center h-screen bg-[#F5F7FA]">
         <div className="text-center max-w-md">
           <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg mb-4">
-            <p className="font-bold text-lg mb-2">Gagal memuat data statistik. Periksa koneksi database!</p>
+            <p className="font-bold text-lg mb-2">Gagal memuat data statistik.</p>
             <p className="text-sm">{error}</p>
           </div>
           <button 
