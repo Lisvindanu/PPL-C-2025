@@ -197,13 +197,21 @@ class PaymentController {
   /**
    * GET /api/payments/check-status/:transactionId
    * Check payment status from Midtrans API and update database
+   * Note: transactionId can be either transaction_id or payment id (UUID)
    */
   async checkPaymentStatus(req, res) {
     try {
       const { transactionId } = req.params;
 
+      // Try to find payment by transaction_id first, then by id (UUID)
+      const { Op } = require('sequelize');
       const payment = await PaymentModel.findOne({
-        where: { transaction_id: transactionId }
+        where: {
+          [Op.or]: [
+            { transaction_id: transactionId },
+            { id: transactionId }
+          ]
+        }
       });
 
       if (!payment) {

@@ -108,19 +108,25 @@ export default function PaymentProcessingPage() {
       if (!isActive) return
 
       try {
-        const response = await api.get(`/payments/check-status/${paymentData?.transaction_id || paymentId}`)
+        const transactionId = paymentData?.transaction_id || paymentId
+        const response = await api.get(`/payments/check-status/${transactionId}`)
         const status = response.data.data.status
 
         if (!isActive) return
 
+        const amount = paymentData?.total_bayar || orderData?.amount
+
+        console.log('[PaymentProcessingPage] Auto-check status:', status)
+
         // Redirect based on status
         if (status === 'berhasil' || status === 'paid' || status === 'success' || status === 'settlement') {
-          navigate(`/payment/success?order_id=${paymentData?.transaction_id}&transaction_id=${paymentData?.transaction_id}&gross_amount=${paymentData?.total_bayar}`)
+          navigate(`/payment/success?order_id=${transactionId}&transaction_id=${transactionId}&gross_amount=${amount}`)
         } else if (status === 'kadaluarsa' || status === 'expired') {
-          navigate(`/payment/expired?order_id=${paymentData?.transaction_id}`)
+          navigate(`/payment/expired?order_id=${transactionId}&transaction_id=${transactionId}&gross_amount=${amount}`)
         } else if (status === 'gagal' || status === 'failed' || status === 'deny') {
-          navigate(`/payment/error?order_id=${paymentData?.transaction_id}`)
+          navigate(`/payment/error?order_id=${transactionId}&gross_amount=${amount}&message=Pembayaran%20gagal`)
         }
+        // Note: Don't redirect on 'menunggu'/'pending' - keep user on processing page
       } catch (error) {
         console.error('Error checking payment status:', error)
       }
@@ -136,7 +142,40 @@ export default function PaymentProcessingPage() {
       isActive = false
       clearInterval(interval)
     }
-  }, [paymentId, paymentData?.transaction_id, paymentData?.total_bayar, navigate])
+  }, [paymentId, paymentData?.transaction_id, paymentData?.total_bayar, orderData?.amount, navigate])
+
+  // Manual check payment status function
+  const handleManualCheckStatus = async () => {
+    setLoading(true)
+    try {
+      const transactionId = paymentData?.transaction_id || paymentId
+      const response = await api.get(`/payments/check-status/${transactionId}`)
+      const { status } = response.data.data
+      const amount = paymentData?.total_bayar || orderData?.amount
+
+      console.log('[PaymentProcessingPage] Manual status check:', status)
+
+      // Redirect based on status
+      if (status === 'berhasil' || status === 'paid' || status === 'success' || status === 'settlement') {
+        navigate(`/payment/success?order_id=${transactionId}&transaction_id=${transactionId}&gross_amount=${amount}`)
+      } else if (status === 'menunggu' || status === 'pending') {
+        navigate(`/payment/pending?order_id=${transactionId}&gross_amount=${amount}`)
+      } else if (status === 'kadaluarsa' || status === 'expired') {
+        navigate(`/payment/expired?order_id=${transactionId}&transaction_id=${transactionId}&gross_amount=${amount}`)
+      } else if (status === 'gagal' || status === 'failed' || status === 'deny') {
+        navigate(`/payment/error?order_id=${transactionId}&gross_amount=${amount}&message=Pembayaran%20gagal`)
+      } else {
+        // Status masih processing, show alert
+        alert('Status pembayaran masih diproses. Halaman akan di-refresh.')
+        window.location.reload()
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error)
+      alert('Gagal memeriksa status pembayaran. Silakan coba lagi.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   // Copy to clipboard function
   const copyToClipboard = (text) => {
@@ -353,10 +392,11 @@ export default function PaymentProcessingPage() {
         {/* Manual Check Button */}
         <div className="text-center">
           <button
-            onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-[#4782BE] text-white rounded-lg hover:bg-blue-700 transition-colors"
+            onClick={handleManualCheckStatus}
+            disabled={loading}
+            className="px-6 py-3 bg-[#4782BE] text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Cek Status Pembayaran
+            {loading ? 'Memeriksa...' : 'Cek Status Pembayaran'}
           </button>
         </div>
 
