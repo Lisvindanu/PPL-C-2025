@@ -77,6 +77,8 @@ app.use((req, res, next) => {
     mockPaymentHelmet(req, res, next);
   } else if (req.path.startsWith("/api-reference")) {
     scalarHelmet(req, res, next);
+  } else if (req.path.includes("/audit-report")) {
+    scalarHelmet(req, res, next); // Reuse Scalar CSP for audit page (needs CDN)
   } else {
     baseHelmet(req, res, next);
   }
