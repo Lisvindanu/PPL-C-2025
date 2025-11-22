@@ -195,6 +195,10 @@ const bookmarkController = new BookmarkController();
 const bookmarkRoutes = require("./modules/order/presentation/routes/bookmarkRoutes");
 app.use("/api/bookmarks", bookmarkRoutes(bookmarkController));
 
+// Modul 3: Favorites (dari favorite module)
+const favoriteRoutes = require("./modules/favorite/presentation/routes/favoriteRoutes");
+app.use("/api/favorites", favoriteRoutes);
+
 // ===== Modul 4: Payment Gateway =====
 const paymentRoutes = require("./modules/payment/presentation/routes/paymentRoutes");
 app.use("/api/payments", paymentRoutes);

@@ -9,12 +9,11 @@ export default defineConfig({
     host: true, // allow external access
     allowedHosts: ['ppl.vinmedia.my.id', '.vinmedia.my.id'], // allow cloudflare tunnel domain
     hmr: {
-      // Development: use localhost for HMR to avoid WebSocket disconnect loop
-      // Remove external domain config — it causes continuous reconnect/reload in dev
-      protocol: 'ws', // Use WebSocket (not WSS) for local dev
-      host: 'localhost', // Local dev server
-      port: 3000 // Match server port
-      // For production with tunnel, configure in separate production config if needed
+      // Use WSS for external domain access, WS for localhost
+      protocol: 'wss', // Use WSS for secure WebSocket
+      clientPort: 443, // Port that browser will use to connect (Cloudflare Tunnel uses 443)
+      // Don't set host - let it use the current hostname automatically
+      // For production with tunnel, this will use ppl.vinmedia.my.id
     }
   },
 })

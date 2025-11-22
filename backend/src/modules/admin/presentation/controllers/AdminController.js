@@ -410,7 +410,7 @@ async unblockService(req, res) {
 
       const ipAddress = req.ip || 'unknown';
       const userAgent = req.get('user-agent') || 'unknown';
-      const adminId = '374d0a01-94b5-4d6f-ad7d-93589be64de4';
+      const adminId = req.user?.userId; // Get from JWT token instead of hardcoded
 
       const result = await this.deleteReviewUseCase.execute(
         adminId,
