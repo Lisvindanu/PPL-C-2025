@@ -21,7 +21,7 @@ class SequelizePaymentRepository {
   async getFailedRecent(limit = 10) {
     try {
       const result = await this.sequelize.query(
-        'SELECT * FROM pembayaran WHERE status = "gagal" ORDER BY created_at DESC LIMIT ?',
+        'SELECT p.*, u.email, u.nama_depan, u.nama_belakang FROM pembayaran p LEFT JOIN users u ON p.user_id = u.id WHERE p.status = "gagal" ORDER BY p.created_at DESC LIMIT ?',
         {
           replacements: [limit],
           raw: true,
@@ -38,12 +38,16 @@ class SequelizePaymentRepository {
     try {
       const result = await this.sequelize.query(`
         SELECT 
-          user_id,
+          p.user_id,
           COUNT(*) as failed_count,
-          MAX(created_at) as last_failed
-        FROM pembayaran
-        WHERE status = "gagal"
-        GROUP BY user_id
+          MAX(p.created_at) as last_failed,
+          u.email,
+          u.nama_depan,
+          u.nama_belakang
+        FROM pembayaran p
+        LEFT JOIN users u ON p.user_id = u.id
+        WHERE p.status = "gagal"
+        GROUP BY p.user_id
         HAVING COUNT(*) >= ?
         ORDER BY failed_count DESC
         LIMIT 10

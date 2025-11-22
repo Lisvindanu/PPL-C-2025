@@ -8,7 +8,8 @@ import {
   ArrowLeftRight, 
   Eye, 
   Star, 
-  FileText 
+  FileText,
+  TrendingUp
 } from 'lucide-react'; 
 import Logo from '../atoms/Logo';
 import { NavItem } from '../molecules/NavItem';
@@ -30,6 +31,7 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
     { id: 'users', icon: <UserPen size={18} />, label: 'Manajemen Pengguna', path: '/admin/users'}, 
     { id: 'services', icon: <Wrench size={18} />, label: 'Manajemen Layanan', path: '/admin/services'}, 
     { id: 'transactions', icon: <ArrowLeftRight size={18} />, label: 'Daftar Transaksi', path: '/admin/transactions'}, 
+    { id: 'transaction-trends', icon: <TrendingUp size={18} />, label: 'Tren Transaksi', path: '/admin/transaction-trends'}, 
     { id: 'reviews', icon: <Eye size={18} />, label: 'Review', path: '/admin/reviews'}, 
     { id: 'recommendations', icon: <Star size={18} />, label: 'Rekomendasi', path: '/admin/recommendations'}, 
     { id: 'reports', icon: <FileText size={18} />, label: 'Tinjauan Laporan', path: '/admin/reports'}, 

@@ -90,6 +90,38 @@ export const adminService = {
     }
   },
 
+  // Get order category trends
+  async getOrderCategoryTrends(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/orders/categories/trends', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch order category trends',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get order category trends by time
+  async getOrderCategoryTrendsByTime(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/orders/categories/trends/by-time', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch order category trends by time',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
   // Get order analytics
   async getOrderAnalytics(filters = {}) {
     try {
@@ -100,6 +132,22 @@ export const adminService = {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch order analytics',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get revenue analytics
+  async getRevenueAnalytics(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/revenue', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch revenue analytics',
         errors: error.response?.data?.errors || [],
         status
       }

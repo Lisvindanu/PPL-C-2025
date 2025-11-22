@@ -297,6 +297,8 @@ module.exports = (adminController) => {
    *         $ref: '#/components/responses/ServerError'
    */
   router.get('/analytics/orders/trends', (req, res) => adminController.getOrderTrends(req, res));
+  router.get('/analytics/orders/categories/trends', (req, res) => adminController.getOrderCategoryTrends(req, res));
+  router.get('/analytics/orders/categories/trends/by-time', (req, res) => adminController.getOrderCategoryTrendsByTime(req, res));
 
   /**
    * @swagger
@@ -586,6 +588,8 @@ module.exports = (adminController) => {
    *         $ref: '#/components/responses/ServerError'
    */
   router.get('/fraud-alerts', (req, res) => adminController.checkFraud(req, res));
+
+  
 
   /**
    * @swagger

@@ -220,7 +220,8 @@ async unblockUser(req, res) {
 
   async getOrderTrends(req, res) {
     try {
-      const data = await this.analyticsService.getOrderTrends();
+      const { month, year } = req.query;
+      const data = await this.analyticsService.getOrderTrends(month || null, year || null);
       res.json({
         success: true,
         message: 'Order trends retrieved',
@@ -235,28 +236,77 @@ async unblockUser(req, res) {
     }
   }
 
-  async getRevenueAnalytics(req, res) {
+  async getOrderCategoryTrends(req, res) {
     try {
-      const { startDate, endDate } = req.query;
-
-      if (!startDate || !endDate) {
-        return res.status(400).json({
-          success: false,
-          error: 'startDate and endDate are required'
-        });
-      }
-
-      const data = await this.getRevenueAnalyticsUseCase.execute(
-        new Date(startDate),
-        new Date(endDate)
-      );
-      const chart = ChartService.formatForChart(data, 'line');
-
+      const { month, year } = req.query;
+      const data = await this.analyticsService.getOrderCategoryTrends(month || null, year || null);
       res.json({
         success: true,
-        message: 'Revenue analytics retrieved',
-        data: chart
+        message: 'Order category trends retrieved',
+        data: data
       });
+    } catch (error) {
+      console.error('Error in getOrderCategoryTrends:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getOrderCategoryTrendsByTime(req, res) {
+    try {
+      const { month, year } = req.query;
+      const data = await this.analyticsService.getOrderCategoryTrendsByTime(month || null, year || null);
+      res.json({
+        success: true,
+        message: 'Order category trends by time retrieved',
+        data: data
+      });
+    } catch (error) {
+      console.error('Error in getOrderCategoryTrendsByTime:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getRevenueAnalytics(req, res) {
+    try {
+      const { startDate, endDate, month, year } = req.query;
+
+      // If month and year are provided, use them
+      if (month && year) {
+        const data = await this.analyticsService.getRevenueAnalytics(
+          null, null, month, year
+        );
+        res.json({
+          success: true,
+          message: 'Revenue analytics retrieved',
+          data: data
+        });
+      } else if (startDate && endDate) {
+        const data = await this.getRevenueAnalyticsUseCase.execute(
+          new Date(startDate),
+          new Date(endDate)
+        );
+        const chart = ChartService.formatForChart(data, 'line');
+
+        res.json({
+          success: true,
+          message: 'Revenue analytics retrieved',
+          data: chart
+        });
+      } else {
+        // Default: last 12 months
+        const data = await this.analyticsService.getRevenueAnalytics(null, null, null, null);
+        res.json({
+          success: true,
+          message: 'Revenue analytics retrieved',
+          data: data
+        });
+      }
     } catch (error) {
       console.error('Error in getRevenueAnalytics:', error);
       res.status(500).json({
@@ -495,11 +545,22 @@ async exportReport(req, res) {
   async checkFraud(req, res) {
     try {
       const suspicious = await this.fraudDetectionService.checkSuspiciousPatterns();
-      res.json({
+
+      const anomalies = Array.isArray(suspicious.anomalies) ? suspicious.anomalies : [];
+      const failedPayments = Array.isArray(suspicious.failedPayments) ? suspicious.failedPayments : [];
+      const multipleFailures = Array.isArray(suspicious.multipleFailures) ? suspicious.multipleFailures : [];
+      const total = typeof suspicious.total === 'number' ? suspicious.total : (anomalies.length + failedPayments.length + multipleFailures.length);
+
+      return res.status(200).json({
         success: true,
         message: 'Fraud detection alerts retrieved',
-        data: suspicious,
-        count: suspicious.length
+        data: {
+          anomalies,
+          failedPayments,
+          multipleFailures,
+          total
+        },
+        count: total
       });
     } catch (error) {
       console.error('Error in checkFraud:', error);
@@ -509,6 +570,8 @@ async exportReport(req, res) {
       });
     }
   }
+
+ 
 
 async getAllLogs(req, res) {
   try {
