@@ -4,6 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const swaggerUi = require("swagger-ui-express");
+const { apiReference } = require("@scalar/express-api-reference");
 const swaggerSpec = require("./config/swagger");
 const { connectDatabase } = require("./shared/database/connection");
 
@@ -30,9 +31,52 @@ const mockPaymentHelmet = helmet({
   crossOriginEmbedderPolicy: false,
 });
 
+const scalarHelmet = helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "'unsafe-eval'",
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com",
+        "https://static.cloudflareinsights.com",
+      ],
+      scriptSrcElem: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://unpkg.com",
+        "https://static.cloudflareinsights.com",
+      ],
+      styleSrc: [
+        "'self'",
+        "'unsafe-inline'",
+        "https://cdn.jsdelivr.net",
+        "https://fonts.googleapis.com",
+      ],
+      fontSrc: [
+        "'self'",
+        "data:",
+        "https:",
+        "https://fonts.gstatic.com",
+        "https://cdn.jsdelivr.net",
+      ],
+      imgSrc: ["'self'", "data:", "https:", "blob:"],
+      connectSrc: ["'self'", "https:"],
+      workerSrc: ["'self'", "blob:"],
+    },
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginEmbedderPolicy: false,
+});
+
 app.use((req, res, next) => {
   if (req.path.startsWith("/mock-payment")) {
     mockPaymentHelmet(req, res, next);
+  } else if (req.path.startsWith("/api-reference")) {
+    scalarHelmet(req, res, next);
   } else {
     baseHelmet(req, res, next);
   }
@@ -97,6 +141,29 @@ app.use(
   },
   swaggerUi.serve,
   swaggerUi.setup(swaggerSpec, swaggerOptions)
+);
+
+// ==================== SCALAR API DOCUMENTATION ====================
+// Modern, beautiful API documentation with Scalar
+app.use(
+  "/api-reference",
+  apiReference({
+    // Fix deprecation: move spec.content to top level
+    content: swaggerSpec,
+    theme: "purple",
+    layout: "modern",
+    showSidebar: true,
+    customCss: `
+      .scalar-card { border-radius: 8px; }
+      .scalar-app { font-family: 'Inter', sans-serif; }
+    `,
+    metaData: {
+      title: "SkillConnect API - Scalar Docs",
+      description: "Modern API Documentation for SkillConnect Platform",
+      ogDescription: "Interactive API documentation with beautiful UI",
+      ogTitle: "SkillConnect API Documentation",
+    },
+  })
 );
 
 // ==================== ROUTES ====================
