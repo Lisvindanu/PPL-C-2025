@@ -56,6 +56,10 @@ module.exports = (sequelize) => {
   }, {
     timestamps: true,
     underscored: true,
+
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+    
     indexes: [
       { fields: ['layanan_id'] },
       { fields: ['rating'] },
