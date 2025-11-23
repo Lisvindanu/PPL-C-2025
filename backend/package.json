@@ -27,6 +27,7 @@
   "author": "SkillConnect Team",
   "license": "MIT",
   "dependencies": {
+    "@scalar/express-api-reference": "^0.8.25",
     "@sendgrid/mail": "^8.1.0",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
