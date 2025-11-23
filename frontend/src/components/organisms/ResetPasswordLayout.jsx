@@ -1,6 +1,6 @@
 export default function ResetPasswordLayout({ children, bottom, title, showCorner = true }) {
   return (
-    <div className="min-h-screen bg-[#DBE2EF] flex flex-col">
+    <div className="min-h-screen bg-[#D8E3F3] flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-6">
         <div className="flex items-center gap-3">
