@@ -24,18 +24,18 @@ export default function RemoveRecommendationModal({ isOpen, onClose, onConfirm, 
             >
               {/* Icon */}
               <div className="pt-8 pb-4 flex justify-center">
-                <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center">
-                  <i className="fas fa-times-circle text-orange-500 text-3xl" />
+                <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
+                  <i className="fas fa-eye-slash text-blue-500 text-3xl" />
                 </div>
               </div>
 
               {/* Content */}
               <div className="px-6 pb-6 text-center">
                 <h2 className="text-2xl font-bold text-neutral-900 mb-2">
-                  Hapus dari Rekomendasi?
+                  Sembunyikan dari Rekomendasi?
                 </h2>
                 <p className="text-neutral-600 mb-1">
-                  Apakah Anda yakin ingin menghapus layanan ini dari daftar rekomendasi?
+                  Apakah Anda yakin ingin menyembunyikan layanan ini dari daftar rekomendasi?
                 </p>
                 <p className="text-sm text-neutral-500 font-semibold">
                   {serviceName}
@@ -52,9 +52,9 @@ export default function RemoveRecommendationModal({ isOpen, onClose, onConfirm, 
                 </button>
                 <button
                   onClick={onConfirm}
-                  className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold py-3 rounded-full hover:shadow-xl transition-all duration-300"
+                  className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 rounded-full hover:shadow-xl transition-all duration-300"
                 >
-                  Ya, Hapus
+                  Ya, Sembunyikan
                 </button>
               </div>
             </motion.div>

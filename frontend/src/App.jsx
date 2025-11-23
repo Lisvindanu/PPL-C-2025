@@ -6,6 +6,9 @@ import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import ProfilePage from "./pages/ProfilePage";
+import FavoritePage from "./pages/FavoritePage";
+import SavedPage from "./pages/SavedPage";
+import RiwayatPesananPage from "./pages/RiwayatPesananPage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
@@ -55,6 +58,38 @@ export default function App() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/favorit"
+        element={
+          <ProtectedRoute>
+            <FavoritePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/disimpan"
+        element={
+          <ProtectedRoute>
+            <SavedPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/riwayat-pesanan"
+        element={
+          <ProtectedRoute>
+            <RiwayatPesananPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/layanan/:id"
+        element={
+          <ProtectedRoute>
+            <ServiceDetailPage />
           </ProtectedRoute>
         }
       />
