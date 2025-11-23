@@ -187,9 +187,10 @@ export const adminService = {
   },
 
   // Unblock user
-  async unblockUser(id) {
+  async unblockUser(id, reason = 'Unblocked by admin') {
     try {
-      const response = await api.put(`/admin/users/${id}/unblock`)
+      const payload = { reason };
+      const response = await api.put(`/admin/users/${id}/unblock`, payload)
       return response.data
     } catch (error) {
       const status = error.response?.status;

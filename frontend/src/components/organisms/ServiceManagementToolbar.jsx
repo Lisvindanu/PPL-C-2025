@@ -125,22 +125,23 @@ export function ServiceManagementToolbar({
     <div className={`border-b border-[#D8E3F3] p-4 ${className}`}>
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
         {/* Search */}
-        <div className="flex-1 w-full md:w-auto">
+        <div className="w-full md:flex-1">
           <AdminSearchBar
-            placeholder="Cari Klien"
+            placeholder="Cari layanan"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
 
         {/* Filters */}
-        <div className="flex gap-3">
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           {/* Status Filter */}
           <FilterDropdown
             value={statusFilter}
             onChange={(e) => onStatusFilterChange(e.target.value)}
             options={statusOptions.slice(1)}
             placeholder="Semua Status"
+            className="w-full md:w-auto"
           />
 
           {/* Kategori Filter */}
@@ -149,13 +150,14 @@ export function ServiceManagementToolbar({
             onChange={(e) => onKategoriFilterChange(e.target.value || 'all')}
             options={kategoriOptions}
             placeholder="Semua Kategori"
+            className="w-full md:w-auto"
           />
 
           {/* Export Dropdown */}
-          <ExportDropdown onExport={onExport} />
+          <ExportDropdown onExport={onExport} className="w-full md:w-auto" />
 
           {/* Service Count */}
-          <div className="text-sm text-gray-600 whitespace-nowrap flex items-center">
+          <div className="text-sm text-gray-600 md:whitespace-nowrap flex items-center">
             Menampilkan {displayedServices} dari {totalServices} Layanan
           </div>
         </div>

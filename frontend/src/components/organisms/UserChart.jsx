@@ -72,16 +72,27 @@ export const UserChart = ({ data }) => {
       <Text variant="h2" className="mb-1 text-gray-900">Total Pengguna</Text>
       <Text variant="caption" className="mb-6 text-gray-600">Riwayat akun pengguna website SkillConnect</Text>
       
-      <div className="relative flex items-center justify-center mb-8">
-        <div style={{ width: '280px', height: '280px', position: 'relative' }}>
+      <div className="flex flex-col md:flex-row items-center justify-center gap-6 mb-8">
+        {/* Left label (Aktif) */}
+        <div className="w-28 md:w-36 text-center">
+          {chartData[0] && (
+            <>
+              <div className="text-xs text-gray-500 mb-1">{chartData[0].name}</div>
+              <div className="text-2xl font-bold text-gray-900">{total > 0 ? `${((chartData[0].value / total) * 100).toFixed(2)}%` : '0.00%'}</div>
+            </>
+          )}
+        </div>
+
+        {/* Chart */}
+        <div className="w-48 h-48 md:w-60 md:h-60 relative">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={80}
-                outerRadius={120}
+                innerRadius={70}
+                outerRadius={100}
                 paddingAngle={0}
                 dataKey="value"
                 startAngle={90}
@@ -93,59 +104,23 @@ export const UserChart = ({ data }) => {
               </Pie>
             </PieChart>
           </ResponsiveContainer>
-          
+
           {/* Center total number */}
           <div className="absolute" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-            <Text className="text-center text-3xl font-bold text-gray-900">
+            <Text className="text-center text-2xl font-bold text-gray-900">
               {total.toLocaleString()}
             </Text>
           </div>
-          
-          {/* Labels positioned dynamically inside the donut ring */}
-          {chartData.map((entry, index) => {
-            if (entry.value === 0) return null; 
-            
-            const percentage = total > 0 ? ((entry.value / total) * 100).toFixed(2) : '0.00';
-            
-            // Calculate position based on slice angle
-            let cumulativeValue = 0;
-            for (let i = 0; i < index; i++) {
-              cumulativeValue += chartData[i].value || 0;
-            }
-            
-            // Starting angle is 90 degrees (top), going clockwise
-            const startAngle = 90 + (cumulativeValue / total) * 360;
-            const sliceAngle = ((entry.value || 0) / total) * 360;
-            const midAngle = startAngle + sliceAngle / 2; 
-            
-            // Convert to radians for positioning
-            const angleRad = (midAngle * Math.PI) / 180;
-            
-            // Dynamic radius based on slice size - smaller slices get closer to center
-            const baseRadius = 100;
-            const sliceSizeRatio = entry.value / total;
-            const radiusPixels = baseRadius - (sliceSizeRatio < 0.1 ? 20 : 0); // Move closer for very small slices
-            
-            const centerX = 140;
-            const centerY = 140;
-            const x = centerX + Math.cos(angleRad) * radiusPixels;
-            const y = centerY + Math.sin(angleRad) * radiusPixels;
-            
-            return (
-              <div 
-                key={index} 
-                className="absolute pointer-events-none" 
-                style={{ 
-                  left: `${x}px`, 
-                  top: `${y}px`,
-                  transform: 'translate(-50%, -50%)'
-                }}
-              >
-                <Text className="text-xs text-white whitespace-nowrap text-center font-medium drop-shadow">{entry.name}</Text>
-                <Text className="text-xs font-bold text-white text-center drop-shadow">{percentage}%</Text>
-              </div>
-            );
-          })}
+        </div>
+
+        {/* Right label (Diblokir) */}
+        <div className="w-28 md:w-36 text-center">
+          {chartData[1] && (
+            <>
+              <div className="text-xs text-gray-500 mb-1">{chartData[1].name}</div>
+              <div className="text-2xl font-bold text-gray-900">{total > 0 ? `${((chartData[1].value / total) * 100).toFixed(2)}%` : '0.00%'}</div>
+            </>
+          )}
         </div>
       </div>
 

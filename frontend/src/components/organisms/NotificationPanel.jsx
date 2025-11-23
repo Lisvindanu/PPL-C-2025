@@ -76,7 +76,7 @@ const NotificationPanel = ({ onClose }) => {
   };
 
   return (
-    <div className="w-96 bg-white shadow-lg rounded-lg border border-gray-200 relative">
+    <div className="w-full max-w-sm md:w-96 bg-white shadow-lg rounded-lg border border-gray-200 relative">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-3 border-b">
         <h3 className="text-lg font-semibold text-gray-900">Notifikasi</h3>

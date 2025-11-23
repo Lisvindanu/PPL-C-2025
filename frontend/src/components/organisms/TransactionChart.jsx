@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ComposedChart, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 export default function TransactionChart({ 
@@ -194,16 +194,30 @@ export default function TransactionChart({
     return colorMap;
   }, [categoryDataByTime, categoryData]);
 
+  const [isSmall, setIsSmall] = useState(typeof window !== 'undefined' ? window.innerWidth < 768 : false);
+  const [containerHeight, setContainerHeight] = useState(isSmall ? 340 : 520);
+
+  useEffect(() => {
+    const onResize = () => {
+      const small = window.innerWidth < 768;
+      setIsSmall(small);
+      setContainerHeight(small ? 340 : 520);
+    };
+
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-xl font-semibold mb-6 text-gray-900">
         Grafik Tren Transaksi - {monthLabel} {selectedYear}
       </h2>
       
-      <ResponsiveContainer width="100%" height={500}>
+      <ResponsiveContainer width="100%" height={containerHeight}>
         <ComposedChart 
           data={chartDataWithCategories} 
-          margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+          margin={{ top: 20, right: 30, left: 20, bottom: isSmall ? 40 : 60 }}
           barCategoryGap="10%"
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
@@ -212,9 +226,9 @@ export default function TransactionChart({
             tick={{ fontSize: 12, fill: '#666' }}
             axisLine={{ stroke: '#D1D5DB' }}
             tickLine={false}
-            angle={-45}
-            textAnchor="end"
-            height={80}
+            angle={isSmall ? -30 : -45}
+            textAnchor={isSmall ? 'middle' : 'end'}
+            height={isSmall ? 50 : 80}
           />
           <YAxis 
             yAxisId="left"
@@ -346,7 +360,7 @@ export default function TransactionChart({
               name={catName}
               fill={categoryColorMap[catName] || generateCategoryColor(catName)}
               radius={[6, 6, 0, 0]}
-              barSize={50}
+              barSize={isSmall ? 20 : 50}
             />
           ))}
           {/* Revenue line - better for trends */}
@@ -365,7 +379,7 @@ export default function TransactionChart({
       </ResponsiveContainer>
       
       {/* Custom labels at bottom */}
-      <div className="mt-4 flex items-center justify-between px-4">
+      <div className={`mt-4 px-4 ${isSmall ? 'flex flex-col gap-2' : 'flex items-center justify-between'}`}>
         <div className="flex items-center gap-2">
           <div className="w-4 h-1 bg-[#4782BE] rounded-full"></div>
           <span className="text-sm text-gray-700">Jumlah Order</span>

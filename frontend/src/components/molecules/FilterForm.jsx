@@ -13,8 +13,8 @@ export default function FilterForm({
 }) {
   return (
     <div className={`bg-white rounded-lg shadow-sm p-6 ${className}`}>
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+        <div className="w-full md:flex-1">
           <Label>Pilih Bulan</Label>
           <Select
             value={selectedMonth}
@@ -23,7 +23,7 @@ export default function FilterForm({
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4782BE] focus:border-[#4782BE] outline-none"
           />
         </div>
-        <div className="flex-1">
+        <div className="w-full md:flex-1">
           <Label>Pilih Tahun</Label>
           <Select
             value={selectedYear}

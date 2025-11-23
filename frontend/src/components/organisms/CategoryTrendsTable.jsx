@@ -34,7 +34,7 @@ export default function CategoryTrendsTable({ data = [], loading = false }) {
     <div className="bg-white rounded-lg shadow-sm p-6">
       <h2 className="text-xl font-semibold mb-6 text-gray-900">Kategori Layanan yang Diorder</h2>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="min-w-[520px] w-full">
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4 font-semibold text-gray-700">No</th>

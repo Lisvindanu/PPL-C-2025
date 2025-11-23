@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { CircleUser, Bell } from 'lucide-react'; 
+import { CircleUser, Bell, Menu } from 'lucide-react'; 
 import { Text } from '../atoms/Text';
 import NotificationPanel from './NotificationPanel';
 import { adminService } from '../../services/adminService';
@@ -58,12 +58,23 @@ export const Header = () => {
   }, [isPanelOpen]);
   
   return (
-    <div className="bg-white px-6 py-5 flex justify-between items-start border-b border-[#D8E3F3]">
-      <div>
-        <Text variant="h1" className="text-gray-900 mb-1">Ringkasan Operasional</Text> 
-        <Text variant="caption" className="text-gray-600">
-          Ringkasan statistik dan aktivitas platform Skill Connect
-        </Text>
+    <div className="bg-white px-4 md:px-6 py-4 flex justify-between items-start border-b border-[#D8E3F3]">
+      <div className="flex items-center gap-4">
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => window.dispatchEvent(new CustomEvent('toggleMobileSidebar'))}
+          className="md:hidden p-2 rounded-md hover:bg-gray-100"
+          aria-label="Open menu"
+        >
+          <Menu size={20} className="text-gray-800" />
+        </button>
+
+        <div>
+          <Text variant="h1" className="text-gray-900 mb-1">Ringkasan Operasional</Text>
+          <Text variant="caption" className="text-gray-600">
+            Ringkasan statistik dan aktivitas platform Skill Connect
+          </Text>
+        </div>
       </div>
       <div className="flex items-center gap-5 relative"> 
         <button

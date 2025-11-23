@@ -101,7 +101,7 @@ export default function TransactionTrendsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-[#F5F7FA]">
+    <div className="flex h-screen bg-[#DBE2EF]">
       <Sidebar activeMenu="transaction-trends" />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
