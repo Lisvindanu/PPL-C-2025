@@ -6,6 +6,7 @@ const toIDR = (n) => {
   const num = Number(n ?? 0);
   return `Rp. ${num.toLocaleString("id-ID")}`;
 };
+
 const fmtDateID = (iso) => {
   if (!iso) return "";
   try {
@@ -55,6 +56,7 @@ export function useMyServices({ page = 1, limit = 6 } = {}) {
       if (import.meta.env.DEV) {
         console.log("[useMyServices] raw result:", res);
       }
+
       const maybe =
         res?.services ??
         res?.data?.services ??
@@ -75,7 +77,20 @@ export function useMyServices({ page = 1, limit = 6 } = {}) {
 
       return { services, pagination };
     },
+
+    // ✅ Keep old data while fetching page lain (UX halus)
     keepPreviousData: true,
+
+    // ✅ PENTING: tiap kali komponen yang pakai hook ini di-mount,
+    // selalu refetch dari server, meskipun cache dianggap masih "fresh"
+    refetchOnMount: "always",
+
+    // Biar nggak refetch tiap pindah tab/focus kalau kamu nggak mau
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: "always",
+
+    // Kalau global staleTime tim kamu besar, ini override khusus query ini
+    staleTime: 0,
   });
 }
 
@@ -90,6 +105,7 @@ export function useDeleteService() {
       return true;
     },
     onSuccess: () => {
+      // ⬅️ tetap invalidate untuk jaga-jaga
       qc.invalidateQueries({ queryKey: ["my-services"] });
     },
   });

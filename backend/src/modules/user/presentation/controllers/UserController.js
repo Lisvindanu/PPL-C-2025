@@ -34,9 +34,10 @@ class UserController {
     try {
       console.log('Registration request body:', req.body);
       const { email, password, nama_depan, nama_belakang } = req.body;
-      const termsAccepted = req.body.ketentuan_agree === true;
+      // Handle both boolean true and string "true"
+      const termsAccepted = req.body.ketentuan_agree === true || req.body.ketentuan_agree === 'true';
       console.log('Terms accepted value:', termsAccepted);
-      
+
       const result = await this.registerUser.execute({
         email,
         password,

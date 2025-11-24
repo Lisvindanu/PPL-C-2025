@@ -44,6 +44,10 @@ module.exports = (serviceController) => {
     serviceController.getServiceById,
     "serviceController.getServiceById"
   );
+  assertFn(
+    serviceController.getServiceBySlug,
+    "serviceController.getServiceBySlug"
+  );
   assertFn(serviceController.getMyServices, "serviceController.getMyServices");
   assertFn(serviceController.createService, "serviceController.createService");
   assertFn(serviceController.updateService, "serviceController.updateService");
@@ -171,6 +175,23 @@ module.exports = (serviceController) => {
     myServicesQueryValidator,
     serviceController.getMyServices
   );
+
+  /**
+   * @swagger
+   * /api/services/slug/{slug}:
+   *   get:
+   *     tags: [Services]
+   *     summary: Get service detail by slug (public, hanya aktif)
+   *     parameters:
+   *       - in: path
+   *         name: slug
+   *         required: true
+   *         schema: { type: string }
+   *     responses:
+   *       200: { description: Success }
+   *       404: { description: Not found }
+   */
+  router.get("/slug/:slug", serviceController.getServiceBySlug);
 
   /**
    * @swagger

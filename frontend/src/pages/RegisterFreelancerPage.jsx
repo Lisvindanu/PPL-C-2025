@@ -14,9 +14,11 @@ import { useToast } from "../components/organisms/ToastProvider";
 export default function RegisterFreelancerPage() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("freelancer");
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const onChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", ketentuan_agree: false });
+  const onChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm((s) => ({ ...s, [e.target.name]: value }));
+  };
 
   const { register, loading, error } = useAuth();
   const navigate = useNavigate();
@@ -43,11 +45,6 @@ export default function RegisterFreelancerPage() {
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
-    if (!termsAccepted) {
-      toast.show("Anda harus menyetujui Ketentuan dan Kebijakan Privasi", "error");
-      return;
-    }
-
     try {
       await register({
         email: form.email,
@@ -55,7 +52,7 @@ export default function RegisterFreelancerPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         role: "freelancer",
-        termsAccepted: true
+        ketentuan_agree: form.ketentuan_agree
       });
       toast.show("Account created. Please login.", "success");
       navigate("/login", { replace: true });
@@ -126,11 +123,12 @@ export default function RegisterFreelancerPage() {
           <div className="text-sm text-[#112D4E] mb-4">
             <input
               type="checkbox"
+              name="ketentuan_agree"
+              checked={form.ketentuan_agree}
+              onChange={onChange}
               className="mr-2"
-              checked={termsAccepted}
-              onChange={(e) => setTermsAccepted(e.target.checked)}
-            />
-            Dengan membuat akun, saya setuju dengan{" "}
+              required
+            /> Dengan membuat akun, saya setuju dengan{" "}
             <a href="#" className="underline">
               Ketentuan
             </a>{" "}

@@ -16,17 +16,17 @@ export const serviceService = {
         ...(filters.status && { status: filters.status }),
       };
 
-      // Only log in development
       if (import.meta.env.DEV) {
         console.log("[serviceService] Fetching services with params:", params);
       }
+
       const response = await api.get("/services", { params });
+
       if (import.meta.env.DEV) {
         console.log("[serviceService] Response:", response.data);
       }
 
       if (response.data.status === "success" || response.data.success) {
-        // Normalisasi: dukung data.items maupun data.services
         const payload = response.data.data || {};
         const services = Array.isArray(payload.services)
           ? payload.services
@@ -65,7 +65,6 @@ export const serviceService = {
   // Get service by ID
   async getServiceById(serviceId) {
     try {
-      // Validate serviceId
       if (!serviceId || serviceId === "undefined") {
         return {
           success: false,
@@ -74,11 +73,12 @@ export const serviceService = {
         };
       }
 
-      // Only log in development
       if (import.meta.env.DEV) {
         console.log("[serviceService] Fetching service by ID:", serviceId);
       }
+
       const response = await api.get(`/services/${serviceId}`);
+
       if (import.meta.env.DEV) {
         console.log("[serviceService] Service response:", response.data);
       }
@@ -113,7 +113,6 @@ export const serviceService = {
   // Get service by slug
   async getServiceBySlug(slug) {
     try {
-      // Validate slug
       if (!slug || slug === "undefined") {
         return {
           success: false,
@@ -122,120 +121,35 @@ export const serviceService = {
         };
       }
 
-      // Only log in development
       if (import.meta.env.DEV) {
         console.log("[serviceService] Fetching service by slug:", slug);
       }
 
-      // Try to fetch by slug endpoint first
-      try {
-        const response = await api.get(`/services/slug/${slug}`);
-        if (import.meta.env.DEV) {
-          console.log(
-            "[serviceService] Service by slug response:",
-            response.data
-          );
-        }
+      const response = await api.get(`/services/slug/${slug}`);
 
-        if (response.data.status === "success" || response.data.success) {
-          return {
-            success: true,
-            service: response.data.data,
-          };
-        }
-      } catch (slugError) {
-        // If slug endpoint not implemented (501), fallback to fetch all and filter
-        if (
-          slugError.response?.status === 501 ||
-          slugError.response?.status === 404
-        ) {
-          if (import.meta.env.DEV) {
-            console.log(
-              "[serviceService] Slug endpoint not available (501/404), fallback scan list by slug"
-            );
-          }
-
-          // Fetch all services and filter by slug
-          let allServices = [];
-          let currentPage = 1;
-          let hasMore = true;
-          const limit = 100;
-          const maxPages = 10;
-
-          while (hasMore && currentPage <= maxPages) {
-            const allServicesResult = await this.getAllServices({
-              page: currentPage,
-              limit,
-              status: "aktif",
-            });
-
-            if (allServicesResult.success && allServicesResult.services) {
-              allServices = [...allServices, ...allServicesResult.services];
-
-              // Check if we found the service
-              const foundService = allServices.find((s) => s.slug === slug);
-              if (foundService) {
-                if (import.meta.env.DEV) {
-                  console.log(
-                    "[serviceService] Found by slug, fetch full by ID:",
-                    foundService.id
-                  );
-                }
-                // Fetch full detail by ID
-                return await this.getServiceById(foundService.id);
-              }
-
-              // Check if there are more pages
-              const pagination = allServicesResult.pagination || {};
-              if (
-                pagination.totalPages &&
-                currentPage < pagination.totalPages
-              ) {
-                currentPage++;
-              } else {
-                hasMore = false;
-              }
-            } else {
-              hasMore = false;
-            }
-          }
-
-          // If we've checked all pages and didn't find the service
-          if (import.meta.env.DEV) {
-            console.log(
-              "[serviceService] Service not found by slug after paginated scan"
-            );
-          }
-          return {
-            success: false,
-            message: "Service not found",
-            service: null,
-          };
-        }
-
-        // If it's not a 501 or 404, throw the error
-        throw slugError;
+      if (response.data.status === "success" || response.data.success) {
+        return {
+          success: true,
+          service: response.data.data,
+        };
       }
 
       return {
         success: false,
-        message: "Service not found",
+        message: response.data.message || "Service not found",
         service: null,
       };
     } catch (error) {
-      // Only log if it's not a handled 501 error
-      if (error.response?.status !== 501) {
-        console.error(
-          "[serviceService] Error fetching service by slug:",
-          error
-        );
-      }
+      console.error("[serviceService] Error fetching service by slug:", error);
+      console.error("[serviceService] Error response:", error.response?.data);
+      console.error("[serviceService] Error config:", error.config);
+
       return {
         success: false,
         message:
           error.response?.data?.message ||
           error.message ||
-          "Failed to get service",
+          "Failed to get service by slug",
         service: null,
       };
     }
@@ -244,11 +158,11 @@ export const serviceService = {
   // Get all categories
   async getCategories() {
     try {
-      // Only log in development
       if (import.meta.env.DEV) {
         console.log("[serviceService] Fetching categories...");
       }
       const response = await api.get("/kategori");
+
       if (import.meta.env.DEV) {
         console.log("[serviceService] Categories response:", response.data);
       }
@@ -293,7 +207,6 @@ export const serviceService = {
       const response = await api.get("/services/search", { params });
 
       if (response.data.status === "success" || response.data.success) {
-        // Normalisasi list
         const payload = response.data.data || {};
         const services = Array.isArray(payload.services)
           ? payload.services
@@ -342,7 +255,9 @@ export const serviceService = {
           params
         );
       }
+
       const response = await api.get("/services/my", { params });
+
       if (import.meta.env.DEV) {
         console.log("[serviceService] /services/my Response:", response.data);
       }
@@ -393,7 +308,9 @@ export const serviceService = {
       if (import.meta.env.DEV) {
         console.log("[serviceService] Deleting service:", serviceId);
       }
+
       const response = await api.delete(`/services/${serviceId}`);
+
       if (import.meta.env.DEV) {
         console.log("[serviceService] Delete response:", response.data);
       }
