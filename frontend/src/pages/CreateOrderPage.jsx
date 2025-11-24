@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
+import { orderService } from '../services/orderService'
 
 const CreateOrderPage = () => {
   const location = useLocation()
@@ -10,23 +11,18 @@ const CreateOrderPage = () => {
   const { service } = location.state || {}
 
   const [formData, setFormData] = useState({
-    judul: service?.title || '',
-    deskripsi: '',
-    catatan_client: '',
-    harga: service?.price || 0,
-    waktu_pengerjaan: 7,
-    batas_revisi: 3
+    catatan_client: ''
   })
 
   const [attachments, setAttachments] = useState([])
   const [touched, setTouched] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
   // Validation logic
   const isFormValid = useMemo(() => {
-    const hasJudul = formData.judul.trim().length >= 5
-    const hasDeskripsi = formData.deskripsi.trim().length >= 20
-    return hasJudul && hasDeskripsi
-  }, [formData.judul, formData.deskripsi])
+    return service && service.id
+  }, [service])
 
   if (!service) {
     return (
@@ -76,103 +72,39 @@ const CreateOrderPage = () => {
     setAttachments(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    // Mark all fields as touched
-    setTouched({
-      judul: true,
-      deskripsi: true
-    })
-
     // Prevent submission if form is invalid
-    if (!isFormValid) {
+    if (!isFormValid || loading) {
       return
     }
 
-    // Generate order ID
-    const orderId = `order-${Date.now()}`
-    const biayaPlatform = formData.harga * 0.1
-    const totalBayar = formData.harga + biayaPlatform
+    setLoading(true)
+    setError('')
 
-    // Hitung tenggat waktu
-    const tenggatWaktu = new Date()
-    tenggatWaktu.setDate(tenggatWaktu.getDate() + parseInt(formData.waktu_pengerjaan))
+    try {
+      // Call API to create order
+      const response = await orderService.createOrder({
+        serviceId: service.id,
+        paketId: service.paket_id || null,
+        catatanClient: formData.catatan_client
+      })
 
-    const newOrder = {
-      id: orderId,
-      nomor_pesanan: `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`,
-      judul: formData.judul,
-      deskripsi: formData.deskripsi,
-      catatan_client: formData.catatan_client,
-      harga: formData.harga,
-      biaya_platform: biayaPlatform,
-      total_bayar: totalBayar,
-      waktu_pengerjaan: formData.waktu_pengerjaan,
-      batas_revisi: formData.batas_revisi,
-      tenggat_waktu: tenggatWaktu.toISOString(),
-      status: 'menunggu_pembayaran',
-      client: {
-        id: 'user-client-001',
-        nama_depan: 'John',
-        nama_belakang: 'Doe',
-        email: 'john.doe@email.com'
-      },
-      freelancer: service.freelancer,
-      service: {
-        id: service.id,
-        judul: service.title,
-        kategori: service.category
-      },
-      lampiran_client: attachments.map((file, idx) => ({
-        name: file.name,
-        url: URL.createObjectURL(file),
-        size: `${(file.size / 1024 / 1024).toFixed(2)} MB`
-      })),
-      created_at: new Date().toISOString(),
-      statusHistory: [
-        {
-          status: 'menunggu_pembayaran',
-          timestamp: new Date().toISOString(),
-          keterangan: 'Order dibuat, menunggu pembayaran'
-        }
-      ]
+      if (response.success && response.data) {
+        const order = response.data
+        // Redirect ke halaman pembayaran
+        navigate(`/payment/${order.id}?amount=${order.total_bayar}&description=${encodeURIComponent(order.judul)}`)
+      } else {
+        setError(response.message || 'Gagal membuat order')
+        setLoading(false)
+      }
+    } catch (err) {
+      setError('Terjadi kesalahan saat membuat order')
+      setLoading(false)
     }
-
-    // Simpan ke localStorage untuk simulasi (bisa diganti dengan API call)
-    const existingOrders = JSON.parse(localStorage.getItem('mockOrders') || '[]')
-    existingOrders.push(newOrder)
-    localStorage.setItem('mockOrders', JSON.stringify(existingOrders))
-
-    // Redirect ke order detail
-    navigate(`/payment/${orderId}?amount=${totalBayar}&description=${encodeURIComponent(formData.judul)}`)
   }
 
-  // Validation error messages
-  const getJudulError = () => {
-    if (!touched.judul) return ''
-    if (formData.judul.trim().length === 0) {
-      return 'Judul pesanan harus diisi'
-    }
-    if (formData.judul.trim().length < 5) {
-      return 'Judul pesanan minimal 5 karakter'
-    }
-    return ''
-  }
-
-  const getDeskripsiError = () => {
-    if (!touched.deskripsi) return ''
-    if (formData.deskripsi.trim().length === 0) {
-      return 'Deskripsi kebutuhan harus diisi'
-    }
-    if (formData.deskripsi.trim().length < 20) {
-      return 'Deskripsi kebutuhan minimal 20 karakter'
-    }
-    return ''
-  }
-
-  const judulError = getJudulError()
-  const deskripsiError = getDeskripsiError()
 
   return (
     <div className="min-h-screen bg-white">
@@ -245,62 +177,24 @@ const CreateOrderPage = () => {
                   Detail Pesanan
                 </h2>
 
-                <div className="space-y-5">
-                  {/* Judul */}
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Judul Pesanan <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="judul"
-                      value={formData.judul}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur('judul')}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#4782BE] transition-all ${
-                        judulError ? 'border-red-500' : 'border-[#D8E3F3] focus:border-[#4782BE]'
-                      }`}
-                      placeholder="Contoh: Desain Logo untuk Startup"
-                    />
-                    {judulError && (
-                      <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                        <i className="fas fa-exclamation-circle"></i>
-                        {judulError}
-                      </p>
-                    )}
-                    <p className="text-xs text-neutral-500 mt-1">
-                      {formData.judul.length} karakter (minimal 5)
+                {error && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <p className="text-sm text-red-700 flex items-center gap-2">
+                      <i className="fas fa-exclamation-circle"></i>
+                      {error}
                     </p>
                   </div>
+                )}
 
-                  {/* Deskripsi */}
-                  <div>
-                    <label className="block text-sm font-semibold text-neutral-900 mb-2">
-                      Deskripsi Kebutuhan <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      name="deskripsi"
-                      value={formData.deskripsi}
-                      onChange={handleChange}
-                      onBlur={() => handleBlur('deskripsi')}
-                      rows={6}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#4782BE] transition-all ${
-                        deskripsiError ? 'border-red-500' : 'border-[#D8E3F3] focus:border-[#4782BE]'
-                      }`}
-                      placeholder="Jelaskan detail kebutuhan Anda..."
-                    />
-                    {deskripsiError && (
-                      <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
-                        <i className="fas fa-exclamation-circle"></i>
-                        {deskripsiError}
-                      </p>
-                    )}
-                    <p className="text-xs text-neutral-500 mt-1">
-                      {formData.deskripsi.length} karakter (minimal 20)
+                <div className="space-y-5">
+                  {/* Info layanan akan otomatis dari service yang dipilih */}
+                  <div className="p-4 bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] rounded-xl">
+                    <p className="text-sm text-neutral-700 mb-2">
+                      <i className="fas fa-info-circle text-[#4782BE] mr-2"></i>
+                      Order akan dibuat berdasarkan layanan yang Anda pilih
                     </p>
-                    <p className="text-xs text-neutral-600 mt-1 flex items-start gap-1">
-                      <i className="fas fa-info-circle text-[#4782BE] mt-0.5"></i>
-                      Jelaskan secara detail agar freelancer dapat memahami kebutuhan Anda
+                    <p className="text-xs text-neutral-600">
+                      Judul dan deskripsi akan diambil dari layanan: <span className="font-semibold">{service?.title}</span>
                     </p>
                   </div>
 
@@ -386,7 +280,7 @@ const CreateOrderPage = () => {
                     Harga layanan
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formatRupiah(formData.harga)}
+                    {formatRupiah(service?.price || 0)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -395,7 +289,7 @@ const CreateOrderPage = () => {
                     Biaya platform (10%)
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formatRupiah(formData.harga * 0.1)}
+                    {formatRupiah((service?.price || 0) * 0.1)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -404,7 +298,7 @@ const CreateOrderPage = () => {
                     Waktu pengerjaan
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formData.waktu_pengerjaan} hari
+                    {service?.duration || 7} hari
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -413,7 +307,7 @@ const CreateOrderPage = () => {
                     Batas revisi
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formData.batas_revisi === 99 ? 'Unlimited' : `${formData.batas_revisi}x`}
+                    {service?.revisions === 99 ? 'Unlimited' : `${service?.revisions || 3}x`}
                   </span>
                 </div>
               </div>
@@ -422,22 +316,30 @@ const CreateOrderPage = () => {
                 <div className="flex justify-between mb-6">
                   <span className="font-bold text-neutral-900 text-lg">Total Pembayaran</span>
                   <span className="text-2xl font-bold bg-gradient-to-r from-[#4782BE] to-[#1D375B] bg-clip-text text-transparent">
-                    {formatRupiah(formData.harga + formData.harga * 0.1)}
+                    {formatRupiah((service?.price || 0) + (service?.price || 0) * 0.1)}
                   </span>
                 </div>
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!isFormValid}
+                  disabled={!isFormValid || loading}
                   className={`w-full py-4 rounded-xl transition-all duration-300 font-bold text-lg ${
-                    isFormValid
+                    isFormValid && !loading
                       ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white hover:shadow-lg'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
-                  title={!isFormValid ? 'Mohon lengkapi field Judul Pesanan dan Deskripsi Kebutuhan' : ''}
                 >
-                  <i className="fas fa-check-circle mr-2"></i>
-                  Buat Pesanan
+                  {loading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin mr-2"></i>
+                      Membuat Pesanan...
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-check-circle mr-2"></i>
+                      Buat Pesanan
+                    </>
+                  )}
                 </button>
 
                 <div className="mt-6 space-y-2">

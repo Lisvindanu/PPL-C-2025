@@ -11,6 +11,7 @@ import AdminCategoryManagementPage from "./pages/AdminCategoryManagementPage";
 import AdminSubCategoryManagementPage from "./pages/AdminSubCategoryManagementPage";
 import TransactionTrendsPage from "./pages/TransactionTrendsPage";
 import ProfilePage from "./pages/ProfilePage";
+import FreelancerProfilePage from "./pages/FreelancerProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
@@ -195,6 +196,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+n      <Route path="/freelancer/:id" element={<FreelancerProfilePage />} />
 
       <Route path="/services/:slug" element={<ServiceDetailPage />} />
 

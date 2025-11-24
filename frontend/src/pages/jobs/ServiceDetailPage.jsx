@@ -198,11 +198,7 @@ export default function ServiceDetailPage() {
                   about={serviceData.freelancer.about}
                   projectCompleted={serviceData.freelancer.projectCompleted}
                   onViewProfile={() =>
-                    navigate(
-                      `/profile/${encodeURIComponent(
-                        serviceData.freelancer.name
-                      )}`
-                    )
+                    navigate(`/freelancer/${serviceData.freelancer_id}`)
                   }
                 />
               </section>
