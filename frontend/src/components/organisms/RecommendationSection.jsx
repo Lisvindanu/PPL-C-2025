@@ -1,16 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ServiceCardItem from "../molecules/ServiceCardItem";
 import RemoveRecommendationModal from "../molecules/RemoveRecommendationModal";
-import { allServices } from "../../utils/servicesData";
-
-// Get random 8 services for recommendations
-const getRandomRecommendations = () => {
-  const shuffled = [...allServices].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 8);
-};
-
-const initialRecommendations = getRandomRecommendations();
+import { serviceService } from "../../services/serviceService";
 
 function RecommendationCard({ service, onClick, onRemove, onFavoriteToggle }) {
   return (
@@ -46,9 +38,46 @@ function RecommendationCard({ service, onClick, onRemove, onFavoriteToggle }) {
 }
 
 export default function RecommendationSection({ onServiceClick, onFavoriteToggle }) {
-  const [recommendations, setRecommendations] = useState(initialRecommendations);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [serviceToRemove, setServiceToRemove] = useState(null);
+
+  useEffect(() => {
+    const fetchRecommendations = async () => {
+      setLoading(true);
+      try {
+        // Fetch random services for recommendations
+        const result = await serviceService.getAllServices({ 
+          limit: 20,
+          status: "aktif",
+          sortBy: "rating",
+          sortOrder: "desc"
+        });
+        
+        if (result.success && result.services) {
+          // Shuffle and take 8 random services
+          const shuffled = [...result.services].sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, 8).map(service => ({
+            id: service.id,
+            title: service.nama_layanan || service.title,
+            category: service.kategori_nama || service.category,
+            freelancer: service.freelancer_name || service.freelancer || "Unknown",
+            rating: parseFloat(service.rating) || 0,
+            reviews: parseInt(service.jumlah_ulasan || service.reviews) || 0,
+            price: parseInt(service.harga) || 0,
+          }));
+          setRecommendations(selected);
+        }
+      } catch (error) {
+        console.error("Error fetching recommendations:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+  }, []);
 
   const handleRemoveClick = (service) => {
     setServiceToRemove(service);
@@ -67,6 +96,17 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     setShowRemoveModal(false);
     setServiceToRemove(null);
   };
+
+  if (loading) {
+    return (
+      <section className="py-12 px-4 bg-neutral-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <i className="fas fa-spinner fa-spin text-2xl text-[#4782BE]" />
+          <p className="text-neutral-600 mt-2">Memuat rekomendasi...</p>
+        </div>
+      </section>
+    );
+  }
 
   if (recommendations.length === 0) {
     return null; // Don't show section if no recommendations

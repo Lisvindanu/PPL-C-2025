@@ -15,7 +15,7 @@ export default function Landing() {
   };
 
   const handleServiceClick = (service) => {
-    navigate(`/create-order/${service.id}`, { state: { service } });
+    navigate(`/services/${service.id}`);
   };
 
   return (

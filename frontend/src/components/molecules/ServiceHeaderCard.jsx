@@ -29,7 +29,7 @@ export default function ServiceHeaderCard({
             <p className="text-sm font-semibold text-neutral-900">{name}</p>
             <div className="flex items-center gap-2 text-xs text-neutral-600">
               <StarRating value={rating} />
-              <span>{rating.toFixed(1)}</span>
+              <span>{(parseFloat(rating) || 0).toFixed(1)}</span>
               <span>•</span>
               <span>{reviewCount} reviews</span>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
@@ -19,6 +19,14 @@ const CreateOrderPage = () => {
   })
 
   const [attachments, setAttachments] = useState([])
+  const [touched, setTouched] = useState({})
+
+  // Validation logic
+  const isFormValid = useMemo(() => {
+    const hasJudul = formData.judul.trim().length >= 5
+    const hasDeskripsi = formData.deskripsi.trim().length >= 20
+    return hasJudul && hasDeskripsi
+  }, [formData.judul, formData.deskripsi])
 
   if (!service) {
     return (
@@ -52,6 +60,13 @@ const CreateOrderPage = () => {
     }))
   }
 
+  const handleBlur = (fieldName) => {
+    setTouched(prev => ({
+      ...prev,
+      [fieldName]: true
+    }))
+  }
+
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files)
     setAttachments(prev => [...prev, ...files])
@@ -63,6 +78,17 @@ const CreateOrderPage = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    // Mark all fields as touched
+    setTouched({
+      judul: true,
+      deskripsi: true
+    })
+
+    // Prevent submission if form is invalid
+    if (!isFormValid) {
+      return
+    }
 
     // Generate order ID
     const orderId = `order-${Date.now()}`
@@ -121,6 +147,32 @@ const CreateOrderPage = () => {
     // Redirect ke order detail
     navigate(`/payment/${orderId}?amount=${totalBayar}&description=${encodeURIComponent(formData.judul)}`)
   }
+
+  // Validation error messages
+  const getJudulError = () => {
+    if (!touched.judul) return ''
+    if (formData.judul.trim().length === 0) {
+      return 'Judul pesanan harus diisi'
+    }
+    if (formData.judul.trim().length < 5) {
+      return 'Judul pesanan minimal 5 karakter'
+    }
+    return ''
+  }
+
+  const getDeskripsiError = () => {
+    if (!touched.deskripsi) return ''
+    if (formData.deskripsi.trim().length === 0) {
+      return 'Deskripsi kebutuhan harus diisi'
+    }
+    if (formData.deskripsi.trim().length < 20) {
+      return 'Deskripsi kebutuhan minimal 20 karakter'
+    }
+    return ''
+  }
+
+  const judulError = getJudulError()
+  const deskripsiError = getDeskripsiError()
 
   return (
     <div className="min-h-screen bg-white">
@@ -204,10 +256,21 @@ const CreateOrderPage = () => {
                       name="judul"
                       value={formData.judul}
                       onChange={handleChange}
-                      required
-                      className="w-full px-4 py-3 border-2 border-[#D8E3F3] rounded-xl focus:ring-2 focus:ring-[#4782BE] focus:border-[#4782BE] transition-all"
+                      onBlur={() => handleBlur('judul')}
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#4782BE] transition-all ${
+                        judulError ? 'border-red-500' : 'border-[#D8E3F3] focus:border-[#4782BE]'
+                      }`}
                       placeholder="Contoh: Desain Logo untuk Startup"
                     />
+                    {judulError && (
+                      <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {judulError}
+                      </p>
+                    )}
+                    <p className="text-xs text-neutral-500 mt-1">
+                      {formData.judul.length} karakter (minimal 5)
+                    </p>
                   </div>
 
                   {/* Deskripsi */}
@@ -219,12 +282,23 @@ const CreateOrderPage = () => {
                       name="deskripsi"
                       value={formData.deskripsi}
                       onChange={handleChange}
-                      required
+                      onBlur={() => handleBlur('deskripsi')}
                       rows={6}
-                      className="w-full px-4 py-3 border-2 border-[#D8E3F3] rounded-xl focus:ring-2 focus:ring-[#4782BE] focus:border-[#4782BE] transition-all"
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-[#4782BE] transition-all ${
+                        deskripsiError ? 'border-red-500' : 'border-[#D8E3F3] focus:border-[#4782BE]'
+                      }`}
                       placeholder="Jelaskan detail kebutuhan Anda..."
                     />
-                    <p className="text-xs text-neutral-600 mt-2 flex items-start gap-1">
+                    {deskripsiError && (
+                      <p className="text-sm text-red-500 mt-1 flex items-center gap-1">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {deskripsiError}
+                      </p>
+                    )}
+                    <p className="text-xs text-neutral-500 mt-1">
+                      {formData.deskripsi.length} karakter (minimal 20)
+                    </p>
+                    <p className="text-xs text-neutral-600 mt-1 flex items-start gap-1">
                       <i className="fas fa-info-circle text-[#4782BE] mt-0.5"></i>
                       Jelaskan secara detail agar freelancer dapat memahami kebutuhan Anda
                     </p>
@@ -354,7 +428,13 @@ const CreateOrderPage = () => {
 
                 <button
                   onClick={handleSubmit}
-                  className="w-full py-4 bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
+                  disabled={!isFormValid}
+                  className={`w-full py-4 rounded-xl transition-all duration-300 font-bold text-lg ${
+                    isFormValid
+                      ? 'bg-gradient-to-r from-[#4782BE] to-[#1D375B] text-white hover:shadow-lg'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                  title={!isFormValid ? 'Mohon lengkapi field Judul Pesanan dan Deskripsi Kebutuhan' : ''}
                 >
                   <i className="fas fa-check-circle mr-2"></i>
                   Buat Pesanan
@@ -382,7 +462,7 @@ const CreateOrderPage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Footer */}
       <Footer />
     </div>

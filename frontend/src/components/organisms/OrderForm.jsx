@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import { X, Paperclip } from 'lucide-react'
 
 const OrderForm = ({ service, onSubmit, onCancel }) => {
@@ -11,12 +11,34 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [touched, setTouched] = useState({})
+
+  // Validation logic
+  const isFormValid = useMemo(() => {
+    // Check if requirements field is filled and has minimum length
+    const hasRequirements = formData.requirements.trim().length >= 10
+
+    // Check if budget is valid
+    const hasBudget = formData.budget && formData.budget >= service.price
+
+    // Check if timeline is selected
+    const hasTimeline = formData.timeline && formData.timeline.trim() !== ''
+
+    return hasRequirements && hasBudget && hasTimeline
+  }, [formData, service.price])
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }))
+  }
+
+  const handleBlur = (fieldName) => {
+    setTouched(prev => ({
+      ...prev,
+      [fieldName]: true
     }))
   }
 
@@ -37,11 +59,23 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+
+    // Mark all fields as touched
+    setTouched({
+      requirements: true,
+      budget: true,
+      timeline: true
+    })
+
+    if (!isFormValid) {
+      return
+    }
+
     setIsSubmitting(true)
-    
+
     try {
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
+
       const orderData = {
         serviceId: service.id,
         serviceTitle: service.title,
@@ -54,7 +88,7 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
         timeline: formData.timeline,
         status: 'pending'
       }
-      
+
       onSubmit(orderData)
     } catch (error) {
       console.error('Error submitting order:', error)
@@ -62,6 +96,32 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
       setIsSubmitting(false)
     }
   }
+
+  // Validation error messages
+  const getRequirementsError = () => {
+    if (!touched.requirements) return ''
+    if (formData.requirements.trim().length === 0) {
+      return 'Detail kebutuhan harus diisi'
+    }
+    if (formData.requirements.trim().length < 10) {
+      return 'Detail kebutuhan minimal 10 karakter'
+    }
+    return ''
+  }
+
+  const getBudgetError = () => {
+    if (!touched.budget) return ''
+    if (!formData.budget) {
+      return 'Budget harus diisi'
+    }
+    if (formData.budget < service.price) {
+      return `Budget minimal Rp ${service.price.toLocaleString('id-ID')}`
+    }
+    return ''
+  }
+
+  const requirementsError = getRequirementsError()
+  const budgetError = getBudgetError()
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -106,28 +166,37 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-text mb-2">
-              Detail Kebutuhan *
+              Detail Kebutuhan <span className="text-red-500">*</span>
             </label>
             <textarea
               name="requirements"
               value={formData.requirements}
               onChange={handleInputChange}
+              onBlur={() => handleBlur('requirements')}
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              placeholder="Jelaskan kebutuhan proyek Anda secara detail..."
-              required
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                requirementsError ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Jelaskan kebutuhan proyek Anda secara detail (minimal 10 karakter)..."
             />
+            {requirementsError && (
+              <p className="text-sm text-red-500 mt-1">{requirementsError}</p>
+            )}
+            <p className="text-xs text-textMuted mt-1">
+              {formData.requirements.length} karakter (minimal 10)
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                Timeline Pengerjaan
+                Timeline Pengerjaan <span className="text-red-500">*</span>
               </label>
               <select
                 name="timeline"
                 value={formData.timeline}
                 onChange={handleInputChange}
+                onBlur={() => handleBlur('timeline')}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
               >
                 <option value="1 week">1 Minggu</option>
@@ -140,16 +209,22 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
 
             <div>
               <label className="block text-sm font-medium text-text mb-2">
-                Budget (USD)
+                Budget (Rp) <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
                 name="budget"
                 value={formData.budget}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                onBlur={() => handleBlur('budget')}
+                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent ${
+                  budgetError ? 'border-red-500' : 'border-gray-300'
+                }`}
                 min={service.price}
               />
+              {budgetError && (
+                <p className="text-sm text-red-500 mt-1">{budgetError}</p>
+              )}
             </div>
           </div>
 
@@ -221,8 +296,13 @@ const OrderForm = ({ service, onSubmit, onCancel }) => {
             </button>
             <button
               type="submit"
-              disabled={isSubmitting || !formData.requirements}
-              className="px-6 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primaryDark disabled:bg-disabled disabled:cursor-not-allowed transition-colors"
+              disabled={isSubmitting || !isFormValid}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                isSubmitting || !isFormValid
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-primary text-white hover:bg-primaryDark'
+              }`}
+              title={!isFormValid ? 'Mohon lengkapi semua field yang required' : ''}
             >
               {isSubmitting ? 'Mengirim...' : 'Kirim Pesanan'}
             </button>

@@ -53,6 +53,7 @@ class SequelizeServiceRepository {
 
     // expose nama kategori
     layananCols.push("k.nama AS nama_kategori");
+    layananCols.push("CONCAT(u.nama_depan, ' ', u.nama_belakang) AS freelancer_name");
     return layananCols.join(", ");
   }
 
@@ -185,6 +186,7 @@ class SequelizeServiceRepository {
       SELECT ${this._selectColumnsWithJoin()}
       FROM layanan l
       LEFT JOIN kategori k ON k.id = l.kategori_id
+      LEFT JOIN users u ON u.id = l.freelancer_id
       WHERE l.slug = ?
       LIMIT 1
       `,
@@ -257,6 +259,7 @@ class SequelizeServiceRepository {
         SELECT ${this._selectColumnsWithJoin()}
         FROM layanan l
         LEFT JOIN kategori k ON k.id = l.kategori_id
+      LEFT JOIN users u ON u.id = l.freelancer_id
         WHERE l.id = ? LIMIT 1
         `,
         { replacements: [id] }
@@ -374,6 +377,7 @@ class SequelizeServiceRepository {
       SELECT ${this._selectColumnsWithJoin()}
       FROM layanan l
       LEFT JOIN kategori k ON k.id = l.kategori_id
+      LEFT JOIN users u ON u.id = l.freelancer_id
       WHERE l.id = ?
       LIMIT 1
       `,
@@ -393,6 +397,7 @@ class SequelizeServiceRepository {
       SELECT ${this._selectColumnsWithJoin()}
       FROM layanan l
       LEFT JOIN kategori k ON k.id = l.kategori_id
+      LEFT JOIN users u ON u.id = l.freelancer_id
       ${clause} ${order} ${paging.clause}
       `,
       { replacements: params }
@@ -427,6 +432,7 @@ class SequelizeServiceRepository {
       SELECT ${this._selectColumnsWithJoin()}
       FROM layanan l
       LEFT JOIN kategori k ON k.id = l.kategori_id
+      LEFT JOIN users u ON u.id = l.freelancer_id
       ${whereClause} ${order} ${paging.clause}
       `,
       { replacements: params }

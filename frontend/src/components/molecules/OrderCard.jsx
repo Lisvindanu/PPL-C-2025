@@ -35,7 +35,7 @@ export default function OrderCard({
 
       <div className="mb-3 flex items-center gap-2 text-sm text-[#585859]">
         <StarRating value={rating} />
-        <span>{rating.toFixed(1)}</span>
+        <span>{(parseFloat(rating) || 0).toFixed(1)}</span>
         <span>•</span>
         <span>{reviewCount} reviews</span>
         <span>•</span>
