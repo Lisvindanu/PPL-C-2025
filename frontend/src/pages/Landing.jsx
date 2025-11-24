@@ -15,7 +15,8 @@ export default function Landing() {
   };
 
   const handleServiceClick = (service) => {
-    navigate(`/services/${service.id}`);
+    // Use slug as primary route, fallback to ID
+    navigate(`/services/${service.slug || service.id}`);
   };
 
   return (
