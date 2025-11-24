@@ -30,7 +30,7 @@ export const authService = {
     }
   },
 
-  async register({ email, password, firstName, lastName, role = 'client', ketentuan_agree }) {
+  async register({ email, password, firstName, lastName, role = 'client', ketentuan_agree = false }) {
     try {
       const response = await api.post('/users/register', {
         email,
@@ -38,7 +38,7 @@ export const authService = {
         nama_depan: firstName,
         nama_belakang: lastName,
         role,
-        ketentuan_agree
+        ketentuan_agree: ketentuan_agree === true
       })
 
       return response.data
