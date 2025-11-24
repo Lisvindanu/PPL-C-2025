@@ -6,14 +6,10 @@ import { adminKategoriService } from './adminKategoriService';
 const ENDPOINT_PREFIX = '/admin/sub-kategori';
 
 export const adminSubKategoriService = {
-    getAll: async (params) => {
-        try {
-            const response = await api.get(ENDPOINT_PREFIX, { params });
-            return { success: true, data: response.data.data, message: 'Data sub kategori berhasil dimuat' };
-        } catch (error) {
-            console.error('Error fetching sub categories:', error);
-            throw error; 
-        }
+    // ✅ PERBAIKAN UTAMA: Return response.data langsung seperti adminKategoriService
+    getAll: async (params = {}) => {
+        const response = await api.get(ENDPOINT_PREFIX, { params });
+        return response.data; // ✅ Tidak dibungkus lagi dengan { success, data, message }
     },
 
     getAllCategoriesSimple: async () => {
@@ -31,7 +27,6 @@ export const adminSubKategoriService = {
     },
 
     createSubKategori: async (data) => {
-        // Data yang dikirim: { nama, id_kategori, deskripsi } -> Match backend
         const response = await api.post(ENDPOINT_PREFIX, data);
         return response.data;
     },
@@ -47,7 +42,9 @@ export const adminSubKategoriService = {
     },
     
     toggleStatus: async (id, isActive) => {
-        const response = await api.patch(`${ENDPOINT_PREFIX}/${id}/toggle-status`, { is_active: isActive });
+        const response = await api.patch(`${ENDPOINT_PREFIX}/${id}/toggle-status`, { 
+            is_active: isActive 
+        });
         return response.data;
     }
 };

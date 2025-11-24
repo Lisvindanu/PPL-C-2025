@@ -10,12 +10,11 @@ import Badge from '../components/atoms/Badge';
 import { Plus, Search, Edit2, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 
 // Import komponen Organism yang dipisahkan
-// 🚨 PERUBAHAN NAMA: CategoryToolbar diubah menjadi CategoryManagementToolbar
 import { CategoryManagementToolbar } from '../components/organisms/CategoryManagementToolbar';
 import { CategoryTable } from '../components/organisms/CategoryTable'; 
 
 // =================================================================
-// UTILITY FUNCTION (Dipindahkan ke sini sesuai permintaan)
+// UTILITY FUNCTION 
 // =================================================================
 
 /**
@@ -421,8 +420,10 @@ export default function AdminCategoryManagementPage() {
     try {
       const params = {};
       if (searchQuery) params.search = searchQuery;
-      if (statusFilter !== 'all') params.is_active = statusFilter === 'aktif' ? '1' : '0';
       
+      if (statusFilter !== 'all') {
+        params.status = statusFilter;
+    }
       const response = await adminKategoriService.getAll(params);
       
       if (response && response.success) {
@@ -440,6 +441,7 @@ export default function AdminCategoryManagementPage() {
     }
   }, [searchQuery, statusFilter, toast]);
 
+  // useEffect tetap sama, memastikan debounce diterapkan ke search dan filter
   useEffect(() => {
     const handler = setTimeout(() => {
       loadCategories();

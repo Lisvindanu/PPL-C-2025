@@ -1,5 +1,6 @@
 // presentation/controllers/admin/AdminKategoriController.js
 
+const { options } = require('pdfkit');
 const { CreateKategoriDto, UpdateKategoriDto, KategoriResponseDto } = require('../../application/dtos/KategoriDto');
 
 
@@ -231,9 +232,8 @@ async getAllKategori(req, res) {
 
       const filters = {};
 
-      // Parse status (bisa "1" atau "0" dari query string)
       if (status !== undefined) {
-        filters.status = status === '1' || status === 'true';
+        filters.status = status;  
       }
 
       if (search) {

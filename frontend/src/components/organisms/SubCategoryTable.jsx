@@ -37,7 +37,6 @@ export function SubCategoryTable({
   }
 
   return (
-    // 🚨 PERBAIKAN: Mengaktifkan kembali horizontal scrolling
     <div className="overflow-x-auto"> 
       <table className="min-w-full table-auto divide-y divide-gray-200">
         <thead className="bg-gray-50 border-b border-[#D8E3F3]">
@@ -49,7 +48,7 @@ export function SubCategoryTable({
               Nama Sub Kategori
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[150px]">
-              Kategori Induk
+              Kategori 
             </th>
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
               Slug
