@@ -32,7 +32,7 @@ export default function ServiceTable({ services = [], onBlock, onDetail }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-[700px] md:min-w-full">
         <thead className="bg-gray-50 border-b border-[#D8E3F3]">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">
@@ -58,63 +58,98 @@ export default function ServiceTable({ services = [], onBlock, onDetail }) {
             return (
               <tr key={service.id} className="hover:bg-gray-50 transition-colors">
                 {/* Judul */}
-                <td className="px-6 py-4">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="text-sm font-medium text-gray-900">
                     {service.judul || 'N/A'}
                   </div>
                 </td>
 
                 {/* Freelancer */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="text-sm text-gray-900">
                     {service.freelancer?.full_name || service.freelancer?.email || service.freelancer_name || 'N/A'}
                   </div>
                 </td>
 
                 {/* Kategori */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center">
                     {getCategoryBadge(service.kategori?.nama || service.kategori_name)}
                   </div>
                 </td>
 
                 {/* Status */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center">
                     {getStatusBadge(service.status)}
                   </div>
                 </td>
 
                 {/* Actions */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center justify-center gap-2">
                     {isActive ? (
-                      <button
-                        type="button"
-                        onClick={() => onBlock(service, 'active')}
-                        className="inline-flex items-center justify-center gap-2 bg-[#EF4444] hover:bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                      >
-                        <XCircle size={16} />
-                        <span>Blokir</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onBlock(service, 'active')}
+                          aria-label="Blokir layanan"
+                          className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#EF4444] hover:bg-red-600 text-white transition-colors"
+                        >
+                          <XCircle size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onBlock(service, 'active')}
+                          className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#EF4444] hover:bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <XCircle size={16} />
+                          <span>Blokir</span>
+                        </button>
+                      </>
                     ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onBlock(service, 'blocked')}
+                          aria-label="Aktifkan layanan"
+                          className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#10B981] hover:bg-green-700 text-white transition-colors"
+                        >
+                          <CheckCircle2 size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onBlock(service, 'blocked')}
+                          className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#10B981] hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>Aktifkan</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* Detail */}
+                    <>
                       <button
                         type="button"
-                        onClick={() => onBlock(service, 'blocked')}
-                        className="inline-flex items-center justify-center gap-2 bg-[#10B981] hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        onClick={() => onDetail && onDetail(service)}
+                        aria-label="Detail layanan"
+                        className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#B3B3B3] hover:bg-gray-500 text-white transition-colors"
                       >
-                        <CheckCircle2 size={16} />
-                        <span>Aktifkan</span>
+                        <Eye size={16} />
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => onDetail && onDetail(service)}
-                      className="inline-flex items-center justify-center gap-2 bg-[#B3B3B3] hover:bg-gray-500 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <Eye size={16} />
-                      <span>Detail</span>
-                    </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onDetail && onDetail(service)}
+                        className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#B3B3B3] hover:bg-gray-500 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <Eye size={16} />
+                        <span>Detail</span>
+                      </button>
+                    </>
                   </div>
                 </td>
               </tr>

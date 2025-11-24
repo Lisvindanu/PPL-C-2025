@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useToast } from '../components/organisms/ToastProvider';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { Header } from '../components/organisms/Header';
 import { adminService } from '../services/adminService';
@@ -54,12 +55,13 @@ function BlockServiceModal({
   isBlocking = true 
 }) {
   const [reason, setReason] = useState('');
+  const toast = useToast();
 
   if (!isOpen || !service) return null;
 
   const handleConfirm = () => {
     if (isBlocking && !reason.trim()) {
-      alert('Silakan masukkan alasan pemblokiran');
+      toast.show('Silakan masukkan alasan pemblokiran', 'error');
       return;
     }
     onConfirm(reason);
@@ -271,6 +273,7 @@ function ServiceDetailModal({
 }
 
 export default function AdminServiceManagementPage() {
+  const toast = useToast();
   const [services, setServices] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -359,7 +362,7 @@ export default function AdminServiceManagementPage() {
       }
 
       if (response.success) {
-        alert(response.message || 'Berhasil memperbarui status layanan');
+        toast.show(response.message || 'Berhasil memperbarui status layanan', 'success');
         setBlockModalOpen(false);
         setSelectedService(null);
         fetchServices();
@@ -368,7 +371,7 @@ export default function AdminServiceManagementPage() {
       }
     } catch (err) {
       console.error('Error updating service:', err);
-      alert(err.message || 'Terjadi kesalahan saat memperbarui status layanan');
+      toast.show(err.message || 'Terjadi kesalahan saat memperbarui status layanan', 'error');
     }
   };
 
@@ -386,16 +389,16 @@ export default function AdminServiceManagementPage() {
 
       if (response.success) {
         if (format === 'csv' || format === 'excel') {
-          alert(`Laporan berhasil diekspor dalam format ${format.toUpperCase()}`);
+          toast.show(`Laporan berhasil diekspor dalam format ${format.toUpperCase()}`, 'success');
         } else {
-          alert('Laporan berhasil diekspor');
+          toast.show('Laporan berhasil diekspor', 'success');
         }
       } else {
         throw new Error(response.message || 'Failed to export report');
       }
     } catch (err) {
       console.error('Error exporting report:', err);
-      alert(err.message || 'Terjadi kesalahan saat mengekspor laporan');
+      toast.show(err.message || 'Terjadi kesalahan saat mengekspor laporan', 'error');
     }
   };
 
@@ -449,7 +452,7 @@ export default function AdminServiceManagementPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F5F7FA]">
+  <div className="flex h-screen bg-[#DBE2EF]">
       <Sidebar activeMenu="services" />
       
       <div className="flex-1 overflow-auto">
