@@ -30,7 +30,7 @@ class ReportReview {
 
     return {
       success: true,
-      message: 'Ulasan telah dilaporkan untuk ditinjau oleh admin.'
+      message: 'Ulasan telah dilaporkan'
     };
   }
 }
