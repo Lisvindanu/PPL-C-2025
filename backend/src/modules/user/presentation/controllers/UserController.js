@@ -262,7 +262,6 @@ class UserController {
       next(err);
     }
   };
-
   // Public method to get user by ID (for viewing freelancer profiles)
   getUserById = async (req, res, next) => {
     try {
@@ -285,14 +284,14 @@ class UserController {
       const responseData = {
         id: user.id,
         email: user.email,
-        nama_depan: user.nama_depan,
-        nama_belakang: user.nama_belakang,
-        no_telepon: user.no_telepon,
+        nama_depan: user.firstName,
+        nama_belakang: user.lastName,
+        no_telepon: user.phoneNumber,
         role: user.role,
         bio: user.bio,
-        foto: user.foto,
-        is_verified: user.is_verified,
-        created_at: user.created_at,
+        foto: user.avatar,
+        is_verified: user.isVerified,
+        created_at: user.createdAt,
         profil_freelancer: profile
       };
 
@@ -307,4 +306,3 @@ class UserController {
 }
 
 module.exports = UserController;
-
