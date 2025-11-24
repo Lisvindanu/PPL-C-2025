@@ -22,6 +22,7 @@ const CreateSubKategori = require('../../application/use-cases/categories/Create
 const UpdateSubKategori = require('../../application/use-cases/categories/UpdateSubKategori');
 const DeleteSubKategori = require('../../application/use-cases/categories/DeleteSubKategori');
 const GetAllSubKategori = require('../../application/use-cases/categories/GetAllSubKategori');
+const ToggleSubKategoriStatus = require('../../application/use-cases/categories/ToggleSubKategoriStatus');
 
 // Import repositories
 const SequelizeKategoriRepository = require('../../infrastructure/repositories/SequelizeKategoriRepository');
@@ -63,6 +64,12 @@ const updateSubKategoriUseCase = new UpdateSubKategori(
   adminLogRepository
 );
 
+const toggleSubKategoriStatusUseCase = new ToggleSubKategoriStatus(
+  subKategoriRepository,
+  adminLogRepository
+);
+
+
 // ✅ PERBAIKI: Hanya 2 parameter
 const deleteSubKategoriUseCase = new DeleteSubKategori(
   subKategoriRepository,
@@ -85,7 +92,8 @@ const adminSubKategoriController = new AdminSubKategoriController(
   createSubKategoriUseCase,
   getAllSubKategoriUseCase,
   updateSubKategoriUseCase,
-  deleteSubKategoriUseCase
+  deleteSubKategoriUseCase,
+  toggleSubKategoriStatusUseCase   
 );
 
 // =========================
@@ -129,5 +137,6 @@ router.get('/sub-kategori', (req, res) => adminSubKategoriController.getAllSubKa
 router.post('/sub-kategori', (req, res) => adminSubKategoriController.createSubKategori(req, res));
 router.put('/sub-kategori/:id', (req, res) => adminSubKategoriController.updateSubKategori(req, res));
 router.delete('/sub-kategori/:id', (req, res) => adminSubKategoriController.deleteSubKategori(req, res));
+router.patch('/sub-kategori/:id/toggle-status', (req, res) => adminSubKategoriController.toggleSubKategoriStatus(req, res));
 
 module.exports = router;

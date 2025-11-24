@@ -9,6 +9,7 @@ const CreateSubKategori = require('../application/use-cases/categories/CreateSub
 const UpdateSubKategori = require('../application/use-cases/categories/UpdateSubKategori');
 const DeleteSubKategori = require('../application/use-cases/categories/DeleteSubKategori');
 const GetAllSubKategori = require('../application/use-cases/categories/GetAllSubKategori');
+const ToggleSubKategoriStatus = require('../application/use-cases/categories/ToggleSubKategoriStatus');
 
 // Controller
 const AdminSubKategoriController = require('../presentation/controllers/AdminSubKategoriController');
@@ -36,6 +37,11 @@ module.exports = function setupSubKategoriDependencies(sequelize) {
     adminLogRepository
   );
 
+  const toggleSubKategoriStatus = new ToggleSubKategoriStatus(
+    subKategoriRepository,
+    adminLogRepository
+  );
+
   const getAllSubKategori = new GetAllSubKategori(
     subKategoriRepository,
     kategoriRepository
@@ -43,9 +49,10 @@ module.exports = function setupSubKategoriDependencies(sequelize) {
 
   const adminSubKategoriController = new AdminSubKategoriController(
     createSubKategori,
+    getAllSubKategori,
     updateSubKategori,
     deleteSubKategori,
-    getAllSubKategori
+    toggleSubKategoriStatus
   );
 
   return {

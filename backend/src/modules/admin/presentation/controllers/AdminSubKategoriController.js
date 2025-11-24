@@ -5,12 +5,14 @@ class AdminSubKategoriController {
     createSubKategoriUseCase,
     getAllSubKategoriUseCase,
     updateSubKategoriUseCase,
-    deleteSubKategoriUseCase
+    deleteSubKategoriUseCase,
+    toggleSubKategoriStatusUseCase
   ) {
     this.createSubKategoriUseCase = createSubKategoriUseCase;
     this.getAllSubKategoriUseCase = getAllSubKategoriUseCase;
     this.updateSubKategoriUseCase = updateSubKategoriUseCase;
     this.deleteSubKategoriUseCase = deleteSubKategoriUseCase;
+    this.toggleSubKategoriStatusUseCase = toggleSubKategoriStatusUseCase;
   }
 
   async createSubKategori(req, res) {
@@ -152,6 +154,58 @@ class AdminSubKategoriController {
         success: false,
         message: 'Terjadi kesalahan saat menghapus sub kategori',
         error: error.message
+      });
+    }
+  }
+
+   async toggleSubKategoriStatus(req, res) {
+    try {
+      const adminId = req.user?.id;
+      
+      if (!adminId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Admin tidak terautentikasi'
+        });
+      }
+
+      const { id } = req.params;
+      const { is_active } = req.body;
+
+      console.log('🔄 Toggle status request:', { id, is_active, adminId });
+
+      // Validasi input
+      if (typeof is_active !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          message: 'Status harus berupa boolean (true/false)'
+        });
+      }
+
+      const result = await this.toggleSubKategoriStatusUseCase.execute(
+        adminId,
+        id,
+        is_active,
+        {
+          ipAddress: req.ip || req.connection.remoteAddress,
+          userAgent: req.get('user-agent')
+        }
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: `Sub kategori berhasil ${is_active ? 'diaktifkan' : 'dinonaktifkan'}`,
+        data: result
+      });
+    } catch (error) {
+      console.error('❌ Error toggling sub kategori status:', error);
+      
+      const statusCode = error.message.includes('tidak ditemukan') ? 404 : 500;
+      
+      return res.status(statusCode).json({
+        success: false,
+        message: error.message || 'Terjadi kesalahan saat mengubah status sub kategori',
+        error: process.env.NODE_ENV === 'development' ? error.stack : undefined
       });
     }
   }

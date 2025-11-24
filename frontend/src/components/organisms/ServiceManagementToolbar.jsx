@@ -112,8 +112,8 @@ export function ServiceManagementToolbar({
 }) {
   const statusOptions = [
     { value: 'all', label: 'Semua Status' },
-    { value: 'active', label: 'Aktif' },
-    { value: 'blocked', label: 'Diblokir' }
+    { value: 'aktif', label: 'Aktif' },
+    { value: 'nonaktif', label: 'Diblokir' }
   ];
 
   const kategoriOptions = categories.map(cat => ({
@@ -137,8 +137,8 @@ export function ServiceManagementToolbar({
         <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
           {/* Status Filter */}
           <FilterDropdown
-            value={statusFilter}
-            onChange={(e) => onStatusFilterChange(e.target.value)}
+            value={statusFilter === 'all' ? '' : statusFilter}
+            onChange={(e) => onStatusFilterChange(e.target.value || 'all')}
             options={statusOptions.slice(1)}
             placeholder="Semua Status"
             className="w-full md:w-auto"

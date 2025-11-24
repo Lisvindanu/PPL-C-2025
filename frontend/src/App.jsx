@@ -7,6 +7,8 @@ import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
+import AdminCategoryManagementPage from "./pages/AdminCategoryManagementPage";
+import AdminSubCategoryManagementPage from "./pages/AdminSubCategoryManagementPage";
 import TransactionTrendsPage from "./pages/TransactionTrendsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
@@ -103,6 +105,22 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/kategori"
+        element={
+          <ProtectedRoute>
+            <AdminCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/subkategori"
+        element={
+          <ProtectedRoute>
+            <AdminSubCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/transaction-trends"
         element={
