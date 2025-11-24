@@ -46,6 +46,7 @@ export default function App() {
         element={<NewPasswordPage />}
       />
       <Route path="/services" element={<ServiceListPage />} />
+
       <Route
         path="/dashboard"
         element={
@@ -126,6 +127,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/freelance/service"
         element={
@@ -166,8 +168,9 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/services/:id" element={<ServiceDetailPage />} />
-      <Route path="/jobs" element={<ServiceDetailPage />} />
+
+      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
       <Route
         path="/create-order/:id"
         element={
@@ -193,6 +196,7 @@ export default function App() {
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
