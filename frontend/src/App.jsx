@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
 import RegisterClientPage from "./pages/RegisterClientPage";
+import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
@@ -40,6 +41,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
+      <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
       <Route
