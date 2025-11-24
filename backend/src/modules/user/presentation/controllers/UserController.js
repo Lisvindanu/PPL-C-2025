@@ -262,8 +262,49 @@ class UserController {
       next(err);
     }
   };
+
+  // Public method to get user by ID (for viewing freelancer profiles)
+  getUserById = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      if (!id) {
+        const err = new Error("User ID is required");
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const user = await this.loginUser.userRepository.findByIdWithProfile(id);
+      if (!user) {
+        const error = new Error("User not found");
+        error.statusCode = 404;
+        throw error;
+      }
+
+      // Return user data with profile (safe for public viewing)
+      const profile = user.freelancerProfile || null;
+      const responseData = {
+        id: user.id,
+        email: user.email,
+        nama_depan: user.nama_depan,
+        nama_belakang: user.nama_belakang,
+        no_telepon: user.no_telepon,
+        role: user.role,
+        bio: user.bio,
+        foto: user.foto,
+        is_verified: user.is_verified,
+        created_at: user.created_at,
+        profil_freelancer: profile
+      };
+
+      res.json({
+        success: true,
+        data: responseData
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 
 module.exports = UserController;
-
 
