@@ -14,8 +14,11 @@ import { useToast } from "../components/organisms/ToastProvider";
 export default function RegisterFreelancerPage() {
   const [step, setStep] = useState(1);
   const [role, setRole] = useState("freelancer");
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
-  const onChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", ketentuan_agree: false });
+  const onChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm((s) => ({ ...s, [e.target.name]: value }));
+  };
 
   const { register, loading, error } = useAuth();
   const navigate = useNavigate();
@@ -43,7 +46,14 @@ export default function RegisterFreelancerPage() {
     if (Object.values(newErrors).some(Boolean)) return;
 
     try {
-      await register({ email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, role: "freelancer" });
+      await register({
+        email: form.email,
+        password: form.password,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        role: "freelancer",
+        ketentuan_agree: form.ketentuan_agree
+      });
       toast.show("Account created. Please login.", "success");
       navigate("/login", { replace: true });
     } catch (_) {
@@ -111,7 +121,14 @@ export default function RegisterFreelancerPage() {
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
           <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
           <div className="text-sm text-[#112D4E] mb-4">
-            <input type="checkbox" className="mr-2" /> Dengan membuat akun, saya setuju dengan{" "}
+            <input
+              type="checkbox"
+              name="ketentuan_agree"
+              checked={form.ketentuan_agree}
+              onChange={onChange}
+              className="mr-2"
+              required
+            /> Dengan membuat akun, saya setuju dengan{" "}
             <a href="#" className="underline">
               Ketentuan
             </a>{" "}
