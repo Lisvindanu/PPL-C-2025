@@ -13,6 +13,10 @@ export default function Button({
     role: "bg-[#FFFFFF] text-[#1D375B] hover:bg-[#D8E3F3] border-2 border-[#9DBBDD] hover:border-[#4782BE]",
     order:
       "bg-[#102d4f] text-white rounded-xl hover:bg-[#f3f4f6] hover:text-[#102d4f]",
+    create:
+      "bg-[#102d4f] text-white rounded-lg hover:bg-[#4782BE] hover:text-white",
+    cancel:
+      "rounded-lg  border-2 border-red-500 text-[#1D375B] hover:bg-red-500 hover:text-white",
   };
 
   return (

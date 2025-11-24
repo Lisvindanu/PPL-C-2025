@@ -109,7 +109,7 @@ export default function PricingEditFormCard({
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3">
           <Button
-            variant="outline"
+            variant="cancel"
             className="w-full sm:w-auto border-[#102d4f] hover:bg-[#3B82F6]/5"
             onClick={onCancel}
             disabled={loading}
@@ -118,7 +118,8 @@ export default function PricingEditFormCard({
           </Button>
 
           <Button
-            className="w-full sm:w-auto bg-[#102d4f] hover:opacity-95 text-white"
+            variant="create"
+            className="w-full sm:w-auto"
             onClick={onSubmit}
             disabled={loading}
           >
