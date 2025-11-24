@@ -5,19 +5,27 @@ class GetAllSubKategori {
     this.subKategoriRepository = subKategoriRepository;
   }
 
+  /**
+   * Mengambil semua data Sub Kategori dengan dukungan filtering dan sorting.
+   *
+   * @param {object} filters - Objek yang berisi kriteria filter (search, status, kategoriId, sortBy, sortOrder).
+   */
   async execute(filters = {}) {
     try {
-      // ✅ PERBAIKAN: Set default value untuk filters
-      const safeFilters = {
-        kategoriId: filters?.kategoriId || null,
-        isActive: filters?.isActive !== undefined ? filters.isActive : null
+      // 1. Siapkan opsi yang akan diteruskan ke Repository
+      const repositoryOptions = {
+        // Gabungkan semua filter yang diterima dari controller
+        ...filters, 
+        // Pastikan Kategori selalu di-include untuk admin panel
+        includeKategori: true 
       };
 
-      console.log('🔍 GetAllSubKategori filters:', safeFilters);
+      console.log('🔍 GetAllSubKategori filters diteruskan ke Repo:', repositoryOptions);
 
-      const subKategoriList = await this.subKategoriRepository.findAll(true); // include kategori
+      // 2. Panggil repository dengan repositoryOptions yang sudah berisi filter
+      const subKategoriList = await this.subKategoriRepository.findAll(repositoryOptions);
 
-      // ✅ PERBAIKAN: Handle jika kategori null/undefined
+      // 3. Mapping data hasil (tetap sama seperti sebelumnya)
       return subKategoriList.map(subKat => ({
         id: subKat.id,
         nama: subKat.nama,
@@ -25,7 +33,7 @@ class GetAllSubKategori {
         deskripsi: subKat.deskripsi,
         icon: subKat.icon,
         is_active: subKat.is_active,
-        id_kategori: subKat.id_kategori, // ✅ Tambahkan ini
+        id_kategori: subKat.id_kategori,
         kategori: subKat.kategori ? {
           id: subKat.kategori.id,
           nama: subKat.kategori.nama,

@@ -7,9 +7,8 @@ import { Header } from '../components/organisms/Header';
 import { adminSubKategoriService } from '../services/adminSubKategoriService'; 
 import Button from '../components/atoms/Button';
 import Badge from '../components/atoms/Badge';
-import { Plus, Search } from 'lucide-react';
 
-// Import komponen Organism yang dipisahkan
+// Import komponen Organism
 import { SubCategoryManagementToolbar } from '../components/organisms/SubCategoryManagementToolbar';
 import { SubCategoryTable } from '../components/organisms/SubCategoryTable';
 
@@ -44,14 +43,13 @@ function SubCategoryFormModal({
 }) {
   const [formData, setFormData] = useState({
     nama: '',
-    id_kategori: '', // 🚨 PERBAIKAN: Menggunakan id_kategori agar match backend
+    id_kategori: '',
     deskripsi: '',
   });
   const [categories, setCategories] = useState([]); 
   const [saving, setSaving] = useState(false);
   const toast = useToast();
 
-  // Efek untuk memuat daftar Kategori Induk
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -67,7 +65,7 @@ function SubCategoryFormModal({
       if (subCategory && isEdit) {
         setFormData({
             nama: subCategory.nama || '',
-            id_kategori: subCategory.kategoriId || subCategory.id_kategori || '', // Mengambil dari kunci lama/baru
+            id_kategori: subCategory.kategoriId || subCategory.id_kategori || '',
             deskripsi: subCategory.deskripsi || '',
         });
       } else {
@@ -90,16 +88,14 @@ function SubCategoryFormModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // 🚨 PERBAIKAN: Validasi menggunakan id_kategori
     if (!formData.nama.trim() || !formData.id_kategori) {
-      toast.show('Nama dan Kategori Induk harus diisi', 'error');
+      toast.show('Nama dan Kategori harus diisi', 'error');
       return;
     }
 
     setSaving(true);
     try {
       let response;
-      // 🚨 PERBAIKAN: dataToSend mengirimkan id_kategori
       const dataToSend = { 
         nama: formData.nama, 
         id_kategori: formData.id_kategori, 
@@ -155,17 +151,17 @@ function SubCategoryFormModal({
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Kategori Induk <span className="text-red-500">*</span>
+                  Kategori <span className="text-red-500">*</span>
                 </label>
                 <select
-                  name="id_kategori" // 🚨 PERBAIKAN: Gunakan name="id_kategori"
+                  name="id_kategori"
                   value={formData.id_kategori}
                   onChange={handleChange}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4782BE] focus:border-transparent bg-white"
                   required
                   disabled={categories.length === 0}
                 >
-                    <option value="">Pilih Kategori Induk</option>
+                    <option value="">Pilih Kategori</option>
                     {categories.length === 0 && <option value="">Memuat Kategori...</option>}
                     {categories.map(cat => (
                         <option key={cat.id} value={cat.id}>
@@ -216,8 +212,7 @@ function SubCategoryFormModal({
   );
 }
 
-
-// Delete Confirmation Modal (Unchanged)
+// Delete Confirmation Modal
 function DeleteSubCategoryModal({ 
   isOpen, 
   onClose, 
@@ -258,7 +253,7 @@ function DeleteSubCategoryModal({
   );
 }
 
-// Sub-Category Detail Modal (Unchanged)
+// Sub-Category Detail Modal
 function SubCategoryDetailModal({ 
   isOpen, 
   onClose, 
@@ -284,7 +279,7 @@ function SubCategoryDetailModal({
                 <p className="text-gray-900">{subCategory.nama || 'N/A'}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Kategori Induk</label>
+                <label className="text-sm font-medium text-gray-700">Kategori</label>
                 <p className="text-gray-900">{subCategory.kategori?.nama || subCategory.kategoriInduk || 'N/A'}</p>
               </div>
               <div>
@@ -352,8 +347,18 @@ export default function AdminSubCategoryManagementPage() {
     setLoading(true);
     try {
       const params = {};
-      if (searchQuery) params.search = searchQuery;
-      if (statusFilter !== 'all') params.is_active = statusFilter === 'aktif' ? '1' : '0';
+      
+      // Tambahkan search parameter
+      if (searchQuery) {
+        params.search = searchQuery;
+      }
+      
+      // Tambahkan status filter (sama seperti kategori)
+      if (statusFilter !== 'all') {
+        params.status = statusFilter;
+      }
+
+      console.log("🔵 FRONTEND - PARAMS DIKIRIM:", params);
       
       const response = await adminSubKategoriService.getAll(params);
       
@@ -412,7 +417,6 @@ export default function AdminSubCategoryManagementPage() {
       }
     } catch (error) {
       console.error('Error deleting sub category:', error);
-      // 🚨 PENTING: Penanganan error 500/400 dari backend
       const backendMessage = error.response?.data?.message || error.response?.message;
       const defaultMessage = 'Terjadi kesalahan saat menghapus Sub Kategori.';
       toast.show(backendMessage || error.message || defaultMessage, 'error');
@@ -433,7 +437,7 @@ export default function AdminSubCategoryManagementPage() {
         <div className="p-6">
           <div className="bg-white rounded-lg border border-[#D8E3F3] overflow-hidden">
             
-            {/* Toolbar (Komponen dipisahkan) */}
+            {/* Toolbar */}
             <SubCategoryManagementToolbar
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
@@ -446,7 +450,7 @@ export default function AdminSubCategoryManagementPage() {
               loading={loading}
             />
 
-            {/* Table (Komponen dipisahkan) */}
+            {/* Table */}
             <SubCategoryTable 
               subCategories={subCategories}
               onEdit={(subCategory) => {
@@ -466,7 +470,7 @@ export default function AdminSubCategoryManagementPage() {
               formatDate={formatDate} 
             />
 
-            {/* Modals (Komponen tetap di sini) */}
+            {/* Modals */}
             <SubCategoryFormModal
               isOpen={addModalOpen}
               onClose={() => setAddModalOpen(false)}
