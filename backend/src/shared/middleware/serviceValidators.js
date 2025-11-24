@@ -155,6 +155,11 @@ const listServicesQueryValidator = [
     .isString()
     .withMessage("kategori_id harus berupa string"),
 
+
+  query("freelancer_id")
+    .optional()
+    .isString()
+    .withMessage("freelancer_id harus berupa string"),
   query("status")
     .optional()
     .isIn(["draft", "aktif", "nonaktif"])

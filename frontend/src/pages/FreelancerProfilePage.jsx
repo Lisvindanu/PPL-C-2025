@@ -1,25 +1,30 @@
-import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import Navbar from '../components/organisms/Navbar'
-import Footer from '../components/organisms/Footer'
-import api from '../utils/axiosConfig'
+import { useState, useEffect } from "react"
+import { useParams, useNavigate } from "react-router-dom"
+import Navbar from "../components/organisms/Navbar"
+import Footer from "../components/organisms/Footer"
+import api from "../utils/axiosConfig"
 
 export default function FreelancerProfilePage() {
   const { id } = useParams()
   const navigate = useNavigate()
 
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const [error, setError] = useState("")
   const [freelancer, setFreelancer] = useState(null)
+  const [services, setServices] = useState([])
+  const [loadingServices, setLoadingServices] = useState(false)
 
   useEffect(() => {
-    loadFreelancerProfile()
+    if (id) {
+      loadFreelancerProfile()
+      loadFreelancerServices()
+    }
   }, [id])
 
   const loadFreelancerProfile = async () => {
     try {
       setLoading(true)
-      setError('')
+      setError("")
 
       const response = await api.get(`/users/${id}`)
 
@@ -27,21 +32,40 @@ export default function FreelancerProfilePage() {
         const userData = response.data.data
 
         // Only allow viewing freelancer profiles
-        if (userData.role !== 'freelancer') {
-          setError('Profile ini bukan freelancer')
+        if (userData.role !== "freelancer") {
+          setError("Profile ini bukan freelancer")
           return
         }
 
         setFreelancer(userData)
       } else {
-        setError('Profile tidak ditemukan')
+        setError("Profile tidak ditemukan")
       }
     } catch (err) {
-      console.error('Error loading freelancer profile:', err)
-      setError(err?.response?.data?.message || 'Gagal memuat profile freelancer')
+      console.error("Error loading freelancer profile:", err)
+      setError(err?.response?.data?.message || "Gagal memuat profile freelancer")
     } finally {
       setLoading(false)
     }
+  }
+
+  const loadFreelancerServices = async () => {
+    try {
+      setLoadingServices(true)
+      const response = await api.get(`/services?freelancer_id=${id}&status=aktif`)
+      
+      if (response.data.status === "success" && response.data.data) {
+        setServices(response.data.data.items || [])
+      }
+    } catch (err) {
+      console.error("Error loading freelancer services:", err)
+    } finally {
+      setLoadingServices(false)
+    }
+  }
+
+  const handleServiceClick = (slug) => {
+    navigate(`/services/${slug}`)
   }
 
   if (loading) {
@@ -66,7 +90,7 @@ export default function FreelancerProfilePage() {
         <div className="max-w-7xl mx-auto px-4 py-16">
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-lg p-8 inline-block">
-              <p className="text-red-600 font-medium text-lg mb-4">⚠️ {error || 'Profile tidak ditemukan'}</p>
+              <p className="text-red-600 font-medium text-lg mb-4">⚠️ {error || "Profile tidak ditemukan"}</p>
               <button
                 onClick={() => navigate(-1)}
                 className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primaryDark transition-colors"
@@ -81,7 +105,7 @@ export default function FreelancerProfilePage() {
     )
   }
 
-  const fullName = `${freelancer.nama_depan || ''} ${freelancer.nama_belakang || ''}`.trim()
+  const fullName = `${freelancer.nama_depan || ""} ${freelancer.nama_belakang || ""}`.trim()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -107,12 +131,12 @@ export default function FreelancerProfilePage() {
               <div className="flex-1 text-white">
                 <h1 className="text-3xl font-bold mb-2">{fullName}</h1>
                 <p className="text-xl opacity-90 mb-3">
-                  {freelancer.profil_freelancer?.judul_profesi || 'Freelancer Professional'}
+                  {freelancer.profil_freelancer?.judul_profesi || "Freelancer Professional"}
                 </p>
                 <div className="flex items-center space-x-4 text-sm">
                   <span className="flex items-center">
                     <i className="fas fa-map-marker-alt mr-2"></i>
-                    {freelancer.profil_freelancer?.kota || 'Indonesia'}
+                    {freelancer.profil_freelancer?.kota || "Indonesia"}
                   </span>
                   {freelancer.profil_freelancer?.rate && (
                     <span className="flex items-center">
@@ -186,6 +210,61 @@ export default function FreelancerProfilePage() {
                     </div>
                   </div>
                 )}
+
+                {/* Services Offered */}
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                    <i className="fas fa-briefcase mr-2 text-primary"></i>
+                    Layanan yang Ditawarkan
+                  </h2>
+                  {loadingServices ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                      <p className="mt-2 text-gray-600 text-sm">Memuat layanan...</p>
+                    </div>
+                  ) : services.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {services.map((service) => (
+                        <div
+                          key={service.id}
+                          onClick={() => handleServiceClick(service.slug)}
+                          className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition-shadow cursor-pointer"
+                        >
+                          <div className="flex items-start space-x-3">
+                            {service.thumbnail && (
+                              <img
+                                src={service.thumbnail.startsWith("http") ? service.thumbnail : `${import.meta.env.VITE_API_BASE_URL?.replace("/api", "") || "http://localhost:5000"}/public/${service.thumbnail}`}
+                                alt={service.judul}
+                                className="w-20 h-20 object-cover rounded-lg"
+                                onError={(e) => {
+                                  e.target.style.display = "none"
+                                }}
+                              />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-900 truncate">{service.judul}</h3>
+                              <p className="text-xs text-gray-500 mt-1">{service.nama_kategori}</p>
+                              <div className="flex items-center justify-between mt-2">
+                                <span className="text-primary font-bold">
+                                  Rp {new Intl.NumberFormat("id-ID").format(service.harga)}
+                                </span>
+                                <div className="flex items-center text-xs text-gray-500">
+                                  <i className="fas fa-star text-yellow-400 mr-1"></i>
+                                  {service.rating_rata_rata || "0.0"}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 bg-gray-50 rounded-lg">
+                      <i className="fas fa-inbox text-4xl text-gray-300 mb-2"></i>
+                      <p className="text-gray-500">Belum ada layanan yang ditawarkan</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Right Column - Stats & Info */}

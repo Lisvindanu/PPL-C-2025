@@ -104,6 +104,7 @@ class ServiceController {
     try {
       const filters = {
         kategori_id: req.query.kategori_id,
+        freelancer_id: req.query.freelancer_id,
         harga_min: req.query.harga_min,
         harga_max: req.query.harga_max,
         rating_min: req.query.rating_min,
