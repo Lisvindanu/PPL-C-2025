@@ -60,6 +60,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
           const shuffled = [...result.services].sort(() => 0.5 - Math.random());
           const selected = shuffled.slice(0, 8).map(service => ({
             id: service.id,
+            slug: service.slug,
             title: service.nama_layanan || service.title,
             category: service.kategori_nama || service.category,
             freelancer: service.freelancer_name || service.freelancer || "Unknown",
