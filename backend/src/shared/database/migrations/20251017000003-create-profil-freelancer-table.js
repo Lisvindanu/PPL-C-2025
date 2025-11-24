@@ -30,9 +30,54 @@ module.exports = {
         type: Sequelize.JSON,
         comment: 'Array of skills (JSON format)'
       },
+      bahasa: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        comment: 'Array of languages (JSON format)'
+      },
+      edukasi: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        comment: 'Array of education records (JSON format)'
+      },
+      lisensi: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        comment: 'Array of licenses/certifications (JSON format)'
+      },
       portfolio_url: {
         type: Sequelize.STRING(255),
         comment: 'Portfolio website URL'
+      },
+      judul_portfolio: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        comment: 'Portfolio title'
+      },
+      deskripsi_portfolio: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Portfolio description'
+      },
+      file_portfolio: {
+        type: Sequelize.JSON,
+        allowNull: true,
+        comment: 'Array of portfolio files/links (JSON format)'
+      },
+      avatar: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        comment: 'Profile picture URL'
+      },
+      foto_latar: {
+        type: Sequelize.STRING(255),
+        allowNull: true,
+        comment: 'Cover/banner photo URL'
+      },
+      deskripsi_lengkap: {
+        type: Sequelize.TEXT,
+        allowNull: true,
+        comment: 'Full description of freelancer'
       },
       total_pekerjaan_selesai: {
         type: Sequelize.INTEGER,

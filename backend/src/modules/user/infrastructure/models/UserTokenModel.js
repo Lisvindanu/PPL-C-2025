@@ -3,12 +3,12 @@ const { sequelize } = require('../../../../shared/database/connection');
 
 const UserTokenModel = sequelize.define('user_tokens', {
   id: {
-    type: DataTypes.CHAR(36),
+    type: DataTypes.UUID,
     primaryKey: true,
     defaultValue: DataTypes.UUIDV4
   },
   user_id: {
-    type: DataTypes.CHAR(36),
+    type: DataTypes.UUID,
     allowNull: false
   },
   token: {

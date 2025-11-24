@@ -143,7 +143,7 @@ class MockPaymentGatewayService {
   getPaymentInstructions(payment_method, channel, amount) {
     const instructions = {
       qris: {
-        type: 'QRIS',
+        type: 'qris',
         title: 'Scan QR Code',
         steps: [
           'Buka aplikasi e-wallet/mobile banking',
@@ -155,7 +155,7 @@ class MockPaymentGatewayService {
         qr_url: `${this.baseUrl}/mock-qr/${Date.now()}.png`
       },
       virtual_account: {
-        type: 'Virtual Account',
+        type: 'virtual_account',
         title: `Transfer ke VA ${channel || 'Bank'}`,
         va_number: this.generateVANumber(channel),
         bank: channel || 'BCA',
@@ -168,19 +168,28 @@ class MockPaymentGatewayService {
         ]
       },
       e_wallet: {
-        type: 'E-Wallet',
+        type: 'e_wallet',
         title: `${channel || 'GoPay'} Payment`,
+        channel: channel || 'GoPay',
         steps: [
           `Buka aplikasi ${channel || 'GoPay'}`,
           'Cek notifikasi pembayaran',
           'Konfirmasi pembayaran',
           `Jumlah: Rp ${Number(amount).toLocaleString('id-ID')}`
         ],
+        actions: [
+          {
+            name: 'deeplink-redirect',
+            url: `gojek://gopay/merchanttransfer?amount=${amount}&orderid=MOCK`
+          }
+        ],
         deeplink: `gojek://gopay/merchanttransfer?amount=${amount}&orderid=MOCK`
       },
       transfer_bank: {
-        type: 'Transfer Bank',
+        type: 'virtual_account',
         title: 'Transfer Manual',
+        va_number: this.generateVANumber(channel || 'Manual'),
+        bank: channel || 'Mandiri',
         bank_account: {
           bank: 'Bank Mandiri',
           account_number: '1370013370133',
@@ -195,7 +204,7 @@ class MockPaymentGatewayService {
         ]
       },
       kartu_kredit: {
-        type: 'Kartu Kredit',
+        type: 'kartu_kredit',
         title: 'Pembayaran Kartu Kredit/Debit',
         steps: [
           'Masukkan nomor kartu',

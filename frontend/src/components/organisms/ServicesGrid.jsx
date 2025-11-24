@@ -1,8 +1,10 @@
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import CategoryServiceSection from "./CategoryServiceSection";
+import { serviceService } from "../../services/serviceService";
 
-// Mock data untuk layanan
-const categoriesWithServices = [
+// Mock data untuk layanan (fallback jika API gagal)
+const categoriesWithServicesMock = [
   {
     id: 1,
     title: "Pengembangan Website",
@@ -588,10 +590,97 @@ const categoriesWithServices = [
 ];
 
 export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFilter }) {
+  const [categoriesWithServices, setCategoriesWithServices] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [useMockData, setUseMockData] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchServices = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch all active services from backend
+        const result = await serviceService.getAllServices({
+          page: 1,
+          limit: 100,
+          status: 'aktif'
+        });
+
+        if (cancelled) return;
+
+        if (result.success && result.services && result.services.length > 0) {
+          // Group services by category
+          const groupedByCategory = {};
+
+          result.services.forEach(service => {
+            const categoryName = service.nama_kategori || service.category || 'Lainnya';
+            const categorySlug = categoryName.toLowerCase().replace(/\s+/g, '-');
+
+            if (!groupedByCategory[categoryName]) {
+              groupedByCategory[categoryName] = {
+                id: service.kategori_id || categorySlug,
+                title: categoryName,
+                slug: categorySlug,
+                services: []
+              };
+            }
+
+            groupedByCategory[categoryName].services.push({
+              id: service.id,
+              title: service.judul || service.title,
+              category: categoryName,
+              freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+              rating: parseFloat(service.rating_rata_rata || service.rating || 0),
+              reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+              price: parseFloat(service.harga || service.price || 0),
+              slug: service.slug
+            });
+          });
+
+          const categoriesArray = Object.values(groupedByCategory);
+          setCategoriesWithServices(categoriesArray);
+          setUseMockData(false);
+        } else {
+          // No services from backend, use mock data
+          console.log('[ServicesGrid] No services from backend, using mock data');
+          setCategoriesWithServices(categoriesWithServicesMock);
+          setUseMockData(true);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error('[ServicesGrid] Error fetching services:', error);
+        // On error, fallback to mock data
+        setCategoriesWithServices(categoriesWithServicesMock);
+        setUseMockData(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchServices();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Filter categories based on activeFilter
   const filteredCategories = activeFilter
     ? categoriesWithServices.filter((cat) => cat.slug === activeFilter)
     : categoriesWithServices;
+
+  if (loading) {
+    return (
+      <section className="py-20 px-4 bg-white">
+        <div className="max-w-7xl mx-auto text-center">
+          <i className="fas fa-spinner fa-spin text-4xl text-[#4782BE] mb-4" />
+          <p className="text-neutral-600">Memuat layanan...</p>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-20 px-4 bg-white">
@@ -613,6 +702,11 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFi
             {activeFilter
               ? `Menampilkan layanan ${filteredCategories[0]?.title || ""}`
               : "Jelajahi berbagai layanan profesional dari freelancer terbaik"}
+            {useMockData && (
+              <span className="block mt-2 text-sm text-orange-600">
+                ⚠️ Menampilkan data contoh (belum ada layanan di database)
+              </span>
+            )}
           </p>
         </motion.div>
 

@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const PaymentController = require('../controllers/PaymentController');
+const authMiddleware = require('../../../../shared/middleware/authMiddleware');
 
 // Initialize controller
 const paymentController = new PaymentController();
@@ -47,6 +48,7 @@ const paymentController = new PaymentController();
  */
 router.post(
   '/create',
+  authMiddleware,
   paymentController.createPayment.bind(paymentController)
 );
 
@@ -72,6 +74,59 @@ router.post(
 router.post(
   '/webhook',
   paymentController.handleWebhook.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/check-status/{transactionId}:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Check payment status and get redirect URL
+ *     description: Check payment status by transaction ID and return appropriate redirect URL for frontend
+ *     parameters:
+ *       - in: path
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Transaction ID
+ *     responses:
+ *       200:
+ *         description: Payment status checked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     payment_id:
+ *                       type: integer
+ *                     transaction_id:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [berhasil, menunggu, kadaluarsa, gagal]
+ *                     redirect_url:
+ *                       type: string
+ *                       description: Frontend URL to redirect based on payment status
+ *                     amount:
+ *                       type: number
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/check-status/:transactionId',
+  paymentController.checkPaymentStatus.bind(paymentController)
 );
 
 /**
@@ -112,6 +167,7 @@ router.post(
  */
 router.get(
   '/:id',
+  authMiddleware,
   paymentController.getPaymentById.bind(paymentController)
 );
 
@@ -153,6 +209,7 @@ router.get(
  */
 router.get(
   '/order/:orderId',
+  authMiddleware,
   paymentController.getPaymentByOrderId.bind(paymentController)
 );
 
@@ -189,6 +246,7 @@ router.get(
  */
 router.post(
   '/escrow/release',
+  authMiddleware,
   paymentController.releaseEscrow.bind(paymentController)
 );
 
@@ -230,6 +288,7 @@ router.post(
  */
 router.get(
   '/escrow/:id',
+  authMiddleware,
   paymentController.getEscrowById.bind(paymentController)
 );
 
@@ -270,6 +329,7 @@ router.get(
  */
 router.post(
   '/withdraw',
+  authMiddleware,
   paymentController.createWithdrawal.bind(paymentController)
 );
 
@@ -311,6 +371,7 @@ router.post(
  */
 router.get(
   '/withdrawals/:id',
+  authMiddleware,
   paymentController.getWithdrawalById.bind(paymentController)
 );
 
@@ -345,6 +406,7 @@ router.get(
  */
 router.get(
   '/:id/invoice',
+  authMiddleware,
   paymentController.getInvoice.bind(paymentController)
 );
 
@@ -385,6 +447,7 @@ router.get(
  */
 router.post(
   '/:id/send-invoice',
+  authMiddleware,
   paymentController.sendInvoice.bind(paymentController)
 );
 
@@ -436,6 +499,7 @@ router.post(
  */
 router.get(
   '/analytics/summary',
+  authMiddleware,
   paymentController.getAnalyticsSummary.bind(paymentController)
 );
 
@@ -458,6 +522,7 @@ router.get(
  */
 router.get(
   '/analytics/escrow',
+  authMiddleware,
   paymentController.getEscrowAnalytics.bind(paymentController)
 );
 
@@ -480,6 +545,7 @@ router.get(
  */
 router.get(
   '/analytics/withdrawals',
+  authMiddleware,
   paymentController.getWithdrawalAnalytics.bind(paymentController)
 );
 
@@ -522,6 +588,7 @@ router.get(
  */
 router.post(
   '/:id/refund',
+  authMiddleware,
   paymentController.requestRefund.bind(paymentController)
 );
 
@@ -563,6 +630,7 @@ router.post(
  */
 router.put(
   '/refund/:id/process',
+  authMiddleware,
   paymentController.processRefund.bind(paymentController)
 );
 
@@ -597,6 +665,7 @@ router.put(
  */
 router.get(
   '/refunds',
+  authMiddleware,
   paymentController.getAllRefunds.bind(paymentController)
 );
 
@@ -637,6 +706,7 @@ router.get(
  */
 router.post(
   '/:id/retry',
+  authMiddleware,
   paymentController.retryPayment.bind(paymentController)
 );
 

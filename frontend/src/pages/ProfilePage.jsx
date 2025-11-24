@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import ProfileLayout from '../components/templates/ProfileLayout'
 import ProfileLoadingOverlay from '../components/organisms/ProfileLoadingOverlay'
+import api from '../utils/axiosConfig'
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
@@ -41,33 +42,21 @@ export default function ProfilePage() {
       const token = localStorage.getItem('token')
       if (token) {
         try {
-          const response = await fetch('http://localhost:5000/api/users/profile', {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          })
+          const response = await api.get('/users/profile')
 
-          if (response.ok) {
-            const result = await response.json()
-            console.log('Profile loaded from database:', result)
-            
-            if (result.success && result.data) {
-              setProfile(prev => ({
-                ...prev,
-                nama_depan: result.data.nama_depan || prev.nama_depan,
-                nama_belakang: result.data.nama_belakang || prev.nama_belakang,
-                email: result.data.email || prev.email,
-                no_telepon: result.data.no_telepon || prev.no_telepon,
-                bio: result.data.bio || prev.bio,
-                kota: result.data.kota || prev.kota,
-                provinsi: result.data.provinsi || prev.provinsi,
-                role: result.data.role || prev.role
-              }))
-              return
-            }
-          } else {
-            console.error('API Error:', response.status, response.statusText)
+          if (response.data.success && response.data.data) {
+            setProfile(prev => ({
+              ...prev,
+              nama_depan: response.data.data.nama_depan || prev.nama_depan,
+              nama_belakang: response.data.data.nama_belakang || prev.nama_belakang,
+              email: response.data.data.email || prev.email,
+              no_telepon: response.data.data.no_telepon || prev.no_telepon,
+              bio: response.data.data.bio || prev.bio,
+              kota: response.data.data.kota || prev.kota,
+              provinsi: response.data.data.provinsi || prev.provinsi,
+              role: response.data.data.role || prev.role
+            }))
+            return
           }
         } catch (apiError) {
           console.error('API Error:', apiError)
@@ -95,7 +84,7 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       setLoading(true)
-      
+
       // Prepare data for API
       const updateData = {
         nama_depan: profile.nama_depan,
@@ -112,31 +101,22 @@ export default function ProfilePage() {
       const token = localStorage.getItem('token')
       if (token) {
         try {
-          const response = await fetch('http://localhost:5000/api/users/profile', {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify(updateData)
-          })
+          const response = await api.put('/users/profile', updateData)
 
-          if (response.ok) {
-            const result = await response.json()
-            console.log('Profile updated in database:', result)
-            
+          if (response.data.success) {
+            console.log('Profile updated in database:', response.data)
+
             // Update localStorage with new data
             const user = JSON.parse(localStorage.getItem('user') || 'null')
             if (user) {
               const updatedUser = { ...user, ...updateData }
               localStorage.setItem('user', JSON.stringify(updatedUser))
             }
-            
+
             alert('Profile updated successfully in database!')
             setIsEditing(false)
             return
           } else {
-            console.error('API Error:', response.status, response.statusText)
             throw new Error('API request failed')
           }
         } catch (apiError) {
@@ -187,7 +167,7 @@ export default function ProfilePage() {
   return (
     <>
       <ProfileLoadingOverlay loading={loading} />
-      <ProfileLayout 
+      <ProfileLayout
         profile={profile}
         isEditing={isEditing}
         loading={loading}

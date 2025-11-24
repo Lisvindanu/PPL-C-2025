@@ -4,8 +4,9 @@
  */
 
 class OrderController {
-  constructor(sequelize) {
-    this.sequelize = sequelize;
+  constructor({ getIncomingOrdersUseCase, getOrderByIdUseCase }) {
+    this.getIncomingOrdersUseCase = getIncomingOrdersUseCase;
+    this.getOrderByIdUseCase = getOrderByIdUseCase;
   }
 
   /**
@@ -50,13 +51,34 @@ class OrderController {
    */
   async getIncomingOrders(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur incoming orders belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+      if (user.role !== 'freelancer') {
+        return res.status(403).json({ success: false, message: 'Hanya freelancer yang dapat melihat pesanan masuk' });
+      }
+
+      const result = await this.getIncomingOrdersUseCase.execute(user.userId, {
+        page: req.query.page,
+        limit: req.query.limit,
+        status: req.query.status,
+        q: req.query.q,
+        created_from: req.query.created_from,
+        created_to: req.query.created_to,
+        sortBy: req.query.sortBy,
+        sortOrder: req.query.sortOrder,
+      });
+
+      return res.json({
+        success: true,
+        message: 'Pesanan masuk berhasil diambil',
+        data: result.data,
+        pagination: result.pagination
       });
     } catch (error) {
       return res.status(500).json({
-        status: 'error',
+        success: false,
         message: error.message
       });
     }
@@ -68,13 +90,16 @@ class OrderController {
    */
   async getOrderById(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur order detail belum diimplementasikan - akan ditambahkan di sprint mendatang'
-      });
+      const user = req.user;
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Unauthorized' });
+      }
+      const { id } = req.params;
+      const result = await this.getOrderByIdUseCase.execute(id, user);
+      return res.json({ success: true, message: 'Detail pesanan berhasil diambil', data: result.data });
     } catch (error) {
-      return res.status(500).json({
-        status: 'error',
+      return res.status(error.statusCode || 500).json({
+        success: false,
         message: error.message
       });
     }

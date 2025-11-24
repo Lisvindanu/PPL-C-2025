@@ -38,9 +38,90 @@ class PaymentController {
    */
   async createPayment(req, res) {
     try {
-      const { pesanan_id, jumlah, metode_pembayaran, channel } = req.body;
-      const user_id = req.user?.id || req.body.user_id; // From auth middleware or body (testing)
+      const { pesanan_id, jumlah, metode_pembayaran, channel, order_title, customer_name, customer_email } = req.body;
+      const user_id = req.user?.userId || req.user?.id || req.body.user_id;
 
+      if (!user_id) {
+        return res.status(401).json({
+          success: false,
+          message: 'User ID is required'
+        });
+      }
+
+      // TEMPORARY WORKAROUND: Auto-create order if not exists
+      // TODO: Remove this when order creation API is fully implemented by the team
+      try {
+        // Check if order exists
+        const [existingOrder] = await PaymentModel.sequelize.query(
+          'SELECT id FROM pesanan WHERE id = ? LIMIT 1',
+          {
+            replacements: [pesanan_id],
+            type: Sequelize.QueryTypes.SELECT
+          }
+        );
+
+        if (!existingOrder) {
+          console.log('[PAYMENT] Order not found, creating minimal order for payment...');
+
+          // Create minimal order for payment to work
+          const nomor_pesanan = `ORD-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`;
+          const harga = parseFloat(jumlah) / 1.1; // Reverse calculate (total / 1.1)
+          const biaya_platform = parseFloat(jumlah) - harga;
+          const waktu_pengerjaan = 7; // Default 7 days
+          const tenggat_waktu = new Date();
+          tenggat_waktu.setDate(tenggat_waktu.getDate() + waktu_pengerjaan);
+
+          // Get a freelancer_id (temporary: use any freelancer, ideally from service)
+          const [anyFreelancer] = await PaymentModel.sequelize.query(
+            "SELECT id FROM users WHERE role = 'freelancer' LIMIT 1",
+            { type: Sequelize.QueryTypes.SELECT }
+          );
+
+          const freelancer_id = anyFreelancer ? anyFreelancer.id : user_id;
+
+          // Get a real layanan_id from database to satisfy foreign key constraint
+          const [anyLayanan] = await PaymentModel.sequelize.query(
+            "SELECT id FROM layanan LIMIT 1",
+            { type: Sequelize.QueryTypes.SELECT }
+          );
+
+          if (!anyLayanan) {
+            throw new Error('No services found in database. Please create at least one service first.');
+          }
+
+          await PaymentModel.sequelize.query(
+            `INSERT INTO pesanan (
+              id, nomor_pesanan, client_id, freelancer_id, layanan_id,
+              judul, deskripsi, harga, biaya_platform, total_bayar,
+              waktu_pengerjaan, tenggat_waktu, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            {
+              replacements: [
+                pesanan_id,
+                nomor_pesanan,
+                user_id, // client_id
+                freelancer_id,
+                anyLayanan.id, // Use real layanan_id
+                order_title || 'Payment Order',
+                `Temporary order created for payment. Customer: ${customer_name || 'N/A'}`,
+                harga,
+                biaya_platform,
+                jumlah,
+                waktu_pengerjaan,
+                tenggat_waktu,
+                'menunggu_pembayaran'
+              ]
+            }
+          );
+
+          console.log('[PAYMENT] Minimal order created:', pesanan_id);
+        }
+      } catch (dbError) {
+        console.error('[PAYMENT] Database error:', dbError);
+        throw new Error('Failed to create order: ' + dbError.message);
+      }
+
+      // Now create payment
       const result = await this.createPaymentUseCase.execute({
         pesanan_id,
         user_id,
@@ -114,6 +195,135 @@ class PaymentController {
   }
 
   /**
+   * GET /api/payments/check-status/:transactionId
+   * Check payment status from Midtrans API and update database
+   * Note: transactionId can be either transaction_id or payment id (UUID)
+   */
+  async checkPaymentStatus(req, res) {
+    try {
+      const { transactionId } = req.params;
+
+      // Try to find payment by transaction_id first, then by id (UUID)
+      const { Op } = require('sequelize');
+      const payment = await PaymentModel.findOne({
+        where: {
+          [Op.or]: [
+            { transaction_id: transactionId },
+            { id: transactionId }
+          ]
+        }
+      });
+
+      if (!payment) {
+        return res.status(404).json({
+          success: false,
+          message: 'Payment not found'
+        });
+      }
+
+      // Query real-time status from Midtrans API if using midtrans gateway
+      if (payment.payment_gateway === 'midtrans') {
+        try {
+          console.log(`[PAYMENT CONTROLLER] Checking status from Midtrans for: ${transactionId}`);
+
+          const MidtransService = require('../../infrastructure/services/MidtransService');
+          const midtransService = new MidtransService();
+
+          const midtransStatus = await midtransService.getPaymentStatus(transactionId);
+          console.log(`[PAYMENT CONTROLLER] Midtrans status:`, midtransStatus);
+
+          // Update database if status changed
+          if (midtransStatus.status !== payment.status) {
+            console.log(`[PAYMENT CONTROLLER] Updating status from ${payment.status} to ${midtransStatus.status}`);
+
+            payment.status = midtransStatus.status;
+
+            // If payment successful, set paid date and generate invoice
+            if (midtransStatus.status === 'berhasil') {
+              payment.dibayar_pada = new Date();
+              if (!payment.nomor_invoice) {
+                const date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const uniqueId = payment.id.substring(0, 8).toUpperCase();
+                payment.nomor_invoice = `INV/${year}/${month}/${uniqueId}`;
+              }
+
+              // Create escrow if not exists
+              const EscrowService = require('../../infrastructure/services/EscrowService');
+              const escrowService = new EscrowService();
+
+              try {
+                await escrowService.createEscrow({
+                  pembayaran_id: payment.id,
+                  pesanan_id: payment.pesanan_id,
+                  jumlah_ditahan: parseFloat(payment.jumlah),
+                  biaya_platform: parseFloat(payment.biaya_platform)
+                });
+                console.log(`[PAYMENT CONTROLLER] Escrow created for payment ${payment.id}`);
+              } catch (escrowError) {
+                // Escrow might already exist
+                console.log(`[PAYMENT CONTROLLER] Escrow creation note:`, escrowError.message);
+              }
+            }
+
+            await payment.save();
+          }
+        } catch (midtransError) {
+          console.error('[PAYMENT CONTROLLER] Failed to check Midtrans status:', midtransError);
+          // Continue with database status if Midtrans API fails
+        }
+      }
+
+      // Determine redirect URL based on status
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      let redirectUrl = '';
+
+      switch (payment.status) {
+        case 'berhasil':
+        case 'paid':
+        case 'success':
+        case 'settlement':
+          redirectUrl = `${frontendUrl}/payment/success?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'menunggu':
+        case 'pending':
+          redirectUrl = `${frontendUrl}/payment/pending?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'kadaluarsa':
+        case 'expired':
+          redirectUrl = `${frontendUrl}/payment/expired?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}`;
+          break;
+        case 'gagal':
+        case 'failed':
+        case 'deny':
+        case 'cancel':
+        default:
+          redirectUrl = `${frontendUrl}/payment/error?order_id=${payment.transaction_id}&transaction_id=${payment.external_id || payment.transaction_id}&gross_amount=${payment.jumlah}&message=${encodeURIComponent(payment.keterangan || 'Payment failed')}`;
+          break;
+      }
+
+      res.status(200).json({
+        success: true,
+        data: {
+          payment_id: payment.id,
+          transaction_id: payment.transaction_id,
+          status: payment.status,
+          redirect_url: redirectUrl,
+          amount: payment.jumlah,
+          created_at: payment.created_at
+        }
+      });
+    } catch (error) {
+      console.error('[PAYMENT CONTROLLER] Check payment status error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message
+      });
+    }
+  }
+
+  /**
    * GET /api/payments/order/:orderId
    * Get payment by order ID
    */
@@ -152,7 +362,7 @@ class PaymentController {
   async releaseEscrow(req, res) {
     try {
       const { escrow_id, reason } = req.body;
-      const user_id = req.user?.id || req.body.user_id;
+      const user_id = req.user?.userId || req.user?.id || req.body.user_id;
 
       const result = await this.releaseEscrowUseCase.execute({
         escrow_id,
@@ -693,7 +903,7 @@ class PaymentController {
     try {
       const { id } = req.params;
       const { alasan, jumlah_refund } = req.body;
-      const user_id = req.user?.id || req.body.user_id;
+      const user_id = req.user?.userId || req.user?.id || req.body.user_id;
 
       const result = await this.requestRefundUseCase.execute({
         pembayaran_id: id,

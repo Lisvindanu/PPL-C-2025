@@ -1,12 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
   const LogAktivitasAdmin = sequelize.define('LogAktivitasAdmin', {
     id: {
-      type: DataTypes.CHAR(36),
+      type: DataTypes.UUID,
       primaryKey: true,
       defaultValue: DataTypes.UUIDV4,
     },
     admin_id: {
-      type: DataTypes.CHAR(36),
+      type: DataTypes.UUID,
       allowNull: false,
     },
     aksi: {
@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
     target_id: {
-      type: DataTypes.CHAR(36),
+      type: DataTypes.UUID,
       allowNull: true,
     },
     detail: {

@@ -12,7 +12,7 @@ const userController = new UserController();
  *   post:
  *     tags: [Users]
  *     summary: Register new user
- *     description: Create a new user account (client or freelancer)
+ *     description: Create a new user account (automatically assigned client role)
  *     requestBody:
  *       required: true
  *       content:
@@ -38,31 +38,6 @@ const userController = new UserController();
  *         $ref: '#/components/responses/ServerError'
  */
 router.post('/register', userController.register);
-
-/**
- * @swagger
- * /api/users/verify-email:
- *   get:
- *     tags: [Users]
- *     summary: Verify email address
- *     description: Verify user email using token sent to email
- *     parameters:
- *       - in: query
- *         name: token
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Email verified successfully
- *       400:
- *         description: Invalid or expired token
- *       404:
- *         description: User not found
- *       500:
- *         $ref: '#/components/responses/ServerError'
- */
-router.get('/verify-email', userController.verifyEmail);
 
 /**
  * @swagger
@@ -172,7 +147,7 @@ router.put('/profile', authMiddleware, userController.updateProfile);
  *   post:
  *     tags: [Users]
  *     summary: Request password reset
- *     description: Send password reset email to user
+ *     description: Send password reset OTP to user's email
  *     requestBody:
  *       required: true
  *       content:
@@ -181,7 +156,7 @@ router.put('/profile', authMiddleware, userController.updateProfile);
  *             $ref: '#/components/schemas/ForgotPasswordRequest'
  *     responses:
  *       200:
- *         description: Password reset email sent
+ *         description: Password reset OTP sent
  *         content:
  *           application/json:
  *             schema:
@@ -201,11 +176,68 @@ router.post('/forgot-password', userController.forgotPassword);
 
 /**
  * @swagger
+ * /api/users/verify-otp:
+ *   post:
+ *     tags: [Users]
+ *     summary: Verify OTP for password reset
+ *     description: Verify the OTP sent to user's email for password reset
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: OTP verified successfully
+ *                     resetToken:
+ *                       type: string
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *       400:
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/verify-otp', userController.verifyOTP);
+
+/**
+ * @swagger
  * /api/users/reset-password:
  *   post:
  *     tags: [Users]
- *     summary: Reset password with token
- *     description: Reset user password using the token from email
+ *     summary: Reset password with verified token
+ *     description: Reset user password after OTP verification
  *     requestBody:
  *       required: true
  *       content:
@@ -229,6 +261,64 @@ router.post('/forgot-password', userController.forgotPassword);
  *         $ref: '#/components/responses/ServerError'
  */
 router.post('/reset-password', userController.resetPassword);
+
+/**
+ * @swagger
+ * /api/users/update-password-direct:
+ *   post:
+ *     tags: [Users]
+ *     summary: Update password directly (Hybrid Service)
+ *     description: Update user password directly without OTP verification (for hybrid mode/testing)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               newPassword:
+ *                 type: string
+ *                 format: password
+ *                 example: NewSecurePassword123!
+ *     responses:
+ *       200:
+ *         description: Password updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Password updated successfully
+ *                     email:
+ *                       type: string
+ *                       example: user@example.com
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/update-password-direct', userController.updatePasswordDirect);
 
 /**
  * @swagger
@@ -292,5 +382,128 @@ router.post('/logout', authMiddleware, userController.logout);
  *         $ref: '#/components/responses/ServerError'
  */
 router.put('/role', authMiddleware, userController.changeRole);
+
+/**
+ * @swagger
+ * /api/users/freelancer-profile:
+ *   post:
+ *     tags: [Users]
+ *     summary: Create freelancer profile
+ *     description: Create freelancer profile for authenticated user and set role to `freelancer`.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nama_lengkap:
+ *                 type: string
+ *                 description: Nama lengkap freelancer (akan dipecah menjadi nama_depan / nama_belakang)
+ *               gelar:
+ *                 type: string
+ *                 description: Gelar atau ringkasan singkat (jika tidak menyediakan judul_profesi)
+ *               no_telepon:
+ *                 type: string
+ *               deskripsi:
+ *                 type: string
+ *                 description: Ringkasan/bio singkat untuk profil
+ *               judul_profesi:
+ *                 type: string
+ *               keahlian:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               portfolio_url:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Freelancer profile created and role updated
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/freelancer-profile', authMiddleware, userController.createFreelancerProfile);
+
+/**
+ * @swagger
+ * /api/users/freelancer-profile:
+ *   put:
+ *     tags: [Users]
+ *     summary: Update freelancer profile
+ *     description: Update freelancer profile information including skills, education, licenses, and portfolio.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               nama_lengkap:
+ *                 type: string
+ *               nama_depan:
+ *                 type: string
+ *               nama_belakang:
+ *                 type: string
+ *               no_telepon:
+ *                 type: string
+ *               kota:
+ *                 type: string
+ *               provinsi:
+ *                 type: string
+ *               gelar:
+ *                 type: string
+ *               deskripsi_lengkap:
+ *                 type: string
+ *               judul_profesi:
+ *                 type: string
+ *               keahlian:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               bahasa:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               edukasi:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               lisensi:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               judul_portfolio:
+ *                 type: string
+ *               deskripsi_portfolio:
+ *                 type: string
+ *               portfolio_url:
+ *                 type: string
+ *               file_portfolio:
+ *                 type: array
+ *               avatar:
+ *                 type: string
+ *               foto_latar:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Freelancer profile updated successfully
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         description: Freelancer profile not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/freelancer-profile', authMiddleware, userController.updateFreelancerProfile);
 
 module.exports = router;

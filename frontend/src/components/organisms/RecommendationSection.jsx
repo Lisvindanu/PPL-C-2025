@@ -1,16 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ServiceCardItem from "../molecules/ServiceCardItem";
 import RemoveRecommendationModal from "../molecules/RemoveRecommendationModal";
 import { allServices } from "../../utils/servicesData";
+import { serviceService } from "../../services/serviceService";
 
-// Get random 8 services for recommendations
+// Get random 8 services for recommendations (MOCK FALLBACK)
 const getRandomRecommendations = () => {
   const shuffled = [...allServices].sort(() => 0.5 - Math.random());
   return shuffled.slice(0, 8);
 };
-
-const initialRecommendations = getRandomRecommendations();
 
 function RecommendationCard({ service, onClick, onHide, onFavoriteToggle }) {
   return (
@@ -20,7 +19,7 @@ function RecommendationCard({ service, onClick, onHide, onFavoriteToggle }) {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
-      className="relative"
+      className="relative h-full"
     >
       {/* Hide Button */}
       <button
@@ -47,6 +46,13 @@ function RecommendationCard({ service, onClick, onHide, onFavoriteToggle }) {
 }
 
 export default function RecommendationSection({ onServiceClick, onFavoriteToggle }) {
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [hiddenCount, setHiddenCount] = useState(0);
+  const [showHideModal, setShowHideModal] = useState(false);
+  const [serviceToHide, setServiceToHide] = useState(null);
+  const [isExpanded, setIsExpanded] = useState(true);
+
   // Load hidden recommendations from localStorage
   const getHiddenRecommendations = () => {
     try {
@@ -57,17 +63,72 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     }
   };
 
-  // Filter out hidden recommendations
-  const getVisibleRecommendations = () => {
-    const hidden = getHiddenRecommendations();
-    return initialRecommendations.filter(service => !hidden.includes(service.id));
-  };
+  // Fetch recommendations from backend
+  useEffect(() => {
+    let cancelled = false;
 
-  const [recommendations, setRecommendations] = useState(getVisibleRecommendations());
-  const [hiddenCount, setHiddenCount] = useState(getHiddenRecommendations().length);
-  const [showHideModal, setShowHideModal] = useState(false);
-  const [serviceToHide, setServiceToHide] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+    const fetchRecommendations = async () => {
+      try {
+        setLoading(true);
+        const hidden = getHiddenRecommendations();
+        setHiddenCount(hidden.length);
+
+        // Fetch active services from backend
+        const result = await serviceService.getAllServices({
+          page: 1,
+          limit: 20,
+          status: 'aktif'
+        });
+
+        if (cancelled) return;
+
+        if (result.success && result.services && result.services.length > 0) {
+          // Map and shuffle services
+          const mappedServices = result.services.map(service => ({
+            id: service.id,
+            title: service.judul || service.title,
+            category: service.nama_kategori || service.category || 'Lainnya',
+            freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+            rating: parseFloat(service.rating_rata_rata || service.rating || 0),
+            reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+            price: parseFloat(service.harga || service.price || 0),
+            slug: service.slug
+          }));
+
+          // Shuffle and take services (always show 4 or 8 for clean grid layout)
+          const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
+          const count = mappedServices.length >= 8 ? 8 : 4;
+          const selected = shuffled.slice(0, Math.min(count, mappedServices.length));
+
+          // Filter out hidden ones
+          const visible = selected.filter(s => !hidden.includes(s.id));
+          setRecommendations(visible);
+        } else {
+          // Fallback to mock data
+          console.log('[RecommendationSection] No services from backend, using mock data');
+          const mockRecs = getRandomRecommendations();
+          const visible = mockRecs.filter(s => !hidden.includes(s.id));
+          setRecommendations(visible);
+        }
+      } catch (error) {
+        if (cancelled) return;
+        console.error('[RecommendationSection] Error fetching recommendations:', error);
+        // Fallback to mock data
+        const mockRecs = getRandomRecommendations();
+        const hidden = getHiddenRecommendations();
+        const visible = mockRecs.filter(s => !hidden.includes(s.id));
+        setRecommendations(visible);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchRecommendations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleHideClick = (service) => {
     setServiceToHide(service);
@@ -96,18 +157,52 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     setServiceToHide(null);
   };
 
-  const handleRestoreAll = () => {
+  const handleRestoreAll = async () => {
     // Clear hidden recommendations from localStorage
     localStorage.removeItem('hiddenRecommendations');
-
-    // Restore all recommendations
-    setRecommendations(initialRecommendations);
     setHiddenCount(0);
+
+    // Re-fetch recommendations
+    try {
+      const result = await serviceService.getAllServices({
+        page: 1,
+        limit: 20,
+        status: 'aktif'
+      });
+
+      if (result.success && result.services && result.services.length > 0) {
+        const mappedServices = result.services.map(service => ({
+          id: service.id,
+          title: service.judul || service.title,
+          category: service.nama_kategori || service.category || 'Lainnya',
+          freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+          rating: parseFloat(service.rating_rata_rata || service.rating || 0),
+          reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+          price: parseFloat(service.harga || service.price || 0),
+          slug: service.slug
+        }));
+        const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
+        setRecommendations(shuffled.slice(0, 8));
+      }
+    } catch (error) {
+      console.error('[RecommendationSection] Error restoring:', error);
+    }
   };
 
   const toggleExpanded = () => {
     setIsExpanded(prev => !prev);
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <section className="py-12 px-4 bg-neutral-50">
+        <div className="max-w-7xl mx-auto text-center">
+          <i className="fas fa-spinner fa-spin text-3xl text-[#4782BE]"></i>
+        </div>
+      </section>
+    );
+  }
 
   // Always show section if there are hidden recommendations
   if (recommendations.length === 0 && hiddenCount === 0) {
@@ -179,7 +274,15 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+                    className={`grid gap-6 items-stretch ${
+                      recommendations.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
+                      recommendations.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' :
+                      recommendations.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+                      recommendations.length === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' :
+                      recommendations.length === 6 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
+                      recommendations.length === 7 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7' :
+                      'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+                    }`}
                   >
                     {recommendations.map((service) => (
                       <RecommendationCard

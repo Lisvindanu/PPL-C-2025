@@ -42,7 +42,7 @@ function DropdownMenu({ title, items, onItemClick }) {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 top-full mt-2 w-64 bg-white rounded-xl shadow-lg border border-neutral-200 py-2 z-50">
+        <div className="absolute left-0 top-full w-64 bg-white rounded-xl shadow-lg border border-neutral-200 py-2 z-50">
           {items.map((item, index) => (
             <button
               key={index}
@@ -91,7 +91,7 @@ export default function NavService() {
   ];
 
   const handleKategoriClick = (slug) => {
-    navigate(`/kategori/${slug}`);
+    navigate(`/services?category=${slug}`);
   };
 
   const handleMenuClick = (path) => {

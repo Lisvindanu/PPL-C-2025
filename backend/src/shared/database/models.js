@@ -1,9 +1,17 @@
 // Load and associate all Sequelize models here
-const UserModel = require('../../modules/user/infrastructure/models/UserModel');
-const UserTokenModel = require('../../modules/user/infrastructure/models/UserTokenModel');
-const FreelancerProfileModel = require('../../modules/user/infrastructure/models/FreelancerProfileModel');
+// Using lazy loading to avoid circular dependency
+
+function getModels() {
+  const UserModel = require('../../modules/user/infrastructure/models/UserModel');
+  const UserTokenModel = require('../../modules/user/infrastructure/models/UserTokenModel');
+  const FreelancerProfileModel = require('../../modules/user/infrastructure/models/FreelancerProfileModel');
+  
+  return { UserModel, UserTokenModel, FreelancerProfileModel };
+}
 
 function initAssociations() {
+  const { UserModel, UserTokenModel, FreelancerProfileModel } = getModels();
+  
   // users -> profil_freelancer (1:1)
   UserModel.hasOne(FreelancerProfileModel, {
     foreignKey: 'user_id',
@@ -27,6 +35,6 @@ function initAssociations() {
   });
 }
 
-module.exports = { initAssociations, UserModel, UserTokenModel, FreelancerProfileModel };
+module.exports = { initAssociations, getModels };
 
 

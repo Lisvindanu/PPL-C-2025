@@ -33,11 +33,17 @@ const connectDatabase = async () => {
     console.log('✅ MySQL Database connected successfully');
     console.log(`📦 Database: ${process.env.DB_NAME}`);
 
-    // Sync models (hanya di development, production pakai migrations)
-    if (process.env.NODE_ENV === 'development') {
-      await sequelize.sync({ alter: false }); // alter: true untuk auto-update schema
-      console.log('✅ Database models synced');
-    }
+    // Initialize model associations (call AFTER sequelize is authenticated)
+    const { initAssociations } = require('./models');
+    initAssociations();
+    console.log('✅ Model associations initialized');
+
+    // Disabled sequelize.sync() - using migrations instead to avoid foreign key conflicts
+    // if (process.env.NODE_ENV === 'development') {
+    //   await sequelize.sync({ alter: false });
+    //   console.log('✅ Database models synced');
+    // }
+    console.log('ℹ️  Using database migrations (sequelize.sync disabled)');
 
   } catch (error) {
     console.error('❌ MySQL connection failed:', error.message);

@@ -1,91 +1,64 @@
-/**
- * Approve Service Use Case (Admin Only)
- *
- * Ini buat admin approve/reject service yang baru dibuat.
- * Workflow nya: User bikin service -> status 'pending' -> Admin review -> approve/reject
- *
- * Steps:
- * 1. Validasi service exist dan status nya 'pending'
- * 2. Validasi user yang request adalah admin (di controller udah di-check middleware)
- * 3. Kalo approve: set status jadi 'active'
- * 4. Kalo reject: set status jadi 'rejected' + kasih alasan
- * 5. (Optional) Kirim email notifikasi ke penyedia
- * 6. Log action ke admin_logs
- */
+"use strict";
 
-class ApproveService {
-  constructor(serviceRepository, emailService = null, adminLogRepository = null) {
+/**
+ * Update/Approve Service Status Use Case (FINAL)
+ * - Hanya admin (sudah difilter adminMiddleware), tapi kita tetap cek defensif.
+ * - action: "approve"  => status = 'aktif'
+ *          "deactivate" => status = 'nonaktif'
+ * - Kembalikan row terbaru setelah update.
+ */
+function boom(msg, status = 400) {
+  const e = new Error(msg);
+  e.status = status;
+  return e;
+}
+
+class ApproveServiceUseCase {
+  /**
+   * @param {object} deps
+   * @param {import('../../infrastructure/repositories/SequelizeServiceRepository')} deps.serviceRepository
+   */
+  constructor(serviceRepository) {
     this.serviceRepository = serviceRepository;
-    this.emailService = emailService;
-    this.adminLogRepository = adminLogRepository;
+
+    // fallback bila enum DB berbeda dapat dioverride via ENV
+    this.STATUS_ACTIVE = process.env.SERVICE_STATUS_ACTIVE || "aktif";
+    this.STATUS_INACTIVE = process.env.SERVICE_STATUS_INACTIVE || "nonaktif";
   }
 
-  async execute(serviceId, adminId, action, reason = null) {
-    // action: 'approve' atau 'reject'
+  async execute(serviceId, payload = {}, authUser = {}) {
+    if (
+      !authUser ||
+      (authUser.role !== "admin" && authUser.is_admin !== true)
+    ) {
+      // harusnya sudah ketahan di adminMiddleware, tapi tetap defensif
+      throw boom("Forbidden", 403);
+    }
+    if (!serviceId) throw boom("Service id is required", 400);
 
-    // TODO: Validasi service exist
-    // const service = await this.serviceRepository.findById(serviceId);
-    // if (!service) {
-    //   throw new Error('Service not found');
-    // }
+    const svc = await this.serviceRepository.findById(serviceId);
+    if (!svc) throw boom("Service not found", 404);
 
-    // TODO: Validasi status harus pending
-    // if (service.status !== 'pending') {
-    //   throw new Error(`Service status ${service.status}, ga bisa di-approve/reject lagi`);
-    // }
+    const action = String(payload.action || "").toLowerCase();
 
-    // TODO: Update status berdasarkan action
-    // let updateData = {};
-    // if (action === 'approve') {
-    //   updateData = {
-    //     status: 'active',
-    //     is_active: true,
-    //     alasan_ditolak: null
-    //   };
-    // } else if (action === 'reject') {
-    //   if (!reason) {
-    //     throw new Error('Alasan penolakan wajib diisi, jangan asal reject anjir');
-    //   }
-    //   updateData = {
-    //     status: 'rejected',
-    //     is_active: false,
-    //     alasan_ditolak: reason
-    //   };
-    // } else {
-    //   throw new Error('Action cuma boleh approve atau reject, bego');
-    // }
+    let updated;
+    if (action === "approve") {
+      // Set ke enum valid DB
+      updated = await this.serviceRepository.setStatus(
+        serviceId,
+        this.STATUS_ACTIVE
+      );
+    } else if (action === "deactivate") {
+      updated = await this.serviceRepository.setStatus(
+        serviceId,
+        this.STATUS_INACTIVE
+      );
+    } else {
+      throw boom("Invalid action. Use 'approve' or 'deactivate'.", 400);
+    }
 
-    // TODO: Update ke database
-    // const updatedService = await this.serviceRepository.updateStatus(
-    //   serviceId,
-    //   updateData.status,
-    //   updateData.alasan_ditolak
-    // );
-
-    // TODO: (Optional) Kirim email notifikasi ke penyedia
-    // if (this.emailService && service.user_email) {
-    //   if (action === 'approve') {
-    //     await this.emailService.sendServiceApprovedEmail(service.user_email, service);
-    //   } else {
-    //     await this.emailService.sendServiceRejectedEmail(service.user_email, service, reason);
-    //   }
-    // }
-
-    // TODO: Log ke admin_logs
-    // if (this.adminLogRepository) {
-    //   await this.adminLogRepository.create({
-    //     admin_id: adminId,
-    //     action: action === 'approve' ? 'APPROVE_SERVICE' : 'REJECT_SERVICE',
-    //     target_type: 'SERVICE',
-    //     target_id: serviceId,
-    //     details: { reason }
-    //   });
-    // }
-
-    // return updatedService;
-
-    throw new Error('Not implemented yet - Tinggal sambungin ke database doang kok');
+    return updated;
   }
 }
 
-module.exports = ApproveService;
+module.exports = ApproveServiceUseCase;

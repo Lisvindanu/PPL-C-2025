@@ -7,8 +7,10 @@ const LoginUser = require('../../application/use-cases/LoginUser');
 const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
-const VerifyEmail = require('../../application/use-cases/VerifyEmail');
+const VerifyOTP = require('../../application/use-cases/VerifyOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
+const CreateFreelancerProfile = require('../../application/use-cases/CreateFreelancerProfile');
+const UpdateFreelancerProfile = require('../../application/use-cases/UpdateFreelancerProfile');
 
 class UserController {
   constructor() {
@@ -22,13 +24,26 @@ class UserController {
     this.updateProfileUseCase = new UpdateProfile({ userRepository });
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
-    this.verifyEmailUseCase = new VerifyEmail({ userRepository });
+    this.verifyOTPUseCase = new VerifyOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
+    this.createFreelancerProfileUseCase = new CreateFreelancerProfile({ userRepository });
+    this.updateFreelancerProfileUseCase = new UpdateFreelancerProfile({ userRepository });
   }
 
   register = async (req, res, next) => {
     try {
-      const result = await this.registerUser.execute(req.body);
+      console.log('Registration request body:', req.body);
+      const { email, password, nama_depan, nama_belakang } = req.body;
+      const termsAccepted = req.body.ketentuan_agree === true;
+      console.log('Terms accepted value:', termsAccepted);
+      
+      const result = await this.registerUser.execute({
+        email,
+        password,
+        firstName: nama_depan,
+        lastName: nama_belakang,
+        termsAccepted
+      });
       res.status(201).json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -70,7 +85,11 @@ class UserController {
         avatar: user.avatar,
         bio: user.bio,
         kota: user.kota,
-        provinsi: user.provinsi
+        provinsi: user.provinsi,
+        // Additional client profile fields added to match updateProfile response
+        foto_latar: user.foto_latar ,
+        anggaran: user.anggaran,
+        tipe_proyek: user.tipe_proyek
       }});
     } catch (err) {
       next(err);
@@ -102,20 +121,57 @@ class UserController {
     }
   };
 
-  resetPassword = async (req, res, next) => {
+  verifyOTP = async (req, res, next) => {
     try {
-  const result = await this.resetPasswordUseCase.execute(req.body);
+      const result = await this.verifyOTPUseCase.execute(req.body);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
   };
 
-  verifyEmail = async (req, res, next) => {
+  resetPassword = async (req, res, next) => {
     try {
-      const { token } = req.query;
-      const result = await this.verifyEmailUseCase.execute({ token });
+      const result = await this.resetPasswordUseCase.execute(req.body);
       res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updatePasswordDirect = async (req, res, next) => {
+    try {
+      const { email, newPassword } = req.body;
+
+      if (!email || !newPassword) {
+        const err = new Error('Email and newPassword are required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      // Find user by email
+      const user = await this.loginUser.userRepository.findByEmail(email);
+      if (!user) {
+        const err = new Error('User not found');
+        err.statusCode = 404;
+        throw err;
+      }
+
+      // Hash new password
+      const hashedPassword = await this.loginUser.hashService.hash(newPassword);
+
+      // Update password in database
+      await user.update({ password: hashedPassword });
+
+      console.log(`✅ Password updated for user: ${email}`);
+
+      res.json({
+        success: true,
+        data: {
+          message: 'Password updated successfully',
+          email: email
+        }
+      });
     } catch (err) {
       next(err);
     }
@@ -142,6 +198,40 @@ class UserController {
 
       const { role } = req.body;
       const result = await this.changeUserRoleUseCase.execute(userId, role);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  createFreelancerProfile = async (req, res, next) => {
+    try {
+      const userId = req.user && req.user.userId;
+      if (!userId) {
+        const err = new Error('Unauthorized');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const profileData = req.body || {};
+      const result = await this.createFreelancerProfileUseCase.execute(userId, profileData);
+      res.status(201).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateFreelancerProfile = async (req, res, next) => {
+    try {
+      const userId = req.user && req.user.userId;
+      if (!userId) {
+        const err = new Error('Unauthorized');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const profileData = req.body || {};
+      const result = await this.updateFreelancerProfileUseCase.execute(userId, profileData);
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

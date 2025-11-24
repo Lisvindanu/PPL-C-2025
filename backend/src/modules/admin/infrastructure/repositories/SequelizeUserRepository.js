@@ -5,11 +5,11 @@ class SequelizeUserRepository {
 
   async countByRole(role = 'all') {
     try {
-      let query = 'SELECT COUNT(*) as count FROM users';
-      const replacements = [];
+      let query = 'SELECT COUNT(*) as count FROM users WHERE role != ?';
+      const replacements = ['admin'];
 
       if (role !== 'all') {
-        query += ' WHERE role = ?';
+        query += ' AND role = ?';
         replacements.push(role);
       }
 
@@ -30,24 +30,59 @@ class SequelizeUserRepository {
       const limit = filters.limit || 10;
       const offset = ((filters.page || 1) - 1) * limit;
 
-      // Get users
-      const users = await this.sequelize.query(
-        'SELECT id, email, role, nama_depan, nama_belakang, is_active, created_at FROM users LIMIT ? OFFSET ?',
-        {
-          replacements: [limit, offset],
-          raw: true,
-          type: this.sequelize.QueryTypes.SELECT
+      // Build query with filters
+      let query = 'SELECT id, email, role, nama_depan, nama_belakang, is_active, created_at FROM users WHERE role != ?';
+      const replacements = ['admin'];
+
+      // Filter by role
+      if (filters.role && filters.role !== 'all') {
+        query += ' AND role = ?';
+        replacements.push(filters.role);
+      }
+
+      // Filter by status
+      if (filters.status && filters.status !== 'all') {
+        if (filters.status === 'active') {
+          query += ' AND is_active = 1';
+        } else if (filters.status === 'blocked') {
+          query += ' AND is_active = 0';
         }
-      );
+      }
+
+      // Get total count with same filters
+      let countQuery = 'SELECT COUNT(*) as count FROM users WHERE role != ?';
+      const countReplacements = ['admin'];
+
+      if (filters.role && filters.role !== 'all') {
+        countQuery += ' AND role = ?';
+        countReplacements.push(filters.role);
+      }
+
+      if (filters.status && filters.status !== 'all') {
+        if (filters.status === 'active') {
+          countQuery += ' AND is_active = 1';
+        } else if (filters.status === 'blocked') {
+          countQuery += ' AND is_active = 0';
+        }
+      }
+
+      // Add pagination
+      query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+      replacements.push(limit, offset);
+
+      // Get users
+      const users = await this.sequelize.query(query, {
+        replacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
 
       // Get total count
-      const total = await this.sequelize.query(
-        'SELECT COUNT(*) as count FROM users',
-        {
-          raw: true,
-          type: this.sequelize.QueryTypes.SELECT
-        }
-      );
+      const total = await this.sequelize.query(countQuery, {
+        replacements: countReplacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
 
       return {
         data: users || [],
@@ -157,8 +192,9 @@ class SequelizeUserRepository {
   async getActiveUsers() {
     try {
       const users = await this.sequelize.query(
-        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 1 ORDER BY created_at DESC',
+        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 1 AND role != ? ORDER BY created_at DESC',
         {
+          replacements: ['admin'],
           raw: true,
           type: this.sequelize.QueryTypes.SELECT
         }
@@ -173,8 +209,9 @@ class SequelizeUserRepository {
   async getInactiveUsers() {
     try {
       const users = await this.sequelize.query(
-        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 0 ORDER BY created_at DESC',
+        'SELECT id, email, role, nama_depan, nama_belakang, created_at FROM users WHERE is_active = 0 AND role != ? ORDER BY created_at DESC',
         {
+          replacements: ['admin'],
           raw: true,
           type: this.sequelize.QueryTypes.SELECT
         }

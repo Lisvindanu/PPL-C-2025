@@ -1,30 +1,20 @@
 export default function Logo({ size = "md", className = "", ...props }) {
   const sizes = {
-    sm: {
-      container: "gap-1 p-2",
-      text: "text-lg"
-    },
-    md: {
-      container: "gap-2 p-4",
-      text: "text-xl"
-    },
-    lg: {
-      container: "gap-3 p-6",
-      text: "text-2xl"
-    },
-    xl: {
-      container: "gap-4 p-8",
-      text: "text-3xl"
-    }
+    sm: "w-16 md:w-20 lg:w-24",
+    md: "w-24 md:w-32 lg:w-40",
+    lg: "w-32 md:w-40 lg:w-48",
+    xl: "w-40 md:w-48 lg:w-56"
   }
 
   const currentSize = sizes[size] || sizes.md;
 
   return (
-    <div className={`flex items-center justify-center ${currentSize.container} ${className}`} {...props}>
-      <div className={`text-skill-secondary font-bold ${currentSize.text} leading-tight`}>
-        Skill Connect
-      </div>
+    <div className={`flex items-center justify-center ${className}`} {...props}>
+      <img 
+        src="/assets/logo.png" 
+        alt="Skill Connect Logo" 
+        className={`${currentSize} h-auto`} 
+      />
     </div>
   );
 }
