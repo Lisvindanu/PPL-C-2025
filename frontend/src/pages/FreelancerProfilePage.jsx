@@ -105,12 +105,11 @@ export default function FreelancerProfilePage() {
     )
   }
 
-  const fullName = `${freelancer.nama_depan || ""} ${freelancer.nama_belakang || ""}`.trim()
+  const fullName = `${freelancer.nama_depan || ''} ${freelancer.nama_belakang || ''}`.trim() || freelancer.email?.split('@')[0] || 'User'
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
-
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button
@@ -211,6 +210,83 @@ export default function FreelancerProfilePage() {
                   </div>
                 )}
 
+                {/* Full Description */}
+                {freelancer.profil_freelancer?.deskripsi_lengkap && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-3 flex items-center">
+                      <i className="fas fa-file-alt mr-2 text-primary"></i>
+                      Deskripsi Lengkap
+                    </h2>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                        {freelancer.profil_freelancer.deskripsi_lengkap}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Portfolio */}
+                {(freelancer.profil_freelancer?.portfolio_url ||
+                  freelancer.profil_freelancer?.judul_portfolio ||
+                  freelancer.profil_freelancer?.file_portfolio) && (
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+                      <i className="fas fa-folder-open mr-2 text-primary"></i>
+                      Portfolio
+                    </h2>
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-6 space-y-4">
+                      {freelancer.profil_freelancer.judul_portfolio && (
+                        <div>
+                          <h3 className="font-bold text-gray-900 text-lg mb-2">
+                            {freelancer.profil_freelancer.judul_portfolio}
+                          </h3>
+                          {freelancer.profil_freelancer.deskripsi_portfolio && (
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                              {freelancer.profil_freelancer.deskripsi_portfolio}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {freelancer.profil_freelancer.portfolio_url && (
+                        <div>
+                          <a
+                            href={freelancer.profil_freelancer.portfolio_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-primaryDark transition-colors"
+                          >
+                            <i className="fas fa-external-link-alt mr-2"></i>
+                            Lihat Portfolio
+                          </a>
+                        </div>
+                      )}
+
+                      {freelancer.profil_freelancer.file_portfolio &&
+                       Array.isArray(freelancer.profil_freelancer.file_portfolio) &&
+                       freelancer.profil_freelancer.file_portfolio.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium text-gray-700 mb-2">File Portfolio:</p>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {freelancer.profil_freelancer.file_portfolio.map((file, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={file.startsWith("http") ? file : `${import.meta.env.VITE_API_BASE_URL?.replace("/api", "") || "http://localhost:5000"}/public/${file}`}
+                                  alt={`Portfolio ${index + 1}`}
+                                  className="w-full h-32 object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow"
+                                  onError={(e) => {
+                                    e.target.src = "https://via.placeholder.com/200x150?text=Portfolio"
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Services Offered */}
                 <div>
                   <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
@@ -279,7 +355,38 @@ export default function FreelancerProfilePage() {
                         {freelancer.profil_freelancer?.total_pekerjaan || 0}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
+
+                    {freelancer.profil_freelancer?.total_pekerjaan_selesai !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Pekerjaan Selesai</span>
+                        <span className="font-bold text-green-600">
+                          {freelancer.profil_freelancer.total_pekerjaan_selesai}
+                        </span>
+                      </div>
+                    )}
+
+                    {freelancer.profil_freelancer?.rating_rata_rata !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Rating</span>
+                        <div className="flex items-center">
+                          <i className="fas fa-star text-yellow-400 mr-1"></i>
+                          <span className="font-bold text-gray-900">
+                            {Number(freelancer.profil_freelancer.rating_rata_rata).toFixed(1)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {freelancer.profil_freelancer?.total_ulasan !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600">Total Ulasan</span>
+                        <span className="font-bold text-gray-900">
+                          {freelancer.profil_freelancer.total_ulasan}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                       <span className="text-gray-600">Member Since</span>
                       <span className="font-bold text-gray-900">
                         {new Date(freelancer.created_at).getFullYear()}

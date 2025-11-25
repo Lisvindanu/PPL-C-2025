@@ -105,7 +105,8 @@ router.post(
  *                   type: object
  *                   properties:
  *                     payment_id:
- *                       type: integer
+ *                       type: string
+ *                       format: uuid
  *                     transaction_id:
  *                       type: string
  *                     status:
@@ -143,7 +144,8 @@ router.get(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Payment ID
  *     responses:
  *       200:
@@ -185,7 +187,8 @@ router.get(
  *         name: orderId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Order ID
  *     responses:
  *       200:
@@ -264,7 +267,8 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Escrow ID
  *     responses:
  *       200:
@@ -347,7 +351,8 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Withdrawal ID
  *     responses:
  *       200:
@@ -729,8 +734,9 @@ if (process.env.NODE_ENV === 'development') {
    *             type: object
    *             properties:
    *               paymentId:
-   *                 type: integer
-   *                 example: 1
+   *                 type: string
+   *                 format: uuid
+   *                 example: "550e8400-e29b-41d4-a716-446655440000"
    *     responses:
    *       200:
    *         description: Payment success triggered
@@ -755,8 +761,9 @@ if (process.env.NODE_ENV === 'development') {
    *             type: object
    *             properties:
    *               paymentId:
-   *                 type: integer
-   *                 example: 1
+   *                 type: string
+   *                 format: uuid
+   *                 example: "550e8400-e29b-41d4-a716-446655440000"
    *     responses:
    *       200:
    *         description: Payment failure triggered

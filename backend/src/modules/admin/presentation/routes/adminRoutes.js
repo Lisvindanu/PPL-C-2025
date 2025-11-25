@@ -145,7 +145,8 @@ module.exports = (adminController) => {
    *         name: id
    *         required: true
    *         schema:
-   *           type: integer
+   *           type: string
+   *           format: uuid
    *         description: User ID
    *     responses:
    *       200:
@@ -179,7 +180,8 @@ module.exports = (adminController) => {
    *         name: id
    *         required: true
    *         schema:
-   *           type: integer
+   *           type: string
+   *           format: uuid
    *         description: User ID
    *     responses:
    *       200:

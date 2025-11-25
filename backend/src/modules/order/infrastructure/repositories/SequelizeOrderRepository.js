@@ -40,11 +40,8 @@ class SequelizeOrderRepository {
   }
 
   async create(orderData) {
-    // TODO: Implementasi create order
-    // const result = await this.sequelize.models.Pesanan.create(orderData);
-    // return new Order(result.toJSON());
-
-    throw new Error('Not implemented - Silakan implementasikan dengan Sequelize create()');
+    const result = await this.OrderModel.create(orderData);
+    return result.get({ plain: true });
   }
 
   async findById(id) {
@@ -90,24 +87,64 @@ class SequelizeOrderRepository {
   }
 
   async findByUserId(userId, filters = {}) {
-    // TODO: Implementasi find by user (sebagai pembeli)
-    // const where = { user_id: userId };
-    // if (filters.status) where.status = filters.status;
-    //
-    // const result = await this.sequelize.models.Pesanan.findAll({
-    //   where,
-    //   include: [
-    //     { model: this.sequelize.models.Layanan, as: 'layanan' },
-    //     { model: this.sequelize.models.User, as: 'penyedia' }
-    //   ],
-    //   limit: filters.limit || 20,
-    //   offset: ((filters.page || 1) - 1) * (filters.limit || 20),
-    //   order: [['created_at', 'DESC']]
-    // });
-    //
-    // return result.map(r => new Order(r.toJSON()));
+    const page = Math.max(parseInt(filters.page || '1', 10), 1);
+    const limit = Math.min(Math.max(parseInt(filters.limit || '10', 10), 1), 100);
+    const offset = (page - 1) * limit;
 
-    throw new Error('Not implemented - Query dengan where clause dan include');
+    const where = { client_id: userId };
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    if (filters.created_from || filters.created_to) {
+      where.created_at = {};
+      if (filters.created_from) where.created_at[Op.gte] = new Date(filters.created_from);
+      if (filters.created_to) where.created_at[Op.lte] = new Date(filters.created_to);
+    }
+
+    if (filters.q) {
+      where[Op.or] = [
+        { nomor_pesanan: { [Op.like]: `%${filters.q}%` } },
+        { judul: { [Op.like]: `%${filters.q}%` } }
+      ];
+    }
+
+    const allowedSort = new Set(['created_at', 'total_bayar', 'harga', 'status', 'tenggat_waktu']);
+    const sortBy = allowedSort.has(filters.sortBy) ? filters.sortBy : 'created_at';
+    const sortOrder = (filters.sortOrder || 'DESC').toString().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // Lazy-require freelancer User model
+    const FreelancerModel = this.sequelize.models.User || this.UserModel;
+    if (!this.OrderModel.associations.freelancer) {
+      this.OrderModel.belongsTo(FreelancerModel, { foreignKey: 'freelancer_id', as: 'freelancer' });
+    }
+
+    const result = await this.OrderModel.findAndCountAll({
+      where,
+      order: [[sortBy, sortOrder]],
+      limit,
+      offset,
+      attributes: [
+        'id', 'nomor_pesanan', 'judul', 'status', 'total_bayar', 'harga',
+        'waktu_pengerjaan', 'tenggat_waktu', 'created_at', 'updated_at',
+        'client_id', 'freelancer_id', 'layanan_id'
+      ],
+      include: [
+        {
+          model: FreelancerModel,
+          as: 'freelancer',
+          attributes: ['id', 'nama_depan', 'nama_belakang', 'avatar']
+        },
+        {
+          model: this.LayananModel,
+          as: 'layanan',
+          attributes: ['id', 'judul', 'thumbnail', 'harga']
+        }
+      ]
+    });
+
+    return result; // { count, rows }
   }
 
   async findByPenyediaId(penyediaId, filters = {}) {
@@ -168,51 +205,46 @@ class SequelizeOrderRepository {
   }
 
   async findByServiceId(serviceId, filters = {}) {
-    // TODO: Implementasi find by service
-    // Berguna untuk validasi: cek apakah service punya active orders
-    // const where = { layanan_id: serviceId };
-    // if (filters.status) where.status = filters.status;
-    //
-    // const result = await this.sequelize.models.Pesanan.findAll({ where });
-    // return result.map(r => new Order(r.toJSON()));
+    const where = { layanan_id: serviceId };
 
-    throw new Error('Not implemented - Simple findAll dengan where');
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    const result = await this.OrderModel.findAll({
+      where,
+      attributes: [
+        'id', 'nomor_pesanan', 'judul', 'status', 'total_bayar',
+        'created_at', 'client_id', 'freelancer_id', 'layanan_id'
+      ]
+    });
+
+    return result.map(r => r.get({ plain: true }));
   }
 
   async updateStatus(id, status) {
-    // TODO: Implementasi update status
-    // await this.sequelize.models.Pesanan.update(
-    //   { status },
-    //   { where: { id } }
-    // );
-    //
-    // return await this.findById(id);
+    await this.OrderModel.update(
+      { status },
+      { where: { id } }
+    );
 
-    throw new Error('Not implemented - Gunakan update() method');
+    return await this.findById(id);
   }
 
-  async cancel(id, cancelledBy, reason) {
-    // TODO: Implementasi cancel order
-    // await this.sequelize.models.Pesanan.update(
-    //   {
-    //     status: 'cancelled',
-    //     dibatalkan_oleh: cancelledBy, // 'buyer', 'seller', atau 'admin'
-    //     alasan_pembatalan: reason
-    //   },
-    //   { where: { id } }
-    // );
-    //
-    // return await this.findById(id);
+  async cancel(id, reason) {
+    await this.OrderModel.update(
+      {
+        status: 'dibatalkan'
+      },
+      { where: { id } }
+    );
 
-    throw new Error('Not implemented - Update multiple fields');
+    return await this.findById(id);
   }
 
   async update(id, orderData) {
-    // TODO: Implementasi general update
-    // await this.sequelize.models.Pesanan.update(orderData, { where: { id } });
-    // return await this.findById(id);
-
-    throw new Error('Not implemented - Standard update operation');
+    await this.OrderModel.update(orderData, { where: { id } });
+    return await this.findById(id);
   }
 }
 
