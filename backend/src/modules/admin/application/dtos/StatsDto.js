@@ -9,7 +9,8 @@ class StatsDto {
       completionRate: stats.totalOrders > 0 
         ? `${((stats.completedOrders / stats.totalOrders) * 100).toFixed(2)}%`
         : '0%',
-      totalRevenue: stats.totalRevenue,
+      // Gunakan biaya platform sebagai total pendapatan di dashboard admin
+      totalRevenue: stats.platformFees,
       platformFees: stats.platformFees,
       timestamp: new Date()
     };

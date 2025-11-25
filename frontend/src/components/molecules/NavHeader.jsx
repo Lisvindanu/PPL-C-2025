@@ -89,7 +89,7 @@ export default function NavHeader() {
   const handleDashboard = () => navigate("/dashboard");
   const handleFavorites = () => navigate("/favorit");
   const handleBookmarks = () => navigate("/bookmarks");
-  const handleOrders = () => navigate("/riwayat-pesanan");
+  const handleOrders = () => navigate("/orders");
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");

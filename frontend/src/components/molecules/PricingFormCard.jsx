@@ -44,6 +44,12 @@ export default function PricingFormCard({
     onChange({ harga: result });
   }
 
+  // Format rupiah untuk display
+  function formatRupiah(value) {
+    if (!value) return "";
+    return new Intl.NumberFormat("id-ID").format(value);
+  }
+
   return (
     <Card
       className="h-full flex flex-col"
@@ -57,12 +63,15 @@ export default function PricingFormCard({
             Waktu Pengerjaan <span className="text-red-500">*</span>
           </Label>
           <Input
-            placeholder="Masukan jumlah Hari"
+            placeholder="Contoh: 7 (dalam hari)"
             inputMode="numeric"
             value={values.waktu_pengerjaan || ""}
             onChange={(e) => handleIntFieldChange(e, "waktu_pengerjaan")}
             disabled={loading}
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Masukkan estimasi waktu pengerjaan dalam satuan hari (minimal 1 hari)
+          </p>
         </div>
 
         {/* Kategori */}
@@ -90,6 +99,9 @@ export default function PricingFormCard({
               </option>
             ))}
           </SelectBox>
+          <p className="text-xs text-gray-500 mt-1">
+            Pilih kategori yang sesuai dengan layanan Anda
+          </p>
         </div>
 
         {/* Harga Dasar (DECIMAL) */}
@@ -98,35 +110,48 @@ export default function PricingFormCard({
             Harga Dasar <span className="text-red-500">*</span>
           </Label>
           <Input
-            placeholder="Masukan Harga Layanan Anda"
+            placeholder="Contoh: 500000 atau 500000.50"
             inputMode="decimal"
             value={values.harga || ""}
             onChange={handleHargaChange}
             disabled={loading}
           />
+          <div className="text-xs text-gray-500 mt-1 space-y-1">
+            <p>Masukkan harga dalam Rupiah (tanpa titik/koma ribuan)</p>
+            {values.harga && (
+              <p className="font-medium text-gray-700">
+                ≈ Rp {formatRupiah(Math.floor(values.harga))}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      {error && <div className="mt-3 text-sm text-red-500">{error}</div>}
+      {error && (
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600 font-medium">⚠️ {error}</p>
+        </div>
+      )}
 
       {/* Action buttons */}
       <div className="mt-4">
         <div className="flex items-center justify-between gap-3">
           <Button
-            variant="outline"
-            className="w-full sm:w-auto  border-[#102d4f] hover:bg-[#3B82F6]/5"
+            variant="cancel"
+            className="w-full sm:w-auto border-[#102d4f] hover:bg-[#3B82F6]/5"
             onClick={onCancel}
             disabled={loading}
           >
-            Membatalkan
+            Batal
           </Button>
 
           <Button
-            className="w-full sm:w-auto bg-[#102d4f] hover:opacity-95 text-white"
+            variant="create"
+            className="w-full sm:w-auto"
             onClick={onSubmit}
             disabled={loading}
           >
-            {loading ? "Menyimpan..." : "Menambahkan"}
+            {loading ? "Menyimpan..." : "Simpan Layanan"}
           </Button>
         </div>
       </div>

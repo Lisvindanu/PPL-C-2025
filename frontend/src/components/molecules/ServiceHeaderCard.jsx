@@ -11,27 +11,33 @@ export default function ServiceHeaderCard({
 }) {
   const [index, setIndex] = useState(0);
 
+  const safeRating = Number.isFinite(Number(rating)) ? Number(rating) : 0;
+  const safeReviewCount = Number.isFinite(Number(reviewCount))
+    ? Number(reviewCount)
+    : 0;
+
   function prev() {
     if (images.length === 0) return;
     setIndex((i) => (i - 1 + images.length) % images.length);
   }
+
   function next() {
     if (images.length === 0) return;
     setIndex((i) => (i + 1) % images.length);
   }
 
   return (
-    <div className="rounded-xl border border-neutral-200 bg-white shadow-sm overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm">
+      <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar src={avatar} size="sm" />
           <div>
             <p className="text-sm font-semibold text-neutral-900">{name}</p>
             <div className="flex items-center gap-2 text-xs text-neutral-600">
               <StarRating value={rating} />
-              <span>{rating.toFixed(1)}</span>
+              <span>{(parseFloat(rating) || 0).toFixed(1)}</span>
               <span>•</span>
-              <span>{reviewCount} reviews</span>
+              <span>{safeReviewCount} reviews</span>
             </div>
           </div>
         </div>
@@ -42,10 +48,10 @@ export default function ServiceHeaderCard({
           <img
             src={images[index]}
             alt={`Gambar ${index + 1}`}
-            className="w-full h-64 sm:h-80 object-cover"
+            className="h-64 w-full object-cover sm:h-80"
           />
         ) : (
-          <div className="h-64 sm:h-80 flex items-center justify-center text-neutral-400">
+          <div className="flex h-64 items-center justify-center text-neutral-400 sm:h-80">
             No image
           </div>
         )}
@@ -72,7 +78,7 @@ export default function ServiceHeaderCard({
         )}
 
         {images.length > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">
             {images.map((_, i) => (
               <span
                 key={i}

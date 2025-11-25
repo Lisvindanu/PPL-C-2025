@@ -46,7 +46,8 @@ const details = await Promise.all(ids.map(async (id) => {
   }
 
   const handleServiceClick = (service) => {
-    navigate(`/services/${service.id}`)
+    // Use slug as primary route, fallback to ID
+    navigate(`/services/${service.slug || service.id}`)
   }
 
   return (

@@ -2,11 +2,18 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./pages/Landing";
 import LoginPage from "./pages/LoginPage";
 import RegisterClientPage from "./pages/RegisterClientPage";
+import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
 import DashboardPage from "./pages/DashboardPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminUserManagementPage from "./pages/AdminUserManagementPage";
 import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
+import AdminCategoryManagementPage from "./pages/AdminCategoryManagementPage";
+import AdminSubCategoryManagementPage from "./pages/AdminSubCategoryManagementPage";
+import TransactionTrendsPage from "./pages/TransactionTrendsPage";
 import ProfilePage from "./pages/ProfilePage";
+import ProfileEditPage from "./pages/ProfileEditPage";
+import FreelancerProfilePage from "./pages/FreelancerProfilePage";
+import FreelancerDetailPage from "./pages/FreelancerDetailPage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
@@ -37,6 +44,7 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
+      <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
       <Route
@@ -44,6 +52,7 @@ export default function App() {
         element={<NewPasswordPage />}
       />
       <Route path="/services" element={<ServiceListPage />} />
+
       <Route
         path="/dashboard"
         element={
@@ -101,6 +110,30 @@ export default function App() {
         }
       />
       <Route
+        path="/admin/kategori"
+        element={
+          <ProtectedRoute>
+            <AdminCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/subkategori"
+        element={
+          <ProtectedRoute>
+            <AdminSubCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/transaction-trends"
+        element={
+          <ProtectedRoute>
+            <TransactionTrendsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/bookmarks"
         element={
           <ProtectedRoute>
@@ -124,6 +157,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/freelance/service"
         element={
@@ -164,8 +198,19 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/services/:id" element={<ServiceDetailPage />} />
-      <Route path="/jobs" element={<ServiceDetailPage />} />
+      <Route
+        path="/profile/edit"
+        element={
+          <ProtectedRoute>
+            <ProfileEditPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/freelancer/:id/detail" element={<FreelancerDetailPage />} />
+      <Route path="/freelancer/:id" element={<FreelancerProfilePage />} />
+
+      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
       <Route
         path="/create-order/:id"
         element={
@@ -191,6 +236,7 @@ export default function App() {
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
+
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

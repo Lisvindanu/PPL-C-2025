@@ -44,7 +44,7 @@ export default function UserTable({ users = [], onBlock, onDetail }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-[700px] md:min-w-full">
         <thead className="bg-gray-50 border-b border-[#D8E3F3]">
           <tr>
             <th className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">
@@ -70,7 +70,7 @@ export default function UserTable({ users = [], onBlock, onDetail }) {
             return (
               <tr key={user.id} className="hover:bg-gray-50 transition-colors">
                 {/* User */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
                       {getInitials(user)}
@@ -86,56 +86,93 @@ export default function UserTable({ users = [], onBlock, onDetail }) {
                 </td>
 
                 {/* Email */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="text-sm text-blue-600 underline">
                     {user.email}
                   </div>
                 </td>
 
                 {/* Role */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center">
                     {getRoleBadge(user.role)}
                   </div>
                 </td>
 
                 {/* Status */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center">
                     {getStatusBadge(user.is_active)}
                   </div>
                 </td>
 
                 {/* Actions */}
-                <td className="px-6 py-4 whitespace-nowrap">
+                <td className="px-4 py-3 md:whitespace-nowrap whitespace-normal">
                   <div className="flex items-center justify-center gap-2">
+                    {/* Mobile: icon-only circular buttons (visible on default/mobile). */}
                     {isActive ? (
-                      <button
-                        type="button"
-                        onClick={() => onBlock(user, 'active')}
-                        className="inline-flex items-center justify-center gap-2 bg-[#EF4444] hover:bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                      >
-                        <XCircle size={16} />
-                        <span>Blokir</span>
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onBlock(user, 'active')}
+                          aria-label="Blokir"
+                          className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#EF4444] hover:bg-red-600 text-white transition-colors"
+                        >
+                          <XCircle size={16} />
+                        </button>
+
+                        {/* Desktop/Tablet: full button with label */}
+                        <button
+                          type="button"
+                          onClick={() => onBlock(user, 'active')}
+                          className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#EF4444] hover:bg-red-600 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <XCircle size={16} />
+                          <span>Blokir</span>
+                        </button>
+                      </>
                     ) : (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => onBlock(user, 'blocked')}
+                          aria-label="Aktifkan"
+                          className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#10B981] hover:bg-green-700 text-white transition-colors"
+                        >
+                          <CheckCircle2 size={16} />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => onBlock(user, 'blocked')}
+                          className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#10B981] hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>Aktifkan</span>
+                        </button>
+                      </>
+                    )}
+
+                    {/* Detail button (icon-only on mobile, labeled on sm+) */}
+                    <>
                       <button
                         type="button"
-                        onClick={() => onBlock(user, 'blocked')}
-                        className="inline-flex items-center justify-center gap-2 bg-[#10B981] hover:bg-green-700 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        onClick={() => onDetail && onDetail(user)}
+                        aria-label="Detail"
+                        className="inline-flex sm:hidden items-center justify-center w-10 h-10 rounded-full bg-[#B3B3B3] hover:bg-gray-500 text-white transition-colors"
                       >
-                        <CheckCircle2 size={16} />
-                        <span>Aktifkan</span>
+                        <Eye size={16} />
                       </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => onDetail && onDetail(user)}
-                      className="inline-flex items-center justify-center gap-2 bg-[#B3B3B3] hover:bg-gray-500 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
-                    >
-                      <Eye size={16} />
-                      <span>Detail</span>
-                    </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onDetail && onDetail(user)}
+                        className="hidden sm:inline-flex items-center justify-center gap-2 bg-[#B3B3B3] hover:bg-gray-500 text-white px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <Eye size={16} />
+                        <span>Detail</span>
+                      </button>
+                    </>
                   </div>
                 </td>
               </tr>

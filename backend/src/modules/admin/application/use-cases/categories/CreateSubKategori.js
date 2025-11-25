@@ -7,7 +7,12 @@ class CreateSubKategori {
     this.adminLogRepository = adminLogRepository;
   }
 
-  async execute(adminId, { nama, deskripsi, icon, id_kategori }, { ipAddress, userAgent } = {}) {
+  // application/use-cases/categories/CreateSubKategori.js
+
+async execute(adminId, { nama, deskripsi, icon, id_kategori }, { ipAddress, userAgent } = {}) {
+  try {
+    console.log('📝 CreateSubKategori - Input:', { adminId, nama, id_kategori, deskripsi, icon });
+
     // Validasi adminId
     if (!adminId) {
       throw new Error('Admin ID diperlukan');
@@ -23,8 +28,9 @@ class CreateSubKategori {
     }
 
     // Cek kategori exist dan aktif
+    console.log('🔍 Mencari kategori dengan ID:', id_kategori);
     const kategori = await this.kategoriRepository.findById(id_kategori);
-    
+    console.log('📦 Kategori ditemukan:', kategori);
 
     if (!kategori) {
       throw new Error('Kategori tidak ditemukan');
@@ -40,6 +46,8 @@ class CreateSubKategori {
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-')
       .trim();
+
+    console.log('🔗 Generated slug:', slug);
 
     // Cek unique nama
     const existingByNama = await this.subKategoriRepository.findByNama(nama);
@@ -57,7 +65,11 @@ class CreateSubKategori {
       is_active: true
     };
 
+    console.log('💾 Data yang akan disimpan:', subKategoriData);
+
     const result = await this.subKategoriRepository.create(subKategoriData);
+
+    console.log('✅ Sub kategori berhasil dibuat:', result.id);
 
     // Log aktivitas
     try {
@@ -76,11 +88,14 @@ class CreateSubKategori {
         userAgent: userAgent || null
       });
     } catch (logError) {
-      console.error('❌ Error saving admin log:', logError);
+      console.error('⚠️ Error saving admin log:', logError);
     }
 
     return result;
+  } catch (error) {
+    console.error('❌ Error in CreateSubKategori:', error);
+    throw error; // Re-throw untuk ditangkap controller
   }
 }
-
+} 
 module.exports = CreateSubKategori;

@@ -4,7 +4,7 @@
  * Service Controller (FINAL)
  * - Bind semua handler
  * - Normalisasi query: map sortOrder -> sortDir
- * - Konsisten response { status, message, data }
+ * - Response { status, message, data }
  */
 class ServiceController {
   constructor(
@@ -29,6 +29,7 @@ class ServiceController {
     this.getAllServices = this.getAllServices.bind(this);
     this.searchServices = this.searchServices.bind(this);
     this.getServiceById = this.getServiceById.bind(this);
+    this.getServiceBySlug = this.getServiceBySlug.bind(this);
     this.getMyServices = this.getMyServices.bind(this);
     this.updateService = this.updateService.bind(this);
     this.deleteService = this.deleteService.bind(this);
@@ -39,6 +40,7 @@ class ServiceController {
   ok(res, message, data, code = 200) {
     return res.status(code).json({ status: "success", message, data });
   }
+
   err(res, error, fallback = 500) {
     const code = error.status || error.statusCode || fallback;
     return res.status(code).json({
@@ -46,16 +48,19 @@ class ServiceController {
       message: error.message || "Internal Server Error",
     });
   }
+
   getUserId(req) {
     const u = req.user || {};
     return u.id || u.userId || u.user_id || null;
   }
+
   toSortDir(q) {
     const raw = (q.sortDir || q.sortOrder || "").toString().toLowerCase();
     return raw === "asc" ? "asc" : "desc";
   }
 
   // ---------- handlers ----------
+
   /**
    * POST /api/services
    * Create service (freelancer, status draft)
@@ -99,6 +104,7 @@ class ServiceController {
     try {
       const filters = {
         kategori_id: req.query.kategori_id,
+        freelancer_id: req.query.freelancer_id,
         harga_min: req.query.harga_min,
         harga_max: req.query.harga_max,
         rating_min: req.query.rating_min,
@@ -153,6 +159,74 @@ class ServiceController {
   }
 
   /**
+   * GET /api/services/slug/:slug
+   * Get service detail by slug (public, hanya aktif)
+   * + embed data freelancer
+   */
+  async getServiceBySlug(req, res) {
+    try {
+      const slug = (req.params.slug || "").trim();
+      if (!slug) {
+        return res
+          .status(400)
+          .json({ status: "error", message: "Slug is required" });
+      }
+
+      const repo = this.getAllServicesUseCase.serviceRepository;
+
+      // 1. Ambil service by slug
+      const svc = await repo.findBySlug(slug);
+      if (!svc || (svc.status || "").toLowerCase() !== "aktif") {
+        return res
+          .status(404)
+          .json({ status: "error", message: "Service not found" });
+      }
+
+      // 2. Ambil data freelancer dari tabel users (SELECT * supaya aman)
+      let freelancer = null;
+      if (svc.freelancer_id) {
+        try {
+          const [rows] = await repo.sequelize.query(
+            `
+            SELECT *
+            FROM users
+            WHERE id = ?
+            LIMIT 1
+          `,
+            { replacements: [svc.freelancer_id] }
+          );
+          const row = Array.isArray(rows) ? rows[0] : rows;
+          if (row) {
+            freelancer = row;
+          }
+        } catch (e) {
+          console.error(
+            "[ServiceController] Failed to load freelancer for service slug",
+            slug,
+            e.message
+          );
+        }
+      }
+
+      // 3. Bentuk payload final (kategori + freelancer dimasukkan)
+      const payload = {
+        ...svc,
+        kategori: svc.nama_kategori
+          ? {
+              id: svc.kategori_id,
+              nama: svc.nama_kategori,
+            }
+          : undefined,
+        freelancer,
+      };
+
+      return this.ok(res, "Service detail retrieved successfully", payload);
+    } catch (error) {
+      return this.err(res, error, 400);
+    }
+  }
+
+  /**
    * GET /api/services/my
    * List my services (freelancer, semua status)
    */
@@ -165,16 +239,12 @@ class ServiceController {
           .json({ status: "error", message: "Unauthorized" });
       }
 
-      // Interpretasi parameter status:
-      // - "aktif" | "draft" | "nonaktif" => filter spesifik
-      // - "all" atau tidak diisi
       const rawStatus = (req.query.status || "").toLowerCase().trim();
       const allow = new Set(["aktif", "draft", "nonaktif"]);
       const filters = { freelancer_id: userId };
       if (allow.has(rawStatus)) {
         filters.status = rawStatus;
       }
-      // jika rawStatus 'all' atau kosong -> biarkan tanpa filters.status
 
       const result = await this.getAllServicesUseCase.serviceRepository.findAll(
         filters,
@@ -196,7 +266,7 @@ class ServiceController {
   }
 
   /**
-   * PUT /api/services/:id
+   * PUT /api/services/{id}
    * Update service (freelancer owner)
    */
   async updateService(req, res) {
@@ -224,7 +294,6 @@ class ServiceController {
       if (thumbnailFile) {
         basePayload.thumbnail = `layanan/${thumbnailFile.filename}`;
       } else if (basePayload.thumbnail === "") {
-        // explicit empty string → hapus thumbnail
         basePayload.thumbnail = null;
       }
 
@@ -249,7 +318,7 @@ class ServiceController {
   }
 
   /**
-   * DELETE /api/services/:id
+   * DELETE /api/services/{id}
    * Delete service (set nonaktif, freelancer owner)
    */
   async deleteService(req, res) {
@@ -265,7 +334,7 @@ class ServiceController {
   }
 
   /**
-   * PATCH /api/services/:id/status
+   * PATCH /api/services/{id}/status
    * Update service status (admin) → approve / deactivate
    */
   async updateServiceStatus(req, res) {

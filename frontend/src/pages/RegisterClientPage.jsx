@@ -4,6 +4,7 @@ import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
 import FormGroup from "../components/molecules/FormGroup";
 import Button from "../components/atoms/Button";
+import RoleCard from "../components/molecules/RoleCard";
 import { useAuth } from "../hooks/useAuth";
 import { validateEmail, validatePassword, validateName } from "../utils/validators";
 import LoadingOverlay from "../components/organisms/LoadingOverlay";
@@ -11,9 +12,13 @@ import { useToast } from "../components/organisms/ToastProvider";
 import Icon from "../components/atoms/Icon";
 
 export default function RegisterClientPage() {
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "" });
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const onChange = (e) => setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
+  const [step, setStep] = useState(1);
+  const [role, setRole] = useState("client");
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", ketentuan_agree: false });
+  const onChange = (e) => {
+    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    setForm((s) => ({ ...s, [e.target.name]: value }));
+  };
 
   const { register, loading, error } = useAuth();
   const navigate = useNavigate();
@@ -22,10 +27,10 @@ export default function RegisterClientPage() {
 
   // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem('token');
     if (token) {
       toast.show("Anda sudah login", "info");
-      navigate("/dashboard", { replace: true });
+      navigate('/dashboard', { replace: true });
     }
   }, [navigate, toast]);
 
@@ -40,13 +45,15 @@ export default function RegisterClientPage() {
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
-    if (!termsAccepted) {
-      toast.show("Anda harus menyetujui ketentuan dan kebijakan privasi", "error");
-      return;
-    }
-
     try {
-      await register({ email: form.email, password: form.password, firstName: form.firstName, lastName: form.lastName, ketentuan_agree: true });
+      await register({
+        email: form.email,
+        password: form.password,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        role: "client",
+        ketentuan_agree: form.ketentuan_agree
+      });
       toast.show("Account created. Please login.", "success");
       navigate("/login", { replace: true });
     } catch (_) {
@@ -54,8 +61,50 @@ export default function RegisterClientPage() {
     }
   };
 
+  const handleRoleSelect = (selectedRole) => {
+    setRole(selectedRole);
+    if (selectedRole === "client") {
+      setStep(2);
+    } else {
+      navigate("/register/freelancer");
+    }
+  };
+
+  if (step === 1) {
+    return (
+      <AuthLayout>
+        <div className="w-full max-w-4xl text-center">
+          <h2 className="text-[#1B1B1B] text-3xl mb-8 font-medium font-title">Bergabung sebagai klien atau pekerja lepas</h2>
+          <div className="grid grid-cols-2 gap-6 mb-8">
+            <RoleCard title="Saya seorang klien, sedang merekrut untuk sebuah proyek" icon={<Icon name="palette" size="xl" className="text-[#112D4E]" />} selected={role === "client"} onClick={() => handleRoleSelect("client")} />
+            <RoleCard title="Saya seorang pekerja lepas, sedang mencari pekerjaan" icon={<Icon name="briefcase" size="xl" className="text-[#112D4E]" />} selected={role === "freelancer"} onClick={() => handleRoleSelect("freelancer")} />
+          </div>
+          <Button variant="role" className="px-8" onClick={() => setStep(2)}>
+            Bergabung sebagai Klien
+          </Button>
+          <div className="text-center mt-4 text-sm text-[#1B1B1B] font-body">
+            Sudah punya akun?{" "}
+            <Link to="/login" className="underline">
+              Masuk
+            </Link>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
-    <AuthLayout title="Buat Akun">
+    <AuthLayout
+      title="Register Client"
+      bottom={
+        <div className="absolute top-4 right-6 text-[#1B1B1B]">
+          Mencari pekerjaan?{" "}
+          <Link to="/register/freelancer" className="underline">
+            Bergabung sebagai Freelancer
+          </Link>
+        </div>
+      }
+    >
       <LoadingOverlay show={loading} text="Creating account..." />
       <AuthCard
         title="Buat Akun"
@@ -72,7 +121,14 @@ export default function RegisterClientPage() {
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
           <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
           <div className="text-sm text-[#112D4E] mb-4">
-            <input type="checkbox" className="mr-2" checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} /> Dengan membuat akun, saya setuju dengan{" "}
+            <input
+              type="checkbox"
+              name="ketentuan_agree"
+              checked={form.ketentuan_agree}
+              onChange={onChange}
+              className="mr-2"
+              required
+            /> Dengan membuat akun, saya setuju dengan{" "}
             <a href="#" className="underline">
               Ketentuan
             </a>{" "}

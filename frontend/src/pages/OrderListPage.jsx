@@ -1,35 +1,44 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/organisms/Navbar'
+import Footer from '../components/organisms/Footer'
 import OrderList from '../components/organisms/OrderList'
-import { mockOrders, filterOrdersByStatus } from '../mocks/orderMockData'
+import { useOrders } from '../hooks/useOrder'
 
 /**
- * OrderListPage using mock data
- * This version uses static mock data instead of API calls
+ * OrderListPage - My Orders
+ * Client dapat melihat semua order mereka
  */
-const OrderListPageWithMock = () => {
+const OrderListPage = () => {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState(null)
+
+  // Ambil orders dari backend: GET /api/orders/my via hook useOrders
+  const { orders = [], pagination = { page: 1, limit: 10, total: 0, totalPages: 1 }, isLoading, error } = useOrders({
+    page,
+    limit: 10,
+    status: statusFilter,
+  })
 
   const handleOrderClick = (orderId) => {
     navigate(`/orders/${orderId}`)
   }
 
-  // Use mock data
-  const orders = filterOrdersByStatus(statusFilter)
-  const pagination = {
-    page: 1,
-    limit: 10,
-    total: orders.length,
-    totalPages: 1
+  // Count orders by status (berdasarkan data yang sudah difetch)
+  const countByStatus = (status) => {
+    return orders.filter(o => o.status === status).length
   }
 
+  // Total pesanan (fallback ke panjang array kalau belum ada pagination.total)
+  const totalOrders = pagination && typeof pagination.total === 'number'
+    ? pagination.total
+    : orders.length
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4">
@@ -45,7 +54,7 @@ const OrderListPageWithMock = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Pesanan</p>
-                  <p className="text-2xl font-bold text-gray-900">{mockOrders.length}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -60,7 +69,7 @@ const OrderListPageWithMock = () => {
                 <div>
                   <p className="text-sm text-gray-600">Dikerjakan</p>
                   <p className="text-2xl font-bold text-purple-600">
-                    {mockOrders.filter(o => o.status === 'dikerjakan').length}
+                    {countByStatus('dikerjakan')}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -76,7 +85,7 @@ const OrderListPageWithMock = () => {
                 <div>
                   <p className="text-sm text-gray-600">Selesai</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {mockOrders.filter(o => o.status === 'selesai').length}
+                    {countByStatus('selesai')}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -92,7 +101,7 @@ const OrderListPageWithMock = () => {
                 <div>
                   <p className="text-sm text-gray-600">Menunggu</p>
                   <p className="text-2xl font-bold text-yellow-600">
-                    {mockOrders.filter(o => o.status === 'menunggu_pembayaran').length}
+                    {countByStatus('menunggu_pembayaran')}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -105,24 +114,53 @@ const OrderListPageWithMock = () => {
           </div>
         </div>
 
+        {/* Error message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <p className="text-red-700 text-sm flex items-center gap-2">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              {error.message || error}
+            </p>
+          </div>
+        )}
+
         {/* Order List */}
         <OrderList
           orders={orders}
           onOrderClick={handleOrderClick}
-          loading={false}
+          loading={isLoading}
         />
 
-        {/* Pagination - always shows 1 page in demo */}
+        {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
           <div className="mt-8 flex items-center justify-between bg-white rounded-lg shadow p-4">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              className="px-3 py-1 rounded-full border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Sebelumnya
+            </button>
             <div className="text-sm text-gray-700">
-              Menampilkan 1 - {pagination.total} dari {pagination.total} pesanan
+              Halaman {pagination.page} dari {pagination.totalPages} | Total {pagination.total} pesanan
             </div>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((prev) => (pagination ? Math.min(pagination.totalPages, prev + 1) : prev + 1))}
+              className="px-3 py-1 rounded-full border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Selanjutnya
+            </button>
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }
 
-export default OrderListPageWithMock
+export default OrderListPage

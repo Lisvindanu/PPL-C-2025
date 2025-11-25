@@ -1,35 +1,85 @@
-// infrastructure/repositories/SequelizeSubKategoriRepository.js
-
 const Kategori = require('../models/Kategori');
 const SubKategori = require('../models/SubKategori');
+const { Op, Sequelize } = require('sequelize');
 
 class SequelizeSubKategoriRepository {
-  async findAll(includeKategori = false) {
+  
+  async findAll(options = {}) {
     try {
-      const options = {
-        order: [['nama', 'ASC']]
+      console.log("🟡 REPO SubKategori - OPTIONS MASUK:", options);
+      
+      const { 
+        status, 
+        search, 
+        kategoriId,
+        sortBy = 'nama', 
+        sortOrder = 'ASC',
+        includeKategori = true 
+      } = options;
+
+      const where = {};
+
+      // ================================
+      // 1. STATUS FILTER 
+      // ================================
+      if (status === 'aktif') {
+        where.is_active = true;
+      } else if (status === 'nonaktif') {
+        where.is_active = false;
+      }
+
+      // ================================
+      // 2. KATEGORI FILTER
+      // ================================
+      if (kategoriId) {
+        where.id_kategori = kategoriId;
+      }
+
+      // ================================
+      // 3. SEARCH 
+      // ================================
+      if (search) {
+        const keyword = `%${search.toLowerCase()}%`;
+        
+        where[Op.or] = [
+          Sequelize.where(
+            Sequelize.fn('LOWER', Sequelize.col('SubKategori.nama')),
+            { [Op.like]: keyword }
+          ),
+        ];
+      }
+
+      // ================================
+      // 4. BUILD QUERY OPTIONS
+      // ================================
+      const queryOptions = {
+        where,
+        order: [[sortBy, sortOrder]]
       };
 
       if (includeKategori) {
-        options.include = [{
+        queryOptions.include = [{
           model: Kategori,
           as: 'kategori',
           attributes: ['id', 'nama', 'slug', 'is_active'],
-          required: false // ✅ LEFT JOIN (jika kategori null tetap muncul)
+          required: false // LEFT JOIN
         }];
       }
 
-      const result = await SubKategori.findAll(options);
+      const result = await SubKategori.findAll(queryOptions);
       
       console.log('📦 SubKategori found:', result.length);
       
       return result;
     } catch (error) {
-      console.error('❌ Error in findAll:', error);
+      console.error('❌ Error in findAll SubKategori:', error);
       throw error;
     }
   }
 
+  /**
+   * Find sub kategori by ID
+   */
   async findById(id_sub_kategori, includeKategori = false) {
     try {
       const options = {
@@ -52,6 +102,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Find sub kategori by kategori ID
+   */
   async findByKategori(id_kategori, includeKategori = true) {
     try {
       const options = {
@@ -75,6 +128,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Find sub kategori by slug
+   */
   async findBySlug(slug, includeKategori = false) {
     try {
       const options = {
@@ -97,6 +153,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Find sub kategori by nama
+   */
   async findByNama(nama) {
     try {
       return await SubKategori.findOne({
@@ -108,6 +167,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Find active sub kategori
+   */
   async findActive(id_kategori = null) {
     try {
       const where = { is_active: true };
@@ -122,7 +184,7 @@ class SequelizeSubKategoriRepository {
           as: 'kategori',
           attributes: ['id', 'nama', 'slug', 'is_active'],
           where: { is_active: true },
-          required: true // ✅ INNER JOIN (hanya kategori aktif)
+          required: true // INNER JOIN
         }],
         order: [['nama', 'ASC']]
       });
@@ -132,6 +194,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Create new sub kategori
+   */
   async create(subKategoriData) {
     try {
       const data = subKategoriData.toJSON ? subKategoriData.toJSON() : subKategoriData;
@@ -142,6 +207,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Update sub kategori
+   */
   async update(id_sub_kategori, updateData) {
     try {
       const [affectedRows] = await SubKategori.update(updateData, {
@@ -159,6 +227,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Delete sub kategori
+   */
   async delete(id_sub_kategori) {
     try {
       const deleted = await SubKategori.destroy({
@@ -172,6 +243,9 @@ class SequelizeSubKategoriRepository {
     }
   }
 
+  /**
+   * Count sub kategori by kategori
+   */
   async countByKategori(id_kategori) {
     try {
       return await SubKategori.count({
