@@ -75,8 +75,9 @@ export const useOrders = ({ page = 1, limit = 10, status = null } = {}) => {
   })
 
   return {
-    orders: query.data?.data?.items || [],
-    pagination: query.data?.data?.pagination,
+    // Backend response shape: { success, message, data: OrderSummary[], pagination }
+    orders: query.data?.data || [],
+    pagination: query.data?.pagination,
     isLoading: query.isLoading,
     error: query.error
   }

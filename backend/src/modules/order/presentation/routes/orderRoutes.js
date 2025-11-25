@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../../../../shared/middleware/authMiddleware');
+const orderValidation = require('../middleware/orderValidation');
 
 module.exports = (orderController) => {
   /**
@@ -23,7 +24,7 @@ module.exports = (orderController) => {
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.post('/', authMiddleware, (req, res) => orderController.createOrder(req, res));
+  router.post('/', authMiddleware, orderValidation.createOrder, (req, res) => orderController.createOrder(req, res));
 
   /**
    * @swagger
@@ -40,7 +41,7 @@ module.exports = (orderController) => {
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.get('/my', authMiddleware, (req, res) => orderController.getMyOrders(req, res));
+  router.get('/my', authMiddleware, orderValidation.listOrders, (req, res) => orderController.getMyOrders(req, res));
 
   /**
    * @swagger
@@ -57,7 +58,7 @@ module.exports = (orderController) => {
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.get('/incoming', authMiddleware, (req, res) => orderController.getIncomingOrders(req, res));
+  router.get('/incoming', authMiddleware, orderValidation.listOrders, (req, res) => orderController.getIncomingOrders(req, res));
 
   /**
    * @swagger
@@ -74,13 +75,14 @@ module.exports = (orderController) => {
    *         required: true
    *         schema:
    *           type: string
+   *           format: uuid
    *     responses:
    *       501:
    *         description: Not implemented yet
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.get('/:id', authMiddleware, (req, res) => orderController.getOrderById(req, res));
+  router.get('/:id', authMiddleware, orderValidation.validateUUID, (req, res) => orderController.getOrderById(req, res));
 
   /**
    * @swagger
@@ -97,13 +99,14 @@ module.exports = (orderController) => {
    *         required: true
    *         schema:
    *           type: string
+   *           format: uuid
    *     responses:
    *       501:
    *         description: Not implemented yet
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.patch('/:id/accept', authMiddleware, (req, res) => orderController.acceptOrder(req, res));
+  router.patch('/:id/accept', authMiddleware, orderValidation.validateUUID, (req, res) => orderController.acceptOrder(req, res));
 
   /**
    * @swagger
@@ -120,13 +123,14 @@ module.exports = (orderController) => {
    *         required: true
    *         schema:
    *           type: string
+   *           format: uuid
    *     responses:
    *       501:
    *         description: Not implemented yet
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.patch('/:id/start', authMiddleware, (req, res) => orderController.startOrder(req, res));
+  router.patch('/:id/start', authMiddleware, orderValidation.validateUUID, (req, res) => orderController.startOrder(req, res));
 
   /**
    * @swagger
@@ -143,13 +147,14 @@ module.exports = (orderController) => {
    *         required: true
    *         schema:
    *           type: string
+   *           format: uuid
    *     responses:
    *       501:
    *         description: Not implemented yet
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.patch('/:id/complete', authMiddleware, (req, res) => orderController.completeOrder(req, res));
+  router.patch('/:id/complete', authMiddleware, orderValidation.validateUUID, (req, res) => orderController.completeOrder(req, res));
 
   /**
    * @swagger
@@ -166,13 +171,14 @@ module.exports = (orderController) => {
    *         required: true
    *         schema:
    *           type: string
+   *           format: uuid
    *     responses:
    *       501:
    *         description: Not implemented yet
    *       401:
    *         $ref: '#/components/responses/UnauthorizedError'
    */
-  router.patch('/:id/cancel', authMiddleware, (req, res) => orderController.cancelOrder(req, res));
+  router.patch('/:id/cancel', authMiddleware, orderValidation.validateUUID, orderValidation.cancelOrder, (req, res) => orderController.cancelOrder(req, res));
 
   return router;
 };

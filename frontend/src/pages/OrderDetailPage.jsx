@@ -5,104 +5,166 @@ import StatusBadge from '../components/atoms/StatusBadge'
 import PriceText from '../components/atoms/PriceText'
 import OrderTimeline from '../components/molecules/OrderTimeline'
 import FreelancerOrderActions from '../components/organisms/FreelancerOrderActions'
+import Footer from '../components/organisms/Footer'
 import { orderService } from '../services/orderService'
 import { authService } from '../services/authService'
 
-/**
- * OrderDetailPage using mock data
- * This version uses static mock data instead of API calls
- */
 const OrderDetailPage = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    let isMounted = true
-    ;(async () => {
-      setLoading(true)
-      setError('')
-      const res = await orderService.getOrderById(id)
+  const loadOrder = async () => {
+    setLoading(true)
+    setError('')
+    const res = await orderService.getOrderById(id)
 
-      if (!isMounted) return
-
-      if (res?.success === false) {
-        setError(res?.message || 'Gagal memuat detail pesanan')
-        setOrder(null)
-        setLoading(false)
-        return
-      }
-
-      // Ambil payload fleksibel
-      const o = res?.data?.order || res?.data || res
-
-      // Normalisasi ke bentuk yang dipakai UI saat ini
-      const normalized = o
-        ? {
-            id: o.id ?? o.order_id ?? id,
-            nomor_pesanan: o.nomor_pesanan ?? o.order_number ?? o.nomor ?? `#${id}`,
-            judul: o.judul ?? o.title ?? 'Detail Pesanan',
-            status: o.status ?? 'unknown',
-            harga: o.harga ?? o.price ?? 0,
-            biaya_platform: o.biaya_platform ?? o.platform_fee ?? 0,
-            total_bayar: o.total_bayar ?? o.total ?? 0,
-            waktu_pengerjaan: o.waktu_pengerjaan ?? o.duration_days ?? 0,
-            deskripsi: o.deskripsi ?? o.description ?? '',
-            catatan_client: o.catatan_client ?? o.client_note ?? '',
-            lampiran_client: o.lampiran_client ?? o.client_attachments ?? [],
-            lampiran_freelancer: o.lampiran_freelancer ?? o.freelancer_attachments ?? [],
-            tenggat_waktu: o.tenggat_waktu ?? o.deadline ?? o.due_date ?? null,
-            // Client normalization (support various API shapes)
-            client:
-              o.client ||
-              o.client_user ||
-              o.clientProfile || {
-                id: o.client_id ?? o.clientId ?? o.client?.id,
-                nama_depan: o.client_first_name || '',
-                nama_belakang: o.client_last_name || '',
-                email: o.client_email || ''
-              },
-            // Freelancer normalization (ensure object exists if only ID present)
-            freelancer:
-              o.freelancer ||
-              o.freelancer_user ||
-              o.freelancerProfile ||
-              (o.freelancer_id || o.freelancerId || o.freelancer?.id
-                ? {
-                    id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
-                    nama_depan: o.freelancer_first_name || o.freelancer?.nama_depan || '',
-                    nama_belakang: o.freelancer_last_name || o.freelancer?.nama_belakang || '',
-                    email: o.freelancer_email || o.freelancer?.email || ''
-                  }
-                : null),
-            client_id: o.client_id ?? o.clientId ?? o.client?.id,
-            freelancer_id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
-            statusHistory: o.statusHistory || o.history || []
-          }
-        : null
-
-      setOrder(normalized)
+    if (res?.success === false) {
+      setError(res?.message || 'Gagal memuat detail pesanan')
+      setOrder(null)
       setLoading(false)
-    })()
+      return
+    }
 
-    return () => {
-      isMounted = false
+    // Ambil payload fleksibel
+    const o = res?.data?.order || res?.data || res
+
+    // Normalisasi ke bentuk yang dipakai UI saat ini
+    const normalized = o
+      ? {
+          id: o.id ?? o.order_id ?? id,
+          nomor_pesanan: o.nomor_pesanan ?? o.order_number ?? o.nomor ?? `#${id}`,
+          judul: o.judul ?? o.title ?? 'Detail Pesanan',
+          status: o.status ?? 'unknown',
+          harga: o.harga ?? o.price ?? 0,
+          biaya_platform: o.biaya_platform ?? o.platform_fee ?? 0,
+          total_bayar: o.total_bayar ?? o.total ?? 0,
+          waktu_pengerjaan: o.waktu_pengerjaan ?? o.duration_days ?? 0,
+          deskripsi: o.deskripsi ?? o.description ?? '',
+          catatan_client: o.catatan_client ?? o.client_note ?? '',
+          lampiran_client: o.lampiran_client ?? o.client_attachments ?? [],
+          lampiran_freelancer: o.lampiran_freelancer ?? o.freelancer_attachments ?? [],
+          tenggat_waktu: o.tenggat_waktu ?? o.deadline ?? o.due_date ?? null,
+          // Client normalization
+          client:
+            o.client ||
+            o.client_user ||
+            o.clientProfile || {
+              id: o.client_id ?? o.clientId ?? o.client?.id,
+              nama_depan: o.client_first_name || '',
+              nama_belakang: o.client_last_name || '',
+              email: o.client_email || ''
+            },
+          // Freelancer normalization
+          freelancer:
+            o.freelancer ||
+            o.freelancer_user ||
+            o.freelancerProfile ||
+            (o.freelancer_id || o.freelancerId || o.freelancer?.id
+              ? {
+                  id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
+                  nama_depan: o.freelancer_first_name || o.freelancer?.nama_depan || '',
+                  nama_belakang: o.freelancer_last_name || o.freelancer?.nama_belakang || '',
+                  email: o.freelancer_email || o.freelancer?.email || ''
+                }
+              : null),
+          client_id: o.client_id ?? o.clientId ?? o.client?.id,
+          freelancer_id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
+          statusHistory: o.statusHistory || o.history || []
+        }
+      : null
+
+    setOrder(normalized)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    if (id) {
+      loadOrder()
     }
   }, [id])
 
-  // Mock handlers
-  const handleAccept = () => {
-    alert('Order accepted! (Demo mode - no actual API call)')
+  // Real API handlers
+  const handleAccept = async () => {
+    if (actionLoading) return
+
+    if (!window.confirm('Apakah Anda yakin ingin menerima pesanan ini?')) {
+      return
+    }
+
+    setActionLoading(true)
+    try {
+      const result = await orderService.acceptOrder(id)
+
+      if (result.success) {
+        alert('✅ Pesanan berhasil diterima!')
+        await loadOrder() // Reload order data
+      } else {
+        alert(`❌ Gagal menerima pesanan: ${result.message}`)
+      }
+    } catch (err) {
+      console.error('Error accepting order:', err)
+      alert('❌ Terjadi kesalahan saat menerima pesanan')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
-  const handleReject = (reason) => {
-    alert(`Order rejected with reason: ${reason} (Demo mode - no actual API call)`)
+  const handleReject = async (reason) => {
+    if (actionLoading) return
+
+    if (!reason || reason.trim() === '') {
+      alert('Harap masukkan alasan penolakan')
+      return
+    }
+
+    setActionLoading(true)
+    try {
+      const result = await orderService.cancelOrder(id, reason)
+
+      if (result.success) {
+        alert('✅ Pesanan berhasil ditolak!')
+        await loadOrder() // Reload order data
+      } else {
+        alert(`❌ Gagal menolak pesanan: ${result.message}`)
+      }
+    } catch (err) {
+      console.error('Error rejecting order:', err)
+      alert('❌ Terjadi kesalahan saat menolak pesanan')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
-  const handleComplete = (data) => {
-    alert(`Order completed! Files: ${data.files.length}, Note: ${data.note} (Demo mode - no actual API call)`)
+  const handleComplete = async (data) => {
+    if (actionLoading) return
+
+    setActionLoading(true)
+    try {
+      // data.files adalah array of files, convert ke format yang dibutuhkan backend
+      const lampiranFreelancer = data.files.map(file => ({
+        name: file.name,
+        url: file.url || '#', // Nanti disesuaikan kalau ada upload service
+        size: file.size
+      }))
+
+      const result = await orderService.completeOrder(id, lampiranFreelancer)
+
+      if (result.success) {
+        alert('✅ Pesanan berhasil diselesaikan!')
+        await loadOrder() // Reload order data
+      } else {
+        alert(`❌ Gagal menyelesaikan pesanan: ${result.message}`)
+      }
+    } catch (err) {
+      console.error('Error completing order:', err)
+      alert('❌ Terjadi kesalahan saat menyelesaikan pesanan')
+    } finally {
+      setActionLoading(false)
+    }
   }
 
   if (loading) {
@@ -123,7 +185,7 @@ const OrderDetailPage = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Gagal Memuat Pesanan</h2>
           <p className="text-gray-600 mb-4">{error || `Order dengan ID "${id}" tidak ditemukan.`}</p>
           <button
-            onClick={() => navigate('/freelance/orders')}
+            onClick={() => navigate('/orders')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Kembali ke Daftar Pesanan
@@ -137,13 +199,10 @@ const OrderDetailPage = () => {
   const isFreelancer = currentUser?.id === order.freelancer_id || currentUser?.role === 'freelancer'
   const isClient = currentUser?.id === order.client_id || currentUser?.role === 'client'
 
-  // Mock status history (sementara pakai static data)
-  const mockStatusHistory = [
-    { status: 'dibuat', label: 'Pesanan dibuat', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString() },
-    { status: 'menunggu_pembayaran', label: 'Menunggu pembayaran', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString() },
-    { status: 'dibayar', label: 'Pembayaran dikonfirmasi', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2 + 1000 * 60 * 30).toISOString() },
-    { status: 'menunggu_konfirmasi', label: 'Menunggu konfirmasi freelancer', at: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2 + 1000 * 60 * 45).toISOString() }
-  ]
+  // Use actual status history from order or empty array
+  const statusHistory = order.statusHistory && order.statusHistory.length > 0
+    ? order.statusHistory
+    : []
 
   // Force display freelancer info from currently logged-in freelancer
   const freelancerDisplay =
@@ -183,12 +242,12 @@ const OrderDetailPage = () => {
   })()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         {/* Back button */}
         <button
-          onClick={() => navigate('/freelance/orders')}
+          onClick={() => navigate('/orders')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,8 +263,13 @@ const OrderDetailPage = () => {
             <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{order.judul}</h1>
-                  <p className="text-gray-600">Order #{order.nomor_pesanan}</p>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{order.judul}</h1>
+                  <p className="text-gray-600 text-sm">Order #{order.nomor_pesanan}</p>
+                  {freelancerDisplay && (
+                    <p className="text-gray-500 text-sm mt-1">
+                      Freelancer: {freelancerName}
+                    </p>
+                  )}
                 </div>
                 <StatusBadge status={order.status} />
               </div>
@@ -233,7 +297,7 @@ const OrderDetailPage = () => {
             {/* Order details */}
             <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Detail Pesanan</h2>
-              
+
               {order.deskripsi && (
                 <div className="mb-4">
                   <h3 className="text-sm font-medium text-gray-700 mb-2">Deskripsi</h3>
@@ -314,7 +378,11 @@ const OrderDetailPage = () => {
             {/* Timeline */}
             <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-6">Riwayat Status</h2>
-              <OrderTimeline statusHistory={mockStatusHistory} />
+              {statusHistory.length > 0 ? (
+                <OrderTimeline statusHistory={statusHistory} />
+              ) : (
+                <p className="text-gray-500 text-sm">Belum ada riwayat status</p>
+              )}
             </div>
           </div>
 
@@ -359,7 +427,7 @@ const OrderDetailPage = () => {
                 onAccept={handleAccept}
                 onReject={handleReject}
                 onComplete={handleComplete}
-                loading={false}
+                loading={actionLoading}
               />
             )}
 
@@ -381,6 +449,7 @@ const OrderDetailPage = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

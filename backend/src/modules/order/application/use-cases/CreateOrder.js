@@ -1,83 +1,104 @@
 /**
  * Create Order Use Case
  *
- * Ini logic paling penting di modul order.
- * Jangan sampe user bisa order service yang ga exist atau yang inactive.
- *
  * Flow pembuatan order:
  * 1. Validasi service exist dan active
- * 2. Validasi user ga bisa order service sendiri (jangan order layanan sendiri tolol)
- * 3. Generate nomor pesanan unik (misal: ORD-20240101-XXXXX)
- * 4. Validasi harga yang disepakati masih dalam range (min-max)
- * 5. Create order dengan status 'pending'
- * 6. (Opsional) Kirim notifikasi ke penyedia layanan
+ * 2. Validasi user tidak bisa order service sendiri
+ * 3. Validasi paket exist jika ada paket_id
+ * 4. Generate nomor pesanan unik
+ * 5. Hitung biaya platform dan total bayar
+ * 6. Create order dengan status 'menunggu_pembayaran'
  * 7. Return order yang baru dibuat
  *
- * Setelah order dibuat, user harus langsung create payment (modul 4)
+ * Setelah order dibuat, user harus langsung create payment
  */
 
 class CreateOrder {
-  constructor(orderRepository, serviceRepository, notificationService = null) {
+  constructor(orderRepository, serviceRepository, paketRepository = null) {
     this.orderRepository = orderRepository;
     this.serviceRepository = serviceRepository;
-    this.notificationService = notificationService;
+    this.paketRepository = paketRepository;
   }
 
   async execute(userId, orderData) {
-    // orderData: { layanan_id, harga_disepakati, tanggal_mulai, durasi_estimasi, catatan_pembeli }
+    // orderData: { layanan_id, paket_id (optional), catatan_client }
 
-    // TODO: Validasi service exist dan active
-    // const service = await this.serviceRepository.findById(orderData.layanan_id);
-    // if (!service || !service.isActive()) {
-    //   throw new Error('Service tidak tersedia atau sudah tidak aktif');
-    // }
+    // Validasi service exist
+    const service = await this.serviceRepository.findById(orderData.layanan_id);
+    if (!service) {
+      const error = new Error('Service tidak ditemukan');
+      error.statusCode = 404;
+      throw error;
+    }
 
-    // TODO: Validasi user ga order service sendiri
-    // if (service.user_id === userId) {
-    //   throw new Error('Lu ga bisa order layanan sendiri, ngapain sih');
-    // }
+    // Validasi service aktif
+    if (service.status !== 'aktif') {
+      const error = new Error('Service tidak tersedia atau sudah tidak aktif');
+      error.statusCode = 400;
+      throw error;
+    }
 
-    // TODO: Validasi harga dalam range
-    // if (orderData.harga_disepakati < service.harga_minimum ||
-    //     orderData.harga_disepakati > service.harga_maksimum) {
-    //   throw new Error(`Harga harus antara ${service.harga_minimum} - ${service.harga_maksimum}`);
-    // }
+    // Validasi user tidak order service sendiri
+    if (service.freelancer_id === userId) {
+      const error = new Error('Anda tidak dapat memesan layanan sendiri');
+      error.statusCode = 400;
+      throw error;
+    }
 
-    // TODO: Generate nomor pesanan
-    // const nomorPesanan = this.generateOrderNumber();
+    // Ambil data paket jika ada
+    let paket = null;
+    let harga = service.harga;
+    let waktuPengerjaan = service.waktu_pengerjaan;
 
-    // TODO: Create order
-    // const order = await this.orderRepository.create({
-    //   nomor_pesanan: nomorPesanan,
-    //   user_id: userId,
-    //   layanan_id: orderData.layanan_id,
-    //   penyedia_id: service.user_id,
-    //   judul_pesanan: service.judul,
-    //   deskripsi_pesanan: service.deskripsi,
-    //   harga_disepakati: orderData.harga_disepakati,
-    //   tanggal_mulai: orderData.tanggal_mulai,
-    //   durasi_estimasi: orderData.durasi_estimasi,
-    //   lokasi_pengerjaan: orderData.lokasi_pengerjaan || service.lokasi,
-    //   catatan_pembeli: orderData.catatan_pembeli,
-    //   status: 'pending'
-    // });
+    if (orderData.paket_id && this.paketRepository) {
+      paket = await this.paketRepository.findById(orderData.paket_id);
+      if (!paket || paket.layanan_id !== orderData.layanan_id) {
+        const error = new Error('Paket tidak valid untuk layanan ini');
+        error.statusCode = 400;
+        throw error;
+      }
+      harga = paket.harga;
+      waktuPengerjaan = paket.waktu_pengerjaan;
+    }
 
-    // TODO: Kirim notifikasi ke penyedia
-    // if (this.notificationService) {
-    //   await this.notificationService.sendNewOrderNotification(service.user_id, order);
-    // }
+    // Generate nomor pesanan
+    const nomorPesanan = this.generateOrderNumber();
 
-    // return order;
+    // Hitung biaya platform (10%)
+    const biayaPlatform = Math.floor(harga * 0.1);
+    const totalBayar = parseFloat(harga) + biayaPlatform;
 
-    throw new Error('Not implemented yet - Kerjain, ini modul penting banget');
+    // Hitung tenggat waktu
+    const tenggat = new Date();
+    tenggat.setDate(tenggat.getDate() + waktuPengerjaan);
+
+    // Create order
+    const order = await this.orderRepository.create({
+      nomor_pesanan: nomorPesanan,
+      client_id: userId,
+      freelancer_id: service.freelancer_id,
+      layanan_id: orderData.layanan_id,
+      paket_id: orderData.paket_id || null,
+      judul: service.judul,
+      deskripsi: service.deskripsi,
+      catatan_client: orderData.catatan_client || null,
+      harga: harga,
+      biaya_platform: biayaPlatform,
+      total_bayar: totalBayar,
+      waktu_pengerjaan: waktuPengerjaan,
+      tenggat_waktu: tenggat,
+      status: 'menunggu_pembayaran'
+    });
+
+    return order;
   }
 
   generateOrderNumber() {
-    // Format: ORD-YYYYMMDD-XXXXX
+    // Format: PES-YYYY-XXXXX
     const date = new Date();
-    const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
+    const year = date.getFullYear();
     const random = Math.floor(Math.random() * 90000) + 10000;
-    return `ORD-${dateStr}-${random}`;
+    return `PES-${year}-${String(random).padStart(5, '0')}`;
   }
 }
 

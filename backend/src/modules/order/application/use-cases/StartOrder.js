@@ -1,17 +1,17 @@
 /**
- * Accept Order Use Case (Freelancer Only)
+ * Start Order Use Case
  *
- * Use case untuk freelancer menerima pesanan yang masuk.
- * Hanya freelancer pemilik layanan yang dapat accept.
+ * Use case untuk freelancer memulai pengerjaan order.
+ * Mengubah status dari 'dibayar' menjadi 'dikerjakan'.
  *
  * Steps:
  * 1. Validasi order exist dan status 'dibayar'
- * 2. Validasi yang request adalah freelancer dari layanan ini
+ * 2. Validasi yang request adalah freelancer pemilik
  * 3. Update status jadi 'dikerjakan'
  * 4. Return updated order
  */
 
-class AcceptOrder {
+class StartOrder {
   constructor(orderRepository) {
     this.orderRepository = orderRepository;
   }
@@ -25,16 +25,16 @@ class AcceptOrder {
       throw error;
     }
 
-    // Validasi ownership - harus freelancer pemilik layanan
+    // Validasi ownership
     if (order.freelancer_id !== userId) {
-      const error = new Error('Anda tidak memiliki akses untuk menerima order ini');
+      const error = new Error('Anda tidak memiliki akses untuk memulai order ini');
       error.statusCode = 403;
       throw error;
     }
 
     // Validasi status harus 'dibayar'
     if (order.status !== 'dibayar') {
-      const error = new Error(`Order dengan status ${order.status} tidak dapat diterima. Pastikan pembayaran sudah berhasil.`);
+      const error = new Error(`Order dengan status ${order.status} tidak dapat dimulai. Pastikan pembayaran sudah berhasil.`);
       error.statusCode = 400;
       throw error;
     }
@@ -46,4 +46,4 @@ class AcceptOrder {
   }
 }
 
-module.exports = AcceptOrder;
+module.exports = StartOrder;

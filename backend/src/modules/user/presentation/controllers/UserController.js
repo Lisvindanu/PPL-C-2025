@@ -93,6 +93,7 @@ class UserController {
           foto_latar: user.foto_latar,
           anggaran: user.anggaran,
           tipe_proyek: user.tipe_proyek,
+          created_at: user.createdAt,
           freelancerProfile: profile
             ? {
                 id: profile.id,
@@ -263,6 +264,7 @@ class UserController {
     }
   };
   // Public method to get user by ID (for viewing freelancer profiles)
+  // Public method to get user by ID (for viewing freelancer profiles)
   getUserById = async (req, res, next) => {
     try {
       const { id } = req.params;
@@ -284,13 +286,13 @@ class UserController {
       const responseData = {
         id: user.id,
         email: user.email,
-        nama_depan: user.firstName,
-        nama_belakang: user.lastName,
-        no_telepon: user.phoneNumber,
+        nama_depan: user.nama_depan,
+        nama_belakang: user.nama_belakang,
+        no_telepon: user.no_telepon,
         role: user.role,
         bio: user.bio,
         foto: user.avatar,
-        is_verified: user.isVerified,
+        is_verified: user.is_verified,
         created_at: user.createdAt,
         profil_freelancer: profile
       };

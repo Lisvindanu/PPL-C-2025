@@ -2,14 +2,12 @@ import api from '../utils/axiosConfig'
 
 export const orderService = {
   // Client: Buat order baru
-  async createOrder({ serviceId, paketId, deskripsi, catatanClient, lampiranClient }) {
+  async createOrder({ serviceId, paketId, catatanClient }) {
     try {
       const response = await api.post('/orders', {
-        serviceId,
-        paketId,
-        deskripsi,
-        catatanClient,
-        lampiranClient
+        layanan_id: serviceId,
+        paket_id: paketId || null,
+        catatan_client: catatanClient || ''
       })
       return response.data
     } catch (error) {
@@ -50,13 +48,13 @@ export const orderService = {
     }
   },
 
-  // Get orders list (untuk current user)
+  // Get orders list (untuk current user sebagai client/pembeli)
   async getOrders({ page = 1, limit = 10, status = null }) {
     try {
       const params = { page, limit }
       if (status) params.status = status
-      
-      const response = await api.get('/orders', { params })
+
+      const response = await api.get('/orders/my', { params })
       return response.data
     } catch (error) {
       return {
@@ -82,7 +80,7 @@ export const orderService = {
   // Freelancer: Accept order
   async acceptOrder(orderId) {
     try {
-      const response = await api.put(`/orders/${orderId}/accept`)
+      const response = await api.patch(`/orders/${orderId}/accept`)
       return response.data
     } catch (error) {
       return {
@@ -92,15 +90,15 @@ export const orderService = {
     }
   },
 
-  // Freelancer: Reject order
-  async rejectOrder(orderId, reason) {
+  // Freelancer: Start order
+  async startOrder(orderId) {
     try {
-      const response = await api.put(`/orders/${orderId}/reject`, { reason })
+      const response = await api.patch(`/orders/${orderId}/start`)
       return response.data
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to reject order'
+        message: error.response?.data?.message || 'Failed to start order'
       }
     }
   },
@@ -108,7 +106,7 @@ export const orderService = {
   // Freelancer: Complete order
   async completeOrder(orderId, lampiranFreelancer) {
     try {
-      const response = await api.put(`/orders/${orderId}/complete`, {
+      const response = await api.patch(`/orders/${orderId}/complete`, {
         lampiranFreelancer
       })
       return response.data
@@ -123,7 +121,7 @@ export const orderService = {
   // Client: Cancel order
   async cancelOrder(orderId, reason) {
     try {
-      const response = await api.put(`/orders/${orderId}/cancel`, { reason })
+      const response = await api.patch(`/orders/${orderId}/cancel`, { reason })
       return response.data
     } catch (error) {
       return {
