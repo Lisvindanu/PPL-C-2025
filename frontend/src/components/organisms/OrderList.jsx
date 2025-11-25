@@ -66,13 +66,77 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {filteredOrders.map(order => (
-            <OrderCard 
-              key={order.id} 
-              order={order} 
-              onClick={onOrderClick}
-            />
-          ))}
+          {filteredOrders.map(order => {
+            const title = order.judul || order.layanan?.judul || 'Pesanan';
+            const total = Number(order.total_bayar || order.harga || 0);
+            const status = order.status || 'menunggu_pembayaran';
+
+            const statusClass =
+              status === 'selesai'
+                ? 'bg-green-100 text-green-700'
+                : status === 'dikerjakan'
+                ? 'bg-blue-100 text-blue-700'
+                : status === 'dibayar'
+                ? 'bg-amber-100 text-amber-700'
+                : status === 'dibatalkan'
+                ? 'bg-red-100 text-red-700'
+                : 'bg-gray-100 text-gray-700';
+
+            return (
+              <div
+                key={order.id}
+                className="bg-white rounded-lg shadow border border-gray-200 p-4 flex flex-col gap-3"
+              >
+                {/* Header info pesanan */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">
+                      Nomor Pesanan:{' '}
+                      <span className="font-mono">{order.nomor_pesanan}</span>
+                    </p>
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+                      {title}
+                    </h3>
+                    {order.created_at && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Dibuat pada{' '}
+                        {new Date(order.created_at).toLocaleString('id-ID')}
+                      </p>
+                    )}
+                    {order.freelancer && (
+                      <p className="text-xs text-gray-600 mt-1">
+                        Freelancer: {order.freelancer.nama_depan}{' '}
+                        {order.freelancer.nama_belakang}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-end gap-1">
+                    <span
+                      className={`px-2 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wide ${statusClass}`}
+                    >
+                      {status.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Total: Rp {total.toLocaleString('id-ID')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Kartu harga / ringkasan service yang sudah ada */}
+                <OrderCard
+                  price={total}
+                  rating={order.rating}
+                  reviewCount={order.reviewCount}
+                  completed={order.completed}
+                  waktu_pengerjaan={order.waktu_pengerjaan}
+                  batas_revisi={order.batas_revisi}
+                  onOrder={() => onOrderClick && onOrderClick(order.id)}
+                  onContact={() => onOrderClick && onOrderClick(order.id)}
+                />
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import StatusBadge from '../components/atoms/StatusBadge'
 import PriceText from '../components/atoms/PriceText'
 import OrderTimeline from '../components/molecules/OrderTimeline'
 import FreelancerOrderActions from '../components/organisms/FreelancerOrderActions'
+import Footer from '../components/organisms/Footer'
 import { orderService } from '../services/orderService'
 import { authService } from '../services/authService'
 
@@ -184,7 +185,7 @@ const OrderDetailPage = () => {
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Gagal Memuat Pesanan</h2>
           <p className="text-gray-600 mb-4">{error || `Order dengan ID "${id}" tidak ditemukan.`}</p>
           <button
-            onClick={() => navigate('/freelance/orders')}
+            onClick={() => navigate('/orders')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Kembali ke Daftar Pesanan
@@ -241,12 +242,12 @@ const OrderDetailPage = () => {
   })()
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         {/* Back button */}
         <button
-          onClick={() => navigate('/freelance/orders')}
+          onClick={() => navigate('/orders')}
           className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -262,8 +263,13 @@ const OrderDetailPage = () => {
             <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{order.judul}</h1>
-                  <p className="text-gray-600">Order #{order.nomor_pesanan}</p>
+                  <h1 className="text-2xl font-bold text-gray-900 mb-1">{order.judul}</h1>
+                  <p className="text-gray-600 text-sm">Order #{order.nomor_pesanan}</p>
+                  {freelancerDisplay && (
+                    <p className="text-gray-500 text-sm mt-1">
+                      Freelancer: {freelancerName}
+                    </p>
+                  )}
                 </div>
                 <StatusBadge status={order.status} />
               </div>
@@ -443,6 +449,7 @@ const OrderDetailPage = () => {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   )
 }
