@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
 import { getServiceById } from "../utils/servicesData";
+import { serviceService } from "../services/serviceService";
 import Navbar from "../components/organisms/Navbar";
 import Footer from "../components/organisms/Footer";
 import ServiceCardItem from "../components/molecules/ServiceCardItem";
@@ -24,20 +25,88 @@ export default function FavoritePage() {
       return;
     }
     loadFavorites();
+
+    // Reload favorites when window gains focus (user switches back to tab)
+    const handleFocus = () => {
+      console.log('[FavoritePage] Window focused, reloading favorites');
+      loadFavorites();
+    };
+    window.addEventListener('focus', handleFocus);
+
+    // Reload favorites when localStorage changes (from other tabs)
+    const handleStorage = (e) => {
+      if (e.key === 'favorites') {
+        console.log('[FavoritePage] Storage event detected, reloading favorites');
+        loadFavorites();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    // Listen to custom event for same-tab changes
+    const handleFavoritesChanged = (e) => {
+      console.log('[FavoritePage] favoritesChanged event detected', e.detail);
+      loadFavorites();
+    };
+    window.addEventListener('favoritesChanged', handleFavoritesChanged);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('favoritesChanged', handleFavoritesChanged);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadFavorites = () => {
+  const loadFavorites = async () => {
     try {
+      setLoading(true);
       // Load from localStorage
       const favoriteIds = JSON.parse(localStorage.getItem('favorites') || '[]');
 
-      // Get full service data
-      const favoriteServices = favoriteIds
-        .map(id => getServiceById(id))
-        .filter(Boolean)
-        .map(service => ({ ...service, isFavorite: true }));
+      if (favoriteIds.length === 0) {
+        setFavorites([]);
+        setLoading(false);
+        return;
+      }
 
+      console.log('[FavoritePage] Loading favorites for IDs:', favoriteIds);
+
+      // Try to get services from both mock data and backend
+      const favoriteServices = [];
+
+      for (const id of favoriteIds) {
+        // First try mock data (UUID format)
+        let service = getServiceById(id);
+
+        // If not found in mock data, try backend (numeric ID)
+        if (!service && typeof id === 'number') {
+          try {
+            const result = await serviceService.getServiceById(id);
+            if (result.success && result.service) {
+              // Map backend service to frontend format
+              service = {
+                id: result.service.id,
+                title: result.service.judul || result.service.title,
+                category: result.service.nama_kategori || result.service.category || 'Lainnya',
+                freelancer: result.service.freelancer?.nama_lengkap || result.service.freelancer || 'Freelancer',
+                rating: parseFloat(result.service.rating_rata_rata || result.service.rating || 0),
+                reviews: parseInt(result.service.jumlah_rating || result.service.reviews || 0),
+                price: parseFloat(result.service.harga || result.service.price || 0),
+                slug: result.service.slug,
+                thumbnail: result.service.thumbnail
+              };
+            }
+          } catch (error) {
+            console.error('[FavoritePage] Error fetching service from backend:', error);
+          }
+        }
+
+        if (service) {
+          favoriteServices.push({ ...service, isFavorite: true });
+        }
+      }
+
+      console.log('[FavoritePage] Loaded favorites:', favoriteServices);
       setFavorites(favoriteServices);
     } catch (err) {
       console.error("Error loading favorites:", err);
@@ -48,9 +117,14 @@ export default function FavoritePage() {
   };
 
   const handleFavoriteToggle = (serviceId, isFavorite) => {
+    console.log('[FavoritePage] handleFavoriteToggle called', { serviceId, isFavorite });
     // Remove from list if unfavorited
     if (!isFavorite) {
       setFavorites(prev => prev.filter(fav => fav.id !== serviceId));
+    } else {
+      // If favorited, reload the list
+      console.log('[FavoritePage] Item favorited, reloading list');
+      loadFavorites();
     }
   };
 

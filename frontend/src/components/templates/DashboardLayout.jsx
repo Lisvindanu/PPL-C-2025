@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sidebar } from '../organisms/Sidebar';
+import Sidebar from '../organisms/Sidebar';
 import { Header } from '../organisms/Header';
 import { StatsGrid } from '../organisms/StatsGrid';
 import { UserChart } from '../organisms/UserChart';

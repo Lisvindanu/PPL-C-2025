@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, startTransition } from "react";
 import { authService } from "../../services/authService";
 import { favoriteService } from "../../services/favoriteService";
 import { bookmarkService } from "../../services/bookmarkService";
@@ -29,12 +29,11 @@ export default function ServiceCardItem({
 
   const [isFavorite, setIsFavorite] = useState(getFavoriteStatus());
   const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showBookmarkToast, setShowBookmarkToast] = useState(false);
   const [showUnfavoriteModal, setShowUnfavoriteModal] = useState(false);
   const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
+  const [pendingBookmarkOperation, setPendingBookmarkOperation] = useState(false);
 
   // Ensure initial bookmark state reflects server on refresh/navigation
   useEffect(() => {
@@ -42,6 +41,12 @@ export default function ServiceCardItem({
 
     const hydrateBookmarkState = async () => {
       if (!user || !isClient || !service?.id) return;
+
+      // Don't override state if there's a pending optimistic operation
+      if (pendingBookmarkOperation) {
+        console.log('[ServiceCardItem] Skipping hydration - pending operation');
+        return;
+      }
 
       try {
         const res = await bookmarkService.isBookmarked(service.id);
@@ -58,149 +63,194 @@ export default function ServiceCardItem({
     return () => {
       cancelled = true;
     };
-  }, [user, isClient, service?.id]);
+  }, [user, isClient, service?.id, pendingBookmarkOperation]);
 
-  const handleFavoriteClick = async (e) => {
+  const handleFavoriteClick = (e) => {
     e.stopPropagation();
+    console.log('[ServiceCardItem] handleFavoriteClick called', {
+      serviceId: service.id,
+      user: !!user,
+      isClient,
+      isFavorite
+    });
 
     if (!user || !isClient) {
+      console.warn('[ServiceCardItem] User not logged in or not a client');
       return; // Silent fail - better UX
     }
 
     // If unfavoriting, show confirmation modal
     if (isFavorite) {
+      console.log('[ServiceCardItem] Already favorited, showing unfavorite modal');
       setShowUnfavoriteModal(true);
       return;
     }
 
-    // Adding to favorites (no confirmation needed)
-    setIsLoading(true);
+    // Adding to favorites - INSTANT UPDATE with startTransition
+    startTransition(() => {
+      try {
+        console.log('[ServiceCardItem] Adding to favorites, service ID:', service.id);
 
-    try {
-      // Update localStorage immediately (offline-first)
-      const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-      if (!favorites.includes(service.id)) {
-        favorites.push(service.id);
+        // Update localStorage immediately (offline-first)
+        const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+        console.log('[ServiceCardItem] Current favorites before add:', favorites);
+
+        if (!favorites.includes(service.id)) {
+          favorites.push(service.id);
+        }
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+        console.log('[ServiceCardItem] Favorites after add:', favorites);
+
+        // Trigger custom event for same tab (StorageEvent only works cross-tab)
+        window.dispatchEvent(new CustomEvent('favoritesChanged', {
+          detail: { favorites, serviceId: service.id, action: 'add' }
+        }));
+
+        // Update UI instantly
+        setIsFavorite(true);
+        if (onFavoriteToggle) {
+          onFavoriteToggle(service.id, true);
+        }
+
+        // Show toast notification
+        setShowToast(true);
+
+        // Sync to backend in background (don't block UI)
+        favoriteService.toggleFavorite(service.id, true).catch((err) => {
+          console.log("[ServiceCardItem] Backend favorite sync failed:", err);
+          // Keep localStorage state, don't revert
+        });
+      } catch (error) {
+        console.error("[ServiceCardItem] Error adding favorite:", error);
       }
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-
-      // Update UI
-      setIsFavorite(true);
-      if (onFavoriteToggle) {
-        onFavoriteToggle(service.id, true);
-      }
-
-      // Show toast notification
-      setShowToast(true);
-
-      // Sync to backend (optional, don't block UI)
-      favoriteService.toggleFavorite(service.id, true).catch((err) => {
-        console.log("Backend sync failed:", err);
-        // Keep localStorage state, don't revert
-      });
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
-  const handleConfirmUnfavorite = async () => {
+  const handleConfirmUnfavorite = () => {
     setShowUnfavoriteModal(false);
-    setIsLoading(true);
 
-    try {
-      // Update localStorage immediately (offline-first)
-      const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-      const index = favorites.indexOf(service.id);
-      if (index > -1) {
-        favorites.splice(index, 1);
+    startTransition(() => {
+      try {
+        // Update localStorage immediately (offline-first)
+        const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
+        const index = favorites.indexOf(service.id);
+        if (index > -1) {
+          favorites.splice(index, 1);
+        }
+        localStorage.setItem("favorites", JSON.stringify(favorites));
+
+        // Trigger custom event for same tab (StorageEvent only works cross-tab)
+        window.dispatchEvent(new CustomEvent('favoritesChanged', {
+          detail: { favorites, serviceId: service.id, action: 'remove' }
+        }));
+
+        // Update UI instantly
+        setIsFavorite(false);
+        if (onFavoriteToggle) {
+          onFavoriteToggle(service.id, false);
+        }
+
+        // Show toast notification
+        setShowToast(true);
+
+        // Sync to backend in background (don't block UI)
+        favoriteService.toggleFavorite(service.id, false).catch((err) => {
+          console.log("Backend sync failed:", err);
+          // Keep localStorage state, don't revert
+        });
+      } catch (error) {
+        console.error("Error:", error);
       }
-      localStorage.setItem("favorites", JSON.stringify(favorites));
-
-      // Update UI
-      setIsFavorite(false);
-      if (onFavoriteToggle) {
-        onFavoriteToggle(service.id, false);
-      }
-
-      // Show toast notification
-      setShowToast(true);
-
-      // Sync to backend (optional, don't block UI)
-      favoriteService.toggleFavorite(service.id, false).catch((err) => {
-        console.log("Backend sync failed:", err);
-        // Keep localStorage state, don't revert
-      });
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setIsLoading(false);
-    }
+    });
   };
 
-  const handleBookmarkClick = async (e) => {
+  const handleBookmarkClick = (e) => {
     e.stopPropagation();
+    console.log('[ServiceCardItem] handleBookmarkClick called', {
+      serviceId: service.id,
+      user: !!user,
+      isClient,
+      isBookmarked
+    });
 
     if (!user || !isClient) {
+      console.warn('[ServiceCardItem] User not logged in or not a client');
       return; // Silent fail - better UX
     }
 
     // If unsaving, show confirmation modal
     if (isBookmarked) {
+      console.log('[ServiceCardItem] Already bookmarked, showing unbookmark modal');
       setShowUnbookmarkModal(true);
       return;
     }
 
-    // Bookmarking (no confirmation needed)
-    setIsBookmarkLoading(true);
+    // Bookmarking - INSTANT UPDATE (no loading state)
+    console.log('[ServiceCardItem] Adding bookmark, service ID:', service.id);
 
-    try {
-      // Optimistic UI update
-      setIsBookmarked(true);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-      setShowBookmarkToast(true);
+    // Mark operation as pending to prevent hydration override
+    setPendingBookmarkOperation(true);
 
-      // Sync to backend bookmarks
-      const res = await bookmarkService.addBookmark(service.id);
-      if (!res?.success) {
-        // Revert if failed
+    // Optimistic UI update immediately
+    setIsBookmarked(true);
+    if (onBookmarkToggle) onBookmarkToggle(service.id, true);
+    setShowBookmarkToast(true);
+
+    // Sync to backend in background (don't block UI)
+    bookmarkService.addBookmark(service.id)
+      .then((res) => {
+        console.log('[ServiceCardItem] addBookmark response:', res);
+        if (!res?.success) {
+          // Revert if failed
+          console.error('[ServiceCardItem] Bookmark failed, reverting');
+          setIsBookmarked(false);
+          if (onBookmarkToggle) onBookmarkToggle(service.id, false);
+        } else {
+          console.log('[ServiceCardItem] Bookmark success!');
+        }
+      })
+      .catch((error) => {
+        console.error("[ServiceCardItem] addBookmark error:", error);
+        // Revert on error
         setIsBookmarked(false);
         if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-      }
-    } catch (error) {
-      console.error("[ServiceCardItem] addBookmark error:", error);
-      setIsBookmarked(false);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-    } finally {
-      setIsBookmarkLoading(false);
-    }
+      })
+      .finally(() => {
+        // Clear pending flag after operation completes
+        setPendingBookmarkOperation(false);
+      });
   };
 
-  const handleConfirmUnbookmark = async () => {
+  const handleConfirmUnbookmark = () => {
     setShowUnbookmarkModal(false);
-    setIsBookmarkLoading(true);
 
-    try {
-      // Optimistic UI update
-      setIsBookmarked(false);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-      setShowBookmarkToast(true);
+    // Mark operation as pending to prevent hydration override
+    setPendingBookmarkOperation(true);
 
-      // Sync to backend bookmarks
-      const res = await bookmarkService.removeBookmark(service.id);
-      if (!res?.success) {
-        // Revert if failed
+    // Optimistic UI update immediately
+    setIsBookmarked(false);
+    if (onBookmarkToggle) onBookmarkToggle(service.id, false);
+    setShowBookmarkToast(true);
+
+    // Sync to backend in background (don't block UI)
+    bookmarkService.removeBookmark(service.id)
+      .then((res) => {
+        if (!res?.success) {
+          // Revert if failed
+          setIsBookmarked(true);
+          if (onBookmarkToggle) onBookmarkToggle(service.id, true);
+        }
+      })
+      .catch((error) => {
+        console.error("[ServiceCardItem] removeBookmark error:", error);
+        // Revert on error
         setIsBookmarked(true);
         if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-      }
-    } catch (error) {
-      console.error("[ServiceCardItem] removeBookmark error:", error);
-      setIsBookmarked(true);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-    } finally {
-      setIsBookmarkLoading(false);
-    }
+      })
+      .finally(() => {
+        // Clear pending flag after operation completes
+        setPendingBookmarkOperation(false);
+      });
   };
 
   const thumbnailSrc = service.thumbnail || "/asset/layanan/Layanan.png";
@@ -266,37 +316,31 @@ export default function ServiceCardItem({
 
             {/* Favorite & Bookmark Icons - Only show for logged in clients */}
             {isClient && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
+                  type="button"
                   onClick={handleFavoriteClick}
-                  disabled={isLoading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all"
+                  aria-label="Tambah ke favorit"
                 >
-                  {isLoading ? (
-                    <i className="fas fa-spinner fa-spin text-neutral-600 text-lg" />
-                  ) : (
-                    <i
-                      className={`${isFavorite ? "fas" : "far"} fa-heart ${
-                        isFavorite ? "text-red-500" : "text-neutral-600"
-                      } text-lg`}
-                    />
-                  )}
+                  <i
+                    className={`${isFavorite ? "fas" : "far"} fa-heart ${
+                      isFavorite ? "text-red-500" : "text-neutral-600"
+                    } text-lg transition-all duration-200 pointer-events-none`}
+                  />
                 </button>
 
                 <button
+                  type="button"
                   onClick={handleBookmarkClick}
-                  disabled={isBookmarkLoading}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all"
+                  aria-label="Simpan layanan"
                 >
-                  {isBookmarkLoading ? (
-                    <i className="fas fa-spinner fa-spin text-neutral-600 text-lg" />
-                  ) : (
-                    <i
-                      className={`${isBookmarked ? "fas" : "far"} fa-bookmark ${
-                        isBookmarked ? "text-neutral-900" : "text-neutral-600"
-                      } text-lg`}
-                    />
-                  )}
+                  <i
+                    className={`${isBookmarked ? "fas" : "far"} fa-bookmark ${
+                      isBookmarked ? "text-neutral-900" : "text-neutral-600"
+                    } text-lg transition-all duration-200 pointer-events-none`}
+                  />
                 </button>
               </div>
             )}

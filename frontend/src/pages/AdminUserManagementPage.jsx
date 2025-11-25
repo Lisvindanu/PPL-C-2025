@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useToast } from '../components/organisms/ToastProvider';
 import { Sidebar } from '../components/organisms/Sidebar';
 import { Header } from '../components/organisms/Header';
 import { adminService } from '../services/adminService';
@@ -53,12 +54,13 @@ function BlockUserModal({
   isBlocking = true 
 }) {
   const [reason, setReason] = useState('');
+  const toast = useToast();
 
   if (!isOpen || !user) return null;
 
   const handleConfirm = () => {
     if (isBlocking && !reason.trim()) {
-      alert('Silakan masukkan alasan pemblokiran');
+      toast.show('Silakan masukkan alasan pemblokiran', 'error');
       return;
     }
     onConfirm(reason);
@@ -237,6 +239,7 @@ function UserDetailModal({
 }
 
 export default function AdminUserManagementPage() {
+  const toast = useToast();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -306,11 +309,13 @@ export default function AdminUserManagementPage() {
       if (isBlocking) {
         response = await adminService.blockUser(selectedUser.id, reason || 'Violation of terms');
       } else {
-        response = await adminService.unblockUser(selectedUser.id);
+        // Some backend implementations require a reason when unblocking.
+        // Send a default reason if none provided to avoid 400 from API.
+        response = await adminService.unblockUser(selectedUser.id, reason || 'Unblocked by admin');
       }
 
       if (response.success) {
-        alert(response.message || 'Berhasil memperbarui status pengguna');
+        toast.show(response.message || 'Berhasil memperbarui status pengguna', 'success');
         setBlockModalOpen(false);
         setSelectedUser(null);
         fetchUsers();
@@ -319,7 +324,7 @@ export default function AdminUserManagementPage() {
       }
     } catch (err) {
       console.error('Error updating user:', err);
-      alert(err.message || 'Terjadi kesalahan saat memperbarui status pengguna');
+      toast.show(err.message || 'Terjadi kesalahan saat memperbarui status pengguna', 'error');
     }
   };
 
@@ -337,17 +342,17 @@ export default function AdminUserManagementPage() {
 
       if (response.success) {
         if (format === 'csv' || format === 'excel') {
-          // File download akan otomatis dihandle oleh browser
-          alert(`Laporan berhasil diekspor dalam format ${format.toUpperCase()}`);
+          // File download handled by browser
+          toast.show(`Laporan berhasil diekspor dalam format ${format.toUpperCase()}`, 'success');
         } else {
-          alert('Laporan berhasil diekspor');
+          toast.show('Laporan berhasil diekspor', 'success');
         }
       } else {
         throw new Error(response.message || 'Failed to export report');
       }
     } catch (err) {
       console.error('Error exporting report:', err);
-      alert(err.message || 'Terjadi kesalahan saat mengekspor laporan');
+      toast.show(err.message || 'Terjadi kesalahan saat mengekspor laporan', 'error');
     }
   };
 
@@ -401,7 +406,7 @@ export default function AdminUserManagementPage() {
 
   if (loading && page === 1) {
     return (
-      <div className="flex items-center justify-center h-screen bg-[#F5F7FA]">
+      <div className="flex items-center justify-center h-screen bg-[#DBE2EF]">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-[#4782BE] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-gray-600">Memuat data pengguna...</p>
@@ -411,7 +416,7 @@ export default function AdminUserManagementPage() {
   }
 
   return (
-    <div className="flex h-screen bg-[#F5F7FA]">
+    <div className="flex h-screen bg-[#DBE2EF]">
       <Sidebar activeMenu="users" />
       
       <div className="flex-1 overflow-auto">

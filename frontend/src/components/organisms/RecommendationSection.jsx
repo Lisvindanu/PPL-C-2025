@@ -1,49 +1,53 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, forwardRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ServiceCardItem from "../molecules/ServiceCardItem";
 import RemoveRecommendationModal from "../molecules/RemoveRecommendationModal";
 import { allServices } from "../../utils/servicesData";
 import { serviceService } from "../../services/serviceService";
 
-// Get random 8 services for recommendations (MOCK FALLBACK)
+// Get random 10 services for recommendations (MOCK FALLBACK)
 const getRandomRecommendations = () => {
   const shuffled = [...allServices].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 8);
+  return shuffled.slice(0, 10);
 };
 
-function RecommendationCard({ service, onClick, onHide, onFavoriteToggle }) {
+const RecommendationCard = forwardRef(({ service, onClick, onHide, onFavoriteToggle }, ref) => {
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
-      className="relative h-full"
+      className="relative w-64 flex-shrink-0"
     >
-      {/* Hide Button */}
+      {/* Hide Button - positioned over the card */}
       <button
+        type="button"
         onClick={(e) => {
           e.stopPropagation();
           onHide(service);
         }}
-        className="absolute -top-2 -right-2 z-10 w-7 h-7 rounded-full bg-white border border-neutral-300 flex items-center justify-center hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-200 shadow-md"
+        className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-white border border-neutral-300 flex items-center justify-center hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-200 shadow-md"
         aria-label="Sembunyikan dari rekomendasi"
         title="Sembunyikan rekomendasi ini"
       >
-        <i className="fas fa-eye-slash text-neutral-600 text-xs" />
+        <i className="fas fa-eye-slash text-neutral-600 text-xs pointer-events-none" />
       </button>
 
-      {/* Service Card */}
+      {/* Service Card - exactly same as popular services */}
       <ServiceCardItem
         service={service}
         onClick={onClick}
         onFavoriteToggle={onFavoriteToggle}
-        fullWidth={true}
+        fullWidth={false}
       />
     </motion.div>
   );
-}
+});
+
+RecommendationCard.displayName = 'RecommendationCard';
 
 export default function RecommendationSection({ onServiceClick, onFavoriteToggle }) {
   const [recommendations, setRecommendations] = useState([]);
@@ -52,6 +56,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
   const [showHideModal, setShowHideModal] = useState(false);
   const [serviceToHide, setServiceToHide] = useState(null);
   const [isExpanded, setIsExpanded] = useState(true);
+  const scrollContainerRef = useRef(null);
 
   // Load hidden recommendations from localStorage
   const getHiddenRecommendations = () => {
@@ -73,6 +78,27 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
         const hidden = getHiddenRecommendations();
         setHiddenCount(hidden.length);
 
+        // Try to get cached recommendations first (v3 for 10 cards with mock fallback)
+        const cachedKey = 'cachedRecommendations_v3';
+        const cached = sessionStorage.getItem(cachedKey);
+
+        if (cached) {
+          try {
+            const parsedCache = JSON.parse(cached);
+            console.log('[RecommendationSection] Using cached recommendations:', parsedCache.length, 'cards');
+            const visible = parsedCache.filter(s => !hidden.includes(s.id));
+            setRecommendations(visible);
+            setLoading(false);
+            return;
+          } catch {
+            // Invalid cache, continue to fetch
+            console.log('[RecommendationSection] Invalid cache, fetching fresh data');
+            sessionStorage.removeItem(cachedKey);
+          }
+        }
+
+        console.log('[RecommendationSection] No cache found, fetching from backend...');
+
         // Fetch active services from backend
         const result = await serviceService.getAllServices({
           page: 1,
@@ -83,22 +109,31 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
         if (cancelled) return;
 
         if (result.success && result.services && result.services.length > 0) {
-          // Map and shuffle services
+          // Map services
           const mappedServices = result.services.map(service => ({
             id: service.id,
-            title: service.judul || service.title,
-            category: service.nama_kategori || service.category || 'Lainnya',
-            freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+            slug: service.slug,
+            title: service.judul || service.nama_layanan || service.title,
+            category: service.nama_kategori || service.kategori_nama || service.category || 'Lainnya',
+            freelancer: service.freelancer?.nama_lengkap || service.freelancer_name || service.freelancer || 'Freelancer',
             rating: parseFloat(service.rating_rata_rata || service.rating || 0),
-            reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+            reviews: parseInt(service.jumlah_rating || service.jumlah_ulasan || service.reviews || 0),
             price: parseFloat(service.harga || service.price || 0),
-            slug: service.slug
           }));
 
-          // Shuffle and take services (always show 4 or 8 for clean grid layout)
-          const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
-          const count = mappedServices.length >= 8 ? 8 : 4;
-          const selected = shuffled.slice(0, Math.min(count, mappedServices.length));
+          let selected;
+          // If less than 10 services from backend, use mock data
+          if (mappedServices.length < 10) {
+            console.log('[RecommendationSection] Only', mappedServices.length, 'services from backend, using mock data');
+            selected = getRandomRecommendations();
+          } else {
+            // Shuffle once and always take exactly 10 services
+            const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
+            selected = shuffled.slice(0, 10);
+          }
+
+          // Cache the recommendations for this session
+          sessionStorage.setItem(cachedKey, JSON.stringify(selected));
 
           // Filter out hidden ones
           const visible = selected.filter(s => !hidden.includes(s.id));
@@ -107,6 +142,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
           // Fallback to mock data
           console.log('[RecommendationSection] No services from backend, using mock data');
           const mockRecs = getRandomRecommendations();
+          sessionStorage.setItem(cachedKey, JSON.stringify(mockRecs));
           const visible = mockRecs.filter(s => !hidden.includes(s.id));
           setRecommendations(visible);
         }
@@ -162,27 +198,38 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     localStorage.removeItem('hiddenRecommendations');
     setHiddenCount(0);
 
-    // Re-fetch recommendations
+    // Get cached recommendations
     try {
-      const result = await serviceService.getAllServices({
-        page: 1,
-        limit: 20,
-        status: 'aktif'
-      });
+      const cachedKey = 'cachedRecommendations_v3';
+      const cached = sessionStorage.getItem(cachedKey);
 
-      if (result.success && result.services && result.services.length > 0) {
-        const mappedServices = result.services.map(service => ({
-          id: service.id,
-          title: service.judul || service.title,
-          category: service.nama_kategori || service.category || 'Lainnya',
-          freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
-          rating: parseFloat(service.rating_rata_rata || service.rating || 0),
-          reviews: parseInt(service.jumlah_rating || service.reviews || 0),
-          price: parseFloat(service.harga || service.price || 0),
-          slug: service.slug
-        }));
-        const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
-        setRecommendations(shuffled.slice(0, 8));
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        setRecommendations(parsedCache);
+      } else {
+        // Re-fetch if no cache
+        const result = await serviceService.getAllServices({
+          page: 1,
+          limit: 20,
+          status: 'aktif'
+        });
+
+        if (result.success && result.services && result.services.length > 0) {
+          const mappedServices = result.services.map(service => ({
+            id: service.id,
+            title: service.judul || service.title,
+            category: service.nama_kategori || service.category || 'Lainnya',
+            freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+            rating: parseFloat(service.rating_rata_rata || service.rating || 0),
+            reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+            price: parseFloat(service.harga || service.price || 0),
+            slug: service.slug
+          }));
+          const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, Math.min(10, mappedServices.length));
+          sessionStorage.setItem(cachedKey, JSON.stringify(selected));
+          setRecommendations(selected);
+        }
       }
     } catch (error) {
       console.error('[RecommendationSection] Error restoring:', error);
@@ -191,6 +238,16 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
 
   const toggleExpanded = () => {
     setIsExpanded(prev => !prev);
+  };
+
+  const scroll = (direction) => {
+    if (scrollContainerRef.current) {
+      const scrollAmount = direction === "left" ? -300 : 300;
+      scrollContainerRef.current.scrollBy({
+        left: scrollAmount,
+        behavior: "smooth",
+      });
+    }
   };
 
   // Show loading state
@@ -264,37 +321,54 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
             </div>
           </motion.div>
 
-          {/* Recommendations Grid */}
+          {/* Recommendations Carousel */}
           {isExpanded && (
             <>
               {recommendations.length > 0 ? (
-                <AnimatePresence mode="popLayout">
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.3 }}
-                    className={`grid gap-6 items-stretch ${
-                      recommendations.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
-                      recommendations.length === 2 ? 'grid-cols-1 sm:grid-cols-2 max-w-3xl mx-auto' :
-                      recommendations.length === 3 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-                      recommendations.length === 5 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5' :
-                      recommendations.length === 6 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' :
-                      recommendations.length === 7 ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7' :
-                      'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
-                    }`}
+                <div className="flex items-center gap-4">
+                  {/* Scroll Left Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scroll("left");
+                    }}
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] flex items-center justify-center hover:from-[#4782BE] hover:to-[#1D375B] transition-all duration-300 shadow-md hover:shadow-xl group"
                   >
-                    {recommendations.map((service) => (
-                      <RecommendationCard
-                        key={service.id}
-                        service={service}
-                        onClick={() => onServiceClick && onServiceClick(service)}
-                        onHide={handleHideClick}
-                        onFavoriteToggle={onFavoriteToggle}
-                      />
-                    ))}
-                  </motion.div>
-                </AnimatePresence>
+                    <i className="fas fa-chevron-left text-lg text-[#1D375B] group-hover:text-white transition-colors" />
+                  </button>
+
+                  {/* Services Cards Carousel */}
+                  <div
+                    ref={scrollContainerRef}
+                    className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide flex-1"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    <AnimatePresence mode="popLayout">
+                      {recommendations.map((service) => (
+                        <RecommendationCard
+                          key={service.id}
+                          service={service}
+                          onClick={() => onServiceClick && onServiceClick(service)}
+                          onHide={handleHideClick}
+                          onFavoriteToggle={onFavoriteToggle}
+                        />
+                      ))}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Scroll Right Button */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      scroll("right");
+                    }}
+                    className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-[#4782BE] to-[#1D375B] flex items-center justify-center hover:shadow-xl transition-all duration-300 shadow-md"
+                  >
+                    <i className="fas fa-chevron-right text-lg text-white" />
+                  </button>
+                </div>
               ) : (
                 <div className="bg-white rounded-2xl shadow-md p-12 text-center">
                   <i className="fas fa-eye-slash text-6xl text-neutral-300 mb-4"></i>

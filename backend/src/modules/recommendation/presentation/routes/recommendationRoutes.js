@@ -681,5 +681,97 @@ module.exports = (recommendationController, favoriteController) => {
     (req, res) => recommendationController.getRecommendationPerformance(req, res)
   );
 
+  /**
+   * @swagger
+   * /api/recommendations/admin/dashboard:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan data dashboard lengkap untuk admin
+   *     description: Endpoint untuk mendapatkan semua data yang diperlukan untuk dashboard monitoring rekomendasi
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Data dashboard berhasil diambil
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal server error
+   */
+  router.get(
+    '/admin/dashboard',
+    authMiddleware,
+    (req, res) => recommendationController.getAdminDashboard(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/recommendations/admin/model/status:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan status model rekomendasi
+   *     description: Endpoint untuk mendapatkan informasi status model, versi, dan log pembaruan
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Status model berhasil diambil
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal server error
+   */
+  router.get(
+    '/admin/model/status',
+    authMiddleware,
+    (req, res) => recommendationController.getModelStatus(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/recommendations/admin/model/update:
+   *   post:
+   *     tags: [Admin]
+   *     summary: Trigger pembaruan model rekomendasi
+   *     description: Endpoint untuk memulai proses pembaruan model rekomendasi
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Model berhasil diperbarui
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal server error
+   */
+  router.post(
+    '/admin/model/update',
+    authMiddleware,
+    (req, res) => recommendationController.updateModel(req, res)
+  );
+
+  /**
+   * @swagger
+   * /api/recommendations/admin/model/evaluation:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan evaluasi model rekomendasi
+   *     description: Endpoint untuk mendapatkan metrik evaluasi model seperti precision, recall, dan accuracy
+   *     security:
+   *       - bearerAuth: []
+   *     responses:
+   *       200:
+   *         description: Evaluasi model berhasil diambil
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal server error
+   */
+  router.get(
+    '/admin/model/evaluation',
+    authMiddleware,
+    (req, res) => recommendationController.getModelEvaluation(req, res)
+  );
+
   return router;
 };

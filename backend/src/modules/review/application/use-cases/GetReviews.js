@@ -30,7 +30,17 @@ class GetReviews {
   }
 
   async byUser(userId, filters = {}) {
-    return await this.reviewRepository.findByUserId(userId, filters);
+
+    const reviews = await this.reviewRepository.findByUserId(
+      userId,
+      filters
+    );
+    const total = await this.reviewRepository.countByUserId(
+      userId,
+      filters
+    );
+
+    return { reviews, total };
   }
 
   async latest(limit = 5) {

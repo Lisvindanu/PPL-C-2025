@@ -37,6 +37,7 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFi
             .slice(0, 10) // Limit to 10 services per category for carousel
             .map(service => ({
               id: service.id,
+              slug: service.slug,
               title: service.nama_layanan || service.title,
               category: category.nama_kategori || category.title,
               freelancer: service.freelancer_name || service.freelancer || "Unknown",

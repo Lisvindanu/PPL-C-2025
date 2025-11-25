@@ -506,4 +506,53 @@ router.post('/freelancer-profile', authMiddleware, userController.createFreelanc
  */
 router.put('/freelancer-profile', authMiddleware, userController.updateFreelancerProfile);
 
+
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user by ID (Public)
+ *     description: Retrieve public user profile information by user ID (for viewing freelancer profiles)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID (UUID)
+ *     responses:
+ *       200:
+ *         description: User profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     nama_depan:
+ *                       type: string
+ *                     nama_belakang:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     profil_freelancer:
+ *                       type: object
+ *       404:
+ *         description: User not found
+ *       500:
+ *         $ref: "#/components/responses/ServerError"
+ */
+router.get("/:id", userController.getUserById);
 module.exports = router;
