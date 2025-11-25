@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/organisms/Navbar'
+import Footer from '../components/organisms/Footer'
 import OrderList from '../components/organisms/OrderList'
-import { orderService } from '../services/orderService'
+import { useOrders } from '../hooks/useOrder'
 
 /**
  * OrderListPage - My Orders
@@ -12,65 +13,32 @@ const OrderListPage = () => {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [statusFilter, setStatusFilter] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [orders, setOrders] = useState([])
-  const [pagination, setPagination] = useState({
-    page: 1,
+
+  // Ambil orders dari backend: GET /api/orders/my via hook useOrders
+  const { orders = [], pagination = { page: 1, limit: 10, total: 0, totalPages: 1 }, isLoading, error } = useOrders({
+    page,
     limit: 10,
-    total: 0,
-    totalPages: 1
+    status: statusFilter,
   })
 
   const handleOrderClick = (orderId) => {
     navigate(`/orders/${orderId}`)
   }
 
-  // Fetch orders from API
-  useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true)
-      setError('')
-
-      try {
-        const response = await orderService.getOrders({
-          page,
-          limit: 10,
-          status: statusFilter
-        })
-
-        if (response.success && response.data) {
-          setOrders(response.data)
-          setPagination(response.pagination || {
-            page,
-            limit: 10,
-            total: response.data.length,
-            totalPages: 1
-          })
-        } else {
-          setError(response.message || 'Gagal memuat orders')
-          setOrders([])
-        }
-      } catch (err) {
-        setError('Terjadi kesalahan saat memuat orders')
-        setOrders([])
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchOrders()
-  }, [page, statusFilter])
-
-  // Count orders by status
+  // Count orders by status (berdasarkan data yang sudah difetch)
   const countByStatus = (status) => {
     return orders.filter(o => o.status === status).length
   }
 
+  // Total pesanan (fallback ke panjang array kalau belum ada pagination.total)
+  const totalOrders = pagination && typeof pagination.total === 'number'
+    ? pagination.total
+    : orders.length
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 flex-1">
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4">
@@ -86,7 +54,7 @@ const OrderListPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Total Pesanan</p>
-                  <p className="text-2xl font-bold text-gray-900">{pagination.total}</p>
+                  <p className="text-2xl font-bold text-gray-900">{totalOrders}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +121,7 @@ const OrderListPage = () => {
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              {error}
+              {error.message || error}
             </p>
           </div>
         )}
@@ -162,18 +130,35 @@ const OrderListPage = () => {
         <OrderList
           orders={orders}
           onOrderClick={handleOrderClick}
-          loading={loading}
+          loading={isLoading}
         />
 
-        {/* Pagination - always shows 1 page in demo */}
+        {/* Pagination */}
         {pagination && pagination.totalPages > 1 && (
           <div className="mt-8 flex items-center justify-between bg-white rounded-lg shadow p-4">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+              className="px-3 py-1 rounded-full border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Sebelumnya
+            </button>
             <div className="text-sm text-gray-700">
-              Menampilkan 1 - {pagination.total} dari {pagination.total} pesanan
+              Halaman {pagination.page} dari {pagination.totalPages} | Total {pagination.total} pesanan
             </div>
+            <button
+              type="button"
+              disabled={page >= pagination.totalPages}
+              onClick={() => setPage((prev) => (pagination ? Math.min(pagination.totalPages, prev + 1) : prev + 1))}
+              className="px-3 py-1 rounded-full border border-gray-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Selanjutnya
+            </button>
           </div>
         )}
       </div>
+      <Footer />
     </div>
   )
 }
