@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, forwardRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ServiceCardItem from "../molecules/ServiceCardItem";
 import RemoveRecommendationModal from "../molecules/RemoveRecommendationModal";
@@ -50,6 +51,7 @@ const RecommendationCard = forwardRef(({ service, onClick, onHide, onFavoriteTog
 RecommendationCard.displayName = 'RecommendationCard';
 
 export default function RecommendationSection({ onServiceClick, onFavoriteToggle }) {
+  const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hiddenCount, setHiddenCount] = useState(0);
@@ -163,6 +165,33 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
 
     return () => {
       cancelled = true;
+    };
+  }, []);
+
+  // Listen to changes from HiddenRecommendationsPage
+  useEffect(() => {
+    const handleHiddenChanged = () => {
+      console.log('[RecommendationSection] Hidden recommendations changed, updating count');
+      const hidden = getHiddenRecommendations();
+      setHiddenCount(hidden.length);
+
+      // Also update visible recommendations
+      const cachedKey = 'cachedRecommendations_v3';
+      const cached = sessionStorage.getItem(cachedKey);
+      if (cached) {
+        try {
+          const parsedCache = JSON.parse(cached);
+          const visible = parsedCache.filter(s => !hidden.includes(s.id));
+          setRecommendations(visible);
+        } catch (error) {
+          console.error('[RecommendationSection] Error updating after hidden change:', error);
+        }
+      }
+    };
+
+    window.addEventListener('hiddenRecommendationsChanged', handleHiddenChanged);
+    return () => {
+      window.removeEventListener('hiddenRecommendationsChanged', handleHiddenChanged);
     };
   }, []);
 
@@ -288,8 +317,17 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                 <p className="text-neutral-600">
                   Layanan yang mungkin Anda sukai berdasarkan aktivitas Anda
                   {hiddenCount > 0 && (
-                    <span className="ml-2 text-sm text-neutral-500">
-                      ({hiddenCount} rekomendasi disembunyikan)
+                    <span className="ml-2 text-sm">
+                      <span className="text-neutral-500">
+                        ({hiddenCount} rekomendasi disembunyikan)
+                      </span>
+                      {" · "}
+                      <button
+                        onClick={() => navigate('/layanan-tersembunyi')}
+                        className="text-[#4782BE] hover:text-[#1D375B] hover:underline font-medium"
+                      >
+                        Lihat Semua
+                      </button>
                     </span>
                   )}
                 </p>

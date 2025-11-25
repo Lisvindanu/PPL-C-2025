@@ -16,6 +16,7 @@ import RiwayatPesananPage from "./pages/RiwayatPesananPage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import FreelancerProfilePage from "./pages/FreelancerProfilePage";
 import FreelancerDetailPage from "./pages/FreelancerDetailPage";
+import HiddenRecommendationsPage from "./pages/HiddenRecommendationsPage";
 import ProtectedRoute from "./components/templates/ProtectedRoute";
 import ServicePage from "./pages/freelance/ServicePage";
 import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
@@ -37,6 +38,9 @@ import OrderListPage from "./pages/OrderListPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import AdminRecommendationDashboardPage from "./pages/admin/AdminRecommendationDashboardPage";
+import AdminModelManagementPage from "./pages/admin/AdminModelManagementPage";
+import AdminModelEvaluationPage from "./pages/admin/AdminModelEvaluationPage";
 
 export default function App() {
   return (
@@ -170,6 +174,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <FavoritePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/layanan-tersembunyi"
+        element={
+          <ProtectedRoute>
+            <HiddenRecommendationsPage />
           </ProtectedRoute>
         }
       />

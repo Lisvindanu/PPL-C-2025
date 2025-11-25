@@ -401,3 +401,5 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
     </>
   );
 };
+
+export default Sidebar;
