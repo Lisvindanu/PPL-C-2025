@@ -15,7 +15,7 @@ import { authService } from "../services/authService";
 export default function RegisterClientPage() {
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", ketentuan_agree: false });
   const onChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+    const value = e.target.type === "checkbox" ? e.target.checked : e.target.value;
     setForm((s) => ({ ...s, [e.target.name]: value }));
   };
 
@@ -29,8 +29,8 @@ export default function RegisterClientPage() {
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
       try {
-        const result = await authService.registerWithGoogle(tokenResponse.access_token, 'client');
-        
+        const result = await authService.registerWithGoogle(tokenResponse.access_token, "client");
+
         if (result.success) {
           toast.show("Account created and logged in with Google", "success");
           navigate("/dashboard", { replace: true });
@@ -47,15 +47,15 @@ export default function RegisterClientPage() {
     onError: () => {
       toast.show("Google authentication failed", "error");
       setGoogleLoading(false);
-    }
+    },
   });
 
   // Check if user is already logged in
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (token) {
       toast.show("Anda sudah login", "info");
-      navigate('/dashboard', { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate, toast]);
 
@@ -86,17 +86,7 @@ export default function RegisterClientPage() {
   };
 
   return (
-    <AuthLayout
-      title="Register Client"
-      bottom={
-        <div className="absolute top-4 right-6 text-[#1B1B1B]">
-          Mencari pekerjaan?{" "}
-          <Link to="/register/freelancer" className="underline">
-            Bergabung sebagai Freelancer
-          </Link>
-        </div>
-      }
-    >
+    <AuthLayout title="Register Client">
       <LoadingOverlay show={loading || googleLoading} text="Creating account..." />
       <AuthCard
         title="Buat Akun"
@@ -113,14 +103,7 @@ export default function RegisterClientPage() {
           <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
           <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
           <div className="text-sm text-[#112D4E] mb-4">
-            <input 
-            type="checkbox" 
-            name="ketentuan_agree" 
-            checked={form.ketentuan_agree} 
-            onChange={onChange} 
-            className="mr-2" 
-            required 
-            /> Dengan membuat akun, saya setuju dengan{" "}
+            <input type="checkbox" name="ketentuan_agree" checked={form.ketentuan_agree} onChange={onChange} className="mr-2" required /> Dengan membuat akun, saya setuju dengan{" "}
             <a href="#" className="underline">
               Ketentuan
             </a>{" "}
@@ -139,13 +122,7 @@ export default function RegisterClientPage() {
             <span>Atau</span>
             <div className="flex-1 h-px bg-[#B3B3B3]" />
           </div>
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            icon={<Icon name="google" size="md" />}
-            onClick={handleGoogleRegister}
-            disabled={googleLoading || loading}
-          >
+          <Button variant="outline" className="w-full" icon={<Icon name="google" size="md" />} onClick={handleGoogleRegister} disabled={googleLoading || loading}>
             {googleLoading ? "Memproses..." : "Lanjutkan dengan Google"}
           </Button>
         </form>

@@ -7,6 +7,11 @@ import useUserIdentity from "../../hooks/useUserIdentity";
 import { authService } from "../../services/authService";
 import { useToast } from "../organisms/ToastProvider";
 
+const ROLE_HOME = {
+  client: "/dashboard",
+  freelancer: "/dashboard",
+};
+
 function ProfileDropdown({ name, email, avatarUrl, role, hasFreelancerProfile, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onSwitchRole, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -98,15 +103,12 @@ export default function NavHeader() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const user = localStorage.getItem("user");
     setIsLoggedIn(!!token);
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        setUserRole(userData.role);
-      } catch (e) {
-        console.error("Failed to parse user data", e);
-      }
+    try {
+      const activeRole = authService.getActiveRole();
+      setUserRole(activeRole);
+    } catch (e) {
+      console.error("Failed to read active role", e);
     }
   }, []);
 
@@ -141,10 +143,21 @@ export default function NavHeader() {
     try {
       const result = await authService.switchRole(newRole);
       if (result.success) {
-        setUserRole(newRole);
-        toast.show(`Role berhasil diubah menjadi ${newRole === "client" ? "Klien" : "Freelancer"}`, "success");
-        // Refresh halaman untuk memperbarui UI berdasarkan role baru
-        window.location.reload();
+        if (result.data?.needsFreelancerRegistration) {
+          toast.show(result.data.message || "Lengkapi profil freelancer terlebih dahulu", "info");
+          navigate("/register/freelancer");
+          return;
+        }
+
+        const updatedRole = result.data?.role || newRole;
+        setUserRole(updatedRole);
+        toast.show(`Role berhasil diubah menjadi ${updatedRole === "client" ? "Klien" : "Freelancer"}`, "success");
+        const destination = ROLE_HOME[updatedRole] || "/";
+        if (typeof window !== "undefined") {
+          window.location.assign(destination);
+        } else {
+          navigate(destination, { replace: true });
+        }
       } else {
         toast.show(result.message || "Gagal mengubah role", "error");
       }
