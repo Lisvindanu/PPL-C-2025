@@ -12,9 +12,16 @@
     "test:integration": "jest --testPathPattern=integration",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
-    "migrate": "node src/shared/database/migrations.js",
-    "seed": "node src/shared/database/seeders.js"
+
+    "migrate": "sequelize db:migrate --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:undo": "sequelize db:migrate:undo --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:undo:all": "sequelize db:migrate:undo:all --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:fresh": "sequelize db:drop --config config/config.js && sequelize db:create --config config/config.js && sequelize db:migrate --config config/config.js --migrations-path src/shared/database/migrations",
+    "seed": "node src/shared/database/seeders/seed.js",
+    "seed:fresh": "npm run migrate:fresh && npm run seed"
+
   },
+
   "keywords": [
     "marketplace",
     "freelance",
