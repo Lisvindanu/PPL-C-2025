@@ -37,6 +37,8 @@ import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import FavoritePage from "./pages/FavoritePage";
 import RiwayatPesananPage from "./pages/RiwayatPesananPage";
+import AllNotificationsPage from "./pages/AllNotificationsPage";
+import FraudReportDetailPage from "./pages/FraudReportDetailPage";
 
 export default function App() {
   return (
@@ -130,6 +132,22 @@ export default function App() {
         element={
           <ProtectedRoute>
             <TransactionTrendsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notifications"
+        element={
+          <ProtectedRoute>
+            <AllNotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/fraud-report/:type/:id"
+        element={
+          <ProtectedRoute>
+            <FraudReportDetailPage />
           </ProtectedRoute>
         }
       />

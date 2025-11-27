@@ -196,17 +196,6 @@ function CategoryFormModal({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Icon URL
-                </label>
-                <input
-                  type="text"
-                  name="icon"
-                  value={formData.icon}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4782BE] focus:border-transparent"
-                  placeholder="https://example.com/icon.png"
-                />
                 {formData.icon && (
                   <div className="mt-2">
                     <p className="text-xs text-gray-500 mb-1">Preview:</p>
