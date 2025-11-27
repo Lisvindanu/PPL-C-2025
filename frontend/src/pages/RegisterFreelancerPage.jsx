@@ -24,7 +24,7 @@ export default function RegisterFreelancerPage() {
 
   // Check if user is logged in, redirect to login if not
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       toast.show("Silakan login terlebih dahulu", "info");
       navigate("/login", { replace: true });
