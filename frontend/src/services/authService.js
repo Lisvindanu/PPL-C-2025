@@ -125,48 +125,68 @@ export const authService = {
   },
 
   isAuthenticated() {
-    return !!localStorage.getItem("token");
+    return !!localStorage.getItem('token')
   },
 
-  async createFreelancerProfile(data) {
+  async loginWithGoogle(token) {
     try {
-      const res = await api.post("/users/freelancer-profile", data);
-      // Update user data in localStorage if profile creation is successful
-      if (res.data.success && res.data.data?.user) {
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-          const updatedUser = { ...currentUser, ...res.data.data.user };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
+      // Support both idToken and accessToken
+      const payload = token.includes('.') && token.split('.').length === 3 
+        ? { idToken: token } 
+        : { accessToken: token };
+      const response = await api.post('/users/login/google', payload)
+      
+      if (response.data.success) {
+        const { token, user } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        return {
+          success: true,
+          data: { token, user }
         }
       }
-      return res.data;
+      
+      return response.data
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Failed to create freelancer profile",
-        errors: error.response?.data?.errors || [],
-      };
+        message: error.response?.data?.message || 'Google login failed',
+        errors: error.response?.data?.errors || []
+      }
     }
   },
 
-  async switchRole(newRole) {
+  async registerWithGoogle(token, role = 'client') {
     try {
-      const res = await api.put("/users/role", { role: newRole });
-      // Update user data in localStorage if role switch is successful
-      if (res.data.success && res.data.data) {
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-          const updatedUser = { ...currentUser, role: res.data.data.role };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
+      // Support both idToken and accessToken
+      const payload = token.includes('.') && token.split('.').length === 3 
+        ? { idToken: token, role } 
+        : { accessToken: token, role };
+      const response = await api.post('/users/register/google', payload)
+
+      if (response.data.success) {
+        const { token, user } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        return {
+          success: true,
+          data: { token, user }
         }
       }
-      return res.data;
+
+      return response.data
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Failed to switch role",
-        errors: error.response?.data?.errors || [],
-      };
+        message: error.response?.data?.message || 'Google registration failed',
+        errors: error.response?.data?.errors || []
+      }
     }
-  },
-};
+  }
+}

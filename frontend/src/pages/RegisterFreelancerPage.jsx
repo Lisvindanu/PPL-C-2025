@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useGoogleLogin } from "@react-oauth/google";
+import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
 import FormGroup from "../components/molecules/FormGroup";
@@ -8,6 +9,7 @@ import { authService } from "../services/authService";
 import { validateName } from "../utils/validators";
 import LoadingOverlay from "../components/organisms/LoadingOverlay";
 import { useToast } from "../components/organisms/ToastProvider";
+import { authService } from "../services/authService";
 
 export default function RegisterFreelancerPage() {
   const [form, setForm] = useState({
@@ -21,8 +23,34 @@ export default function RegisterFreelancerPage() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
+  const [googleLoading, setGoogleLoading] = useState(false);
 
-  // Check if user is logged in, redirect to login if not
+  const handleGoogleRegister = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        const result = await authService.registerWithGoogle(tokenResponse.access_token, 'freelancer');
+        
+        if (result.success) {
+          toast.show("Account created and logged in with Google", "success");
+          navigate("/dashboard", { replace: true });
+        } else {
+          toast.show(result.message || "Google registration failed", "error");
+        }
+      } catch (err) {
+        console.error("Google registration error:", err);
+        toast.show("Google registration failed", "error");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.show("Google authentication failed", "error");
+      setGoogleLoading(false);
+    }
+  });
+
+  // Check if user is already logged in
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -82,9 +110,27 @@ export default function RegisterFreelancerPage() {
   };
 
   return (
-    <AuthLayout title="Buat Profile Pekerja Lepas Anda">
-      <LoadingOverlay show={loading} text="Membuat profil freelancer..." />
-      <AuthCard title="Buat Profile Pekerja Lepas Anda">
+    <AuthLayout
+      title="Register Freelancer"
+      bottom={
+        <div className="absolute top-4 right-6 font-body text-[#112D4E]">
+          Di sini untuk merekrut pekerja?{" "}
+          <Link to="/register/client" className="underline">
+            Bergabung sebagai Klien
+          </Link>
+        </div>
+      }
+    >
+      <LoadingOverlay show={loading || googleLoading} text="Creating account..." />
+      <AuthCard
+        title="Buat Akun"
+        headerRight={
+          <Link to="/login" className="text-[#1B1B1B] text-sm underline">
+            {" "}
+            Masuk
+          </Link>
+        }
+      >
         <form onSubmit={submit}>
           <FormGroup label="Nama Lengkap" name="nama_lengkap" value={form.nama_lengkap} onChange={onChange} error={errors.nama_lengkap} required />
           <FormGroup label="Gelar" name="gelar" value={form.gelar} onChange={onChange} error={errors.gelar} placeholder="Contoh: Web Developer, Graphic Designer, dll" required />
@@ -106,7 +152,21 @@ export default function RegisterFreelancerPage() {
           </div>
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
           <Button type="submit" variant="neutral" className="w-full" disabled={loading}>
-            {loading ? "Memproses..." : "Daftar sebagai Pekerja Lepas"}
+            {loading ? "Loading..." : "Buat Akun"}
+          </Button>
+          <div className="flex items-center gap-4 text-[#8a8a8a] my-4">
+            <div className="flex-1 h-px bg-[#B3B3B3]" />
+            <span>Atau</span>
+            <div className="flex-1 h-px bg-[#B3B3B3]" />
+          </div>
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            icon={<Icon name="google" size="md" />}
+            onClick={handleGoogleRegister}
+            disabled={googleLoading || loading}
+          >
+            {googleLoading ? "Memproses..." : "Lanjutkan dengan Google"}
           </Button>
         </form>
       </AuthCard>
