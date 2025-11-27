@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
 import FormGroup from "../components/molecules/FormGroup";
@@ -9,6 +10,7 @@ import { validateEmail, validatePassword } from "../utils/validators";
 import LoadingOverlay from "../components/organisms/LoadingOverlay";
 import { useToast } from "../components/organisms/ToastProvider";
 import Icon from "../components/atoms/Icon";
+import { authService } from "../services/authService";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -18,6 +20,50 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        // Get user info from Google using access token
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        const userInfo = await userInfoResponse.json();
+        
+        // Use access_token to login/register with Google
+        // Backend will fetch user info from Google API
+        let result = await authService.loginWithGoogle(tokenResponse.access_token);
+        
+        if (!result.success && result.message?.includes('not found')) {
+          // If login fails with "not found", try to register
+          result = await authService.registerWithGoogle(tokenResponse.access_token, 'client');
+        }
+        
+        if (result.success) {
+          toast.show(result.data?.user ? "Logged in successfully with Google" : "Account created and logged in with Google", "success");
+          const user = JSON.parse(localStorage.getItem("user") || "{}");
+          if (user.role === "admin") {
+            navigate("/admin/dashboard", { replace: true });
+          } else {
+            navigate("/dashboard", { replace: true });
+          }
+        } else {
+          toast.show(result.message || "Google authentication failed", "error");
+        }
+      } catch (err) {
+        console.error("Google login error:", err);
+        toast.show("Google authentication failed", "error");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.show("Google authentication failed", "error");
+      setGoogleLoading(false);
+    }
+  });
 
   // Check if user is already logged in
   useEffect(() => {
@@ -57,9 +103,19 @@ export default function LoginPage() {
         <span className="whitespace-nowrap">Atau</span>
         <div className="flex-1 h-px bg-[#9DBBDD]" />
       </div>
-      <Button variant="outline" className="w-full mt-4 sm:mt-5" icon={<Icon name="google" size="md" />}>
-        <span className="hidden sm:inline">Lanjutkan dengan Google</span>
-        <span className="sm:hidden">Google</span>
+      <Button 
+        variant="outline" 
+        className="w-full mt-4 sm:mt-5" 
+        icon={<Icon name="google" size="md" />}
+        onClick={handleGoogleLogin}
+        disabled={googleLoading || loading}
+      >
+        {googleLoading ? "Memproses..." : (
+          <>
+            <span className="hidden sm:inline">Lanjutkan dengan Google</span>
+            <span className="sm:hidden">Google</span>
+          </>
+        )}
       </Button>
       <div className="text-center mt-4 sm:mt-5">
         <Link to="/forgot-password" className="text-[#1B1B1B] text-sm sm:text-base underline hover:no-underline transition-colors hover:text-[#4782BE]">
@@ -83,7 +139,7 @@ export default function LoginPage() {
         </div>
       }
     >
-      <LoadingOverlay show={loading} text="Signing in..." />
+      <LoadingOverlay show={loading || googleLoading} text="Signing in..." />
       <AuthCard title="Masuk ke Skill Connect" footer={footer}>
         <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
           <FormGroup label="Alamat Email" name="email" type="email" value={form.email} onChange={handleChange} error={errors.email} />

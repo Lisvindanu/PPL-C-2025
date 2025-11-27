@@ -127,5 +127,67 @@ export const authService = {
 
   isAuthenticated() {
     return !!localStorage.getItem('token')
+  },
+
+  async loginWithGoogle(token) {
+    try {
+      // Support both idToken and accessToken
+      const payload = token.includes('.') && token.split('.').length === 3 
+        ? { idToken: token } 
+        : { accessToken: token };
+      const response = await api.post('/users/login/google', payload)
+      
+      if (response.data.success) {
+        const { token, user } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        return {
+          success: true,
+          data: { token, user }
+        }
+      }
+      
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Google login failed',
+        errors: error.response?.data?.errors || []
+      }
+    }
+  },
+
+  async registerWithGoogle(token, role = 'client') {
+    try {
+      // Support both idToken and accessToken
+      const payload = token.includes('.') && token.split('.').length === 3 
+        ? { idToken: token, role } 
+        : { accessToken: token, role };
+      const response = await api.post('/users/register/google', payload)
+
+      if (response.data.success) {
+        const { token, user } = response.data.data
+        
+        // Store token and user data
+        localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+        
+        return {
+          success: true,
+          data: { token, user }
+        }
+      }
+
+      return response.data
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Google registration failed',
+        errors: error.response?.data?.errors || []
+      }
+    }
   }
 }

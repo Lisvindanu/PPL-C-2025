@@ -74,6 +74,83 @@ router.post('/login', userController.login);
 
 /**
  * @swagger
+ * /api/users/login/google:
+ *   post:
+ *     tags: [Users]
+ *     summary: Login with Google OAuth
+ *     description: Authenticate user with Google OAuth ID token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google OAuth ID token
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         description: Invalid Google token or user not found
+ *       404:
+ *         description: User not found. Please register first.
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/login/google', userController.loginWithGoogle);
+
+/**
+ * @swagger
+ * /api/users/register/google:
+ *   post:
+ *     tags: [Users]
+ *     summary: Register with Google OAuth
+ *     description: Create a new user account using Google OAuth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google OAuth ID token
+ *               role:
+ *                 type: string
+ *                 enum: [client, freelancer]
+ *                 default: client
+ *                 description: User role (optional, defaults to client)
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       409:
+ *         description: Email or Google account already exists
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/register/google', userController.registerWithGoogle);
+
+/**
+ * @swagger
  * /api/users/profile:
  *   get:
  *     tags: [Users]

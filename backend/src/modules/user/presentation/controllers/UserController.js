@@ -4,6 +4,8 @@ const JwtService = require('../../infrastructure/services/JwtService');
 const EmailService = require('../../infrastructure/services/EmailService');
 const RegisterUser = require('../../application/use-cases/RegisterUser');
 const LoginUser = require('../../application/use-cases/LoginUser');
+const RegisterWithGoogle = require('../../application/use-cases/RegisterWithGoogle');
+const LoginWithGoogle = require('../../application/use-cases/LoginWithGoogle');
 const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
@@ -21,6 +23,8 @@ class UserController {
 
     this.registerUser = new RegisterUser({ userRepository, hashService, emailService });
     this.loginUser = new LoginUser({ userRepository, hashService, jwtService });
+    this.registerWithGoogleUseCase = new RegisterWithGoogle({ userRepository, jwtService, emailService });
+    this.loginWithGoogleUseCase = new LoginWithGoogle({ userRepository, jwtService });
     this.updateProfileUseCase = new UpdateProfile({ userRepository });
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
@@ -59,6 +63,51 @@ class UserController {
       next(err);
     }
   };
+
+  loginWithGoogle = async (req, res, next) => {
+    try {
+      const { idToken, accessToken } = req.body;
+
+      if (!idToken && !accessToken) {
+        const err = new Error('Google ID token or access token is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.loginWithGoogleUseCase.execute({
+        idToken,
+        accessToken
+      });
+
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+
+  registerWithGoogle = async (req, res, next) => {
+    try {
+      const { idToken, accessToken, role } = req.body;
+
+      if (!idToken && !accessToken) {
+        const err = new Error('Google ID token or access token is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.registerWithGoogleUseCase.execute({
+        idToken,
+        accessToken,
+        role: role || 'client'
+      });
+
+      res.status(201).json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
 
   getProfile = async (req, res, next) => {
     try {

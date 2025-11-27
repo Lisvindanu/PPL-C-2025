@@ -7,6 +7,10 @@ class SequelizeUserRepository extends IUserRepository {
     return UserModel.findOne({ where: { email } });
   }
 
+  async findByGoogleId(googleId) {
+    return UserModel.findOne({ where: { google_id: googleId } });
+  }
+
   async findById(id) {
     return UserModel.findByPk(id);
   }

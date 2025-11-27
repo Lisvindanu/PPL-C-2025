@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useGoogleLogin } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
@@ -10,6 +11,7 @@ import { useAuth } from "../hooks/useAuth";
 import { validateEmail, validatePassword, validateName } from "../utils/validators";
 import LoadingOverlay from "../components/organisms/LoadingOverlay";
 import { useToast } from "../components/organisms/ToastProvider";
+import { authService } from "../services/authService";
 
 export default function RegisterFreelancerPage() {
   const [step, setStep] = useState(1);
@@ -24,6 +26,32 @@ export default function RegisterFreelancerPage() {
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleRegister = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setGoogleLoading(true);
+      try {
+        const result = await authService.registerWithGoogle(tokenResponse.access_token, 'freelancer');
+        
+        if (result.success) {
+          toast.show("Account created and logged in with Google", "success");
+          navigate("/dashboard", { replace: true });
+        } else {
+          toast.show(result.message || "Google registration failed", "error");
+        }
+      } catch (err) {
+        console.error("Google registration error:", err);
+        toast.show("Google registration failed", "error");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    onError: () => {
+      toast.show("Google authentication failed", "error");
+      setGoogleLoading(false);
+    }
+  });
 
   // Check if user is already logged in
   useEffect(() => {
@@ -105,7 +133,7 @@ export default function RegisterFreelancerPage() {
         </div>
       }
     >
-      <LoadingOverlay show={loading} text="Creating account..." />
+      <LoadingOverlay show={loading || googleLoading} text="Creating account..." />
       <AuthCard
         title="Buat Akun"
         headerRight={
@@ -147,8 +175,14 @@ export default function RegisterFreelancerPage() {
             <span>Atau</span>
             <div className="flex-1 h-px bg-[#B3B3B3]" />
           </div>
-          <Button variant="outline" className="w-full" icon={<Icon name="google" size="md" />}>
-            Lanjutkan dengan Google
+          <Button 
+            variant="outline" 
+            className="w-full" 
+            icon={<Icon name="google" size="md" />}
+            onClick={handleGoogleRegister}
+            disabled={googleLoading || loading}
+          >
+            {googleLoading ? "Memproses..." : "Lanjutkan dengan Google"}
           </Button>
         </form>
       </AuthCard>
