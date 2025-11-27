@@ -29,17 +29,69 @@ export default function RegisterFreelancerPage() {
     onSuccess: async (tokenResponse) => {
       setGoogleLoading(true);
       try {
-        const result = await authService.registerWithGoogle(tokenResponse.access_token, "freelancer");
+        // Since this page requires login, user should already be logged in
+        // Use Google to auto-fill form and create freelancer profile
+        const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+        });
+        
+        if (!userInfoResponse.ok) {
+          throw new Error('Failed to get user info from Google');
+        }
+        
+        const userInfo = await userInfoResponse.json();
+        
+        // Pre-fill form with Google data
+        const updatedForm = {
+          nama_lengkap: userInfo.name || form.nama_lengkap || "",
+          gelar: form.gelar || "Freelancer",
+          no_telepon: form.no_telepon || "",
+          deskripsi: form.deskripsi || `Hi, I'm ${userInfo.name || 'a freelancer'}`,
+        };
+        
+        setForm(updatedForm);
+
+        // Check if we have minimum required data to create profile
+        // Note: Backend doesn't require no_telepon, but frontend form validation does
+        // So we'll auto-fill form and let user complete if needed
+        const hasMinimumData = updatedForm.nama_lengkap && updatedForm.gelar;
+        
+        if (!hasMinimumData) {
+          toast.show("Data dari Google tidak lengkap. Silakan lengkapi form manual.", "info");
+          setGoogleLoading(false);
+          return;
+        }
+
+        // If no_telepon is missing, ask user to fill it first
+        if (!updatedForm.no_telepon) {
+          toast.show("Form telah diisi otomatis. Mohon lengkapi nomor telepon sebelum submit.", "info");
+          setGoogleLoading(false);
+          return;
+        }
+
+        // Create freelancer profile for existing logged-in user
+        const result = await authService.createFreelancerProfile({
+          nama_lengkap: updatedForm.nama_lengkap,
+          gelar: updatedForm.gelar,
+          no_telepon: updatedForm.no_telepon,
+          deskripsi: updatedForm.deskripsi,
+        });
 
         if (result.success) {
-          toast.show("Account created and logged in with Google", "success");
+          toast.show("Profil freelancer berhasil dibuat!", "success");
+          authService.setActiveRole("freelancer");
           navigate("/dashboard", { replace: true });
         } else {
-          toast.show(result.message || "Google registration failed", "error");
+          toast.show(result.message || "Gagal membuat profil freelancer", "error");
         }
       } catch (err) {
         console.error("Google registration error:", err);
-        toast.show("Google registration failed", "error");
+        if (err.message?.includes("already exists") || err.response?.data?.message?.includes("already exists")) {
+          toast.show("Anda sudah memiliki profil freelancer. Silakan login dengan role freelancer.", "info");
+          navigate("/dashboard", { replace: true });
+        } else {
+          toast.show("Gagal mengambil informasi dari Google. Silakan isi form manual.", "error");
+        }
       } finally {
         setGoogleLoading(false);
       }

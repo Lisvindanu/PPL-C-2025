@@ -12,7 +12,7 @@ const ROLE_HOME = {
   freelancer: "/dashboard",
 };
 
-function ProfileDropdown({ name, email, avatarUrl, role, hasFreelancerProfile, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onSwitchRole, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, hasFreelancerProfile, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onSwitchRole, onRegisterFreelancer, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -40,33 +40,86 @@ function ProfileDropdown({ name, email, avatarUrl, role, hasFreelancerProfile, o
 
       {open && (
         <div role="menu" className="absolute right-0 z-20 mt-2 w-56 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-lg">
+          {/* Header dengan Role Badge */}
+          <div className="px-4 py-3 border-b border-neutral-200 bg-neutral-50">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-neutral-500 uppercase">Role Aktif</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                role === "freelancer" 
+                  ? "bg-[#E8F4FD] text-[#1D375B]" 
+                  : "bg-green-100 text-green-700"
+              }`}>
+                {role === "freelancer" ? "👨‍💼 Freelancer" : "👤 Klien"}
+              </span>
+            </div>
+          </div>
+
           <button type="button" role="menuitem" onClick={onProfile} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
             Profile
           </button>
           <button type="button" role="menuitem" onClick={onDashboard} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
             Dashboard
           </button>
-          {hasFreelancerProfile && <div className="my-1 h-px bg-neutral-200" />}
+          
+          {/* Section Ganti Role */}
           {hasFreelancerProfile && (
-            <div className="px-4 py-2">
-              <div className="text-xs font-semibold text-neutral-500 uppercase mb-1">Ganti Role</div>
+            <>
+              <div className="my-1 h-px bg-neutral-200" />
+              <div className="px-4 py-2">
+                <div className="text-xs font-semibold text-neutral-500 uppercase mb-2">Ganti Role</div>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => onSwitchRole("client")}
+                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between ${
+                    role === "client" 
+                      ? "bg-[#E8F4FD] text-[#1D375B] font-medium border border-[#9DBBDD]" 
+                      : "hover:bg-neutral-50 border border-transparent"
+                  }`}
+                >
+                  <span>Sebagai Klien</span>
+                  {role === "client" && (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => onSwitchRole("freelancer")}
+                  className={`w-full px-3 py-2 text-left text-sm rounded-md transition-colors flex items-center justify-between mt-1.5 ${
+                    role === "freelancer" 
+                      ? "bg-[#E8F4FD] text-[#1D375B] font-medium border border-[#9DBBDD]" 
+                      : "hover:bg-neutral-50 border border-transparent"
+                  }`}
+                >
+                  <span>Sebagai Freelancer</span>
+                  {role === "freelancer" && (
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+              </div>
+            </>
+          )}
+          
+          {/* Tombol untuk user yang belum punya profil freelancer tapi ingin daftar */}
+          {!hasFreelancerProfile && role === "client" && (
+            <>
+              <div className="my-1 h-px bg-neutral-200" />
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => onSwitchRole("client")}
-                className={`w-full px-3 py-1.5 text-left text-sm rounded-md transition-colors ${role === "client" ? "bg-[#E8F4FD] text-[#1D375B] font-medium" : "hover:bg-neutral-50"}`}
+                onClick={onRegisterFreelancer}
+                className="w-full px-4 py-2 text-left text-sm text-[#1D375B] hover:bg-[#E8F4FD] font-medium"
               >
-                {role === "client" && "✓ "}Sebagai Klien
+                Daftar sebagai Freelancer →
               </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={() => onSwitchRole("freelancer")}
-                className={`w-full px-3 py-1.5 text-left text-sm rounded-md transition-colors ${role === "freelancer" ? "bg-[#E8F4FD] text-[#1D375B] font-medium" : "hover:bg-neutral-50"}`}
-              >
-                {role === "freelancer" && "✓ "}Sebagai Freelancer
-              </button>
-            </div>
+            </>
           )}
           {role === "client" && (
             <>
@@ -214,6 +267,7 @@ export default function NavHeader() {
                 onBookmarks={handleBookmarks}
                 onOrders={handleOrders}
                 onSwitchRole={handleSwitchRole}
+                onRegisterFreelancer={handleRegisterFreelancer}
                 onLogout={handleLogout}
               />
             </div>
