@@ -4,8 +4,10 @@ import SearchBar from "./SearchBar";
 import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
+import { authService } from "../../services/authService";
+import { useToast } from "../organisms/ToastProvider";
 
-function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, hasFreelancerProfile, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onSwitchRole, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -39,8 +41,31 @@ function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard,
           <button type="button" role="menuitem" onClick={onDashboard} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
             Dashboard
           </button>
+          {hasFreelancerProfile && <div className="my-1 h-px bg-neutral-200" />}
+          {hasFreelancerProfile && (
+            <div className="px-4 py-2">
+              <div className="text-xs font-semibold text-neutral-500 uppercase mb-1">Ganti Role</div>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => onSwitchRole("client")}
+                className={`w-full px-3 py-1.5 text-left text-sm rounded-md transition-colors ${role === "client" ? "bg-[#E8F4FD] text-[#1D375B] font-medium" : "hover:bg-neutral-50"}`}
+              >
+                {role === "client" && "✓ "}Sebagai Klien
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => onSwitchRole("freelancer")}
+                className={`w-full px-3 py-1.5 text-left text-sm rounded-md transition-colors ${role === "freelancer" ? "bg-[#E8F4FD] text-[#1D375B] font-medium" : "hover:bg-neutral-50"}`}
+              >
+                {role === "freelancer" && "✓ "}Sebagai Freelancer
+              </button>
+            </div>
+          )}
           {role === "client" && (
             <>
+              <div className="my-1 h-px bg-neutral-200" />
               <button type="button" role="menuitem" onClick={onFavorites} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
                 Favorit Anda
               </button>
@@ -64,9 +89,11 @@ function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard,
 
 export default function NavHeader() {
   const navigate = useNavigate();
+  const toast = useToast();
   const { loading, fullName, email, avatarUrl } = useUserIdentity();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [hasFreelancerProfile, setHasFreelancerProfile] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   useEffect(() => {
@@ -83,13 +110,48 @@ export default function NavHeader() {
     }
   }, []);
 
+  // Cek apakah user memiliki profil freelancer
+  useEffect(() => {
+    if (isLoggedIn) {
+      const checkFreelancerProfile = async () => {
+        try {
+          const profile = await authService.getProfile();
+          if (profile.success && profile.data?.freelancerProfile) {
+            setHasFreelancerProfile(!!profile.data.freelancerProfile);
+          }
+        } catch (error) {
+          console.error("Failed to check freelancer profile", error);
+        }
+      };
+      checkFreelancerProfile();
+    }
+  }, [isLoggedIn]);
+
   const handleLogin = () => navigate("/login");
   const handleRegister = () => navigate("/register/client");
+  const handleRegisterFreelancer = () => navigate("/register/freelancer");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
   const handleFavorites = () => navigate("/favorit");
   const handleBookmarks = () => navigate("/bookmarks");
   const handleOrders = () => navigate("/orders");
+  const handleSwitchRole = async (newRole) => {
+    if (newRole === userRole) return; // Sudah pada role ini
+
+    try {
+      const result = await authService.switchRole(newRole);
+      if (result.success) {
+        setUserRole(newRole);
+        toast.show(`Role berhasil diubah menjadi ${newRole === "client" ? "Klien" : "Freelancer"}`, "success");
+        // Refresh halaman untuk memperbarui UI berdasarkan role baru
+        window.location.reload();
+      } else {
+        toast.show(result.message || "Gagal mengubah role", "error");
+      }
+    } catch (error) {
+      toast.show("Gagal mengubah role", "error");
+    }
+  };
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
@@ -117,18 +179,31 @@ export default function NavHeader() {
           {loading ? (
             <div className="h-9 sm:h-10 w-20 sm:w-24 animate-pulse rounded-full bg-neutral-200" />
           ) : isLoggedIn ? (
-            <ProfileDropdown
-              name={fullName}
-              email={email}
-              avatarUrl={avatarUrl}
-              role={userRole}
-              onProfile={handleProfile}
-              onDashboard={handleDashboard}
-              onFavorites={handleFavorites}
-              onBookmarks={handleBookmarks}
-              onOrders={handleOrders}
-              onLogout={handleLogout}
-            />
+            <div className="flex items-center gap-2 sm:gap-3">
+              {!hasFreelancerProfile && (
+                <Button
+                  onClick={handleRegisterFreelancer}
+                  variant="outline"
+                  className="text-xs sm:text-sm md:text-base px-3 sm:px-4 md:px-5 py-1.5 sm:py-2 md:py-2.5 whitespace-nowrap shadow-md hover:shadow-lg transition-all bg-[#E8F4FD] border-[#9DBBDD] text-[#1D375B] hover:bg-[#D8E3F3] hover:border-[#4782BE]"
+                >
+                  Daftar Freelancer
+                </Button>
+              )}
+              <ProfileDropdown
+                name={fullName}
+                email={email}
+                avatarUrl={avatarUrl}
+                role={userRole}
+                hasFreelancerProfile={hasFreelancerProfile}
+                onProfile={handleProfile}
+                onDashboard={handleDashboard}
+                onFavorites={handleFavorites}
+                onBookmarks={handleBookmarks}
+                onOrders={handleOrders}
+                onSwitchRole={handleSwitchRole}
+                onLogout={handleLogout}
+              />
+            </div>
           ) : (
             <div className="flex items-center gap-3 sm:gap-4 md:gap-5">
               <button onClick={handleLogin} className="text-sm sm:text-base text-neutral-900 hover:text-neutral-700 underline font-medium whitespace-nowrap transition-colors">

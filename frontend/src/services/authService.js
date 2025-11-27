@@ -4,21 +4,21 @@ export const authService = {
   async login({ email, password }) {
     try {
       const response = await api.post('/users/login', { email, password })
-      
+
       // Handle success response according to README specs
       if (response.data.success) {
         const { token, user } = response.data.data
-        
+
         // Store token and user data
         localStorage.setItem('token', token)
         localStorage.setItem('user', JSON.stringify(user))
-        
+
         return {
           success: true,
           data: { token, user }
         }
       }
-      
+
       return response.data
     } catch (error) {
       // Handle error response
@@ -30,16 +30,15 @@ export const authService = {
     }
   },
 
-  async register({ email, password, firstName, lastName, role = 'client', ketentuan_agree = false }) {
+  async register({ email, password, firstName, lastName, ketentuan_agree = false }) {
     try {
       const response = await api.post('/users/register', {
         email,
         password,
         nama_depan: firstName,
         nama_belakang: lastName,
-        role,
-        ketentuan_agree: ketentuan_agree === true
-      })
+        ketentuan_agree: ketentuan_agree === true,
+      });
 
       return response.data
     } catch (error) {
@@ -127,5 +126,47 @@ export const authService = {
 
   isAuthenticated() {
     return !!localStorage.getItem('token')
-  }
-}
+  },
+
+  async createFreelancerProfile(data) {
+    try {
+      const res = await api.post('/users/freelancer-profile', data)
+      // Update user data in localStorage if profile creation is successful
+      if (res.data.success && res.data.data?.user) {
+        const currentUser = this.getCurrentUser()
+        if (currentUser) {
+          const updatedUser = { ...currentUser, ...res.data.data.user }
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+        }
+      }
+      return res.data
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to create freelancer profile',
+        errors: error.response?.data?.errors || []
+      };
+    }
+  },
+
+  async switchRole(newRole) {
+    try {
+      const res = await api.put('/users/role', { role: newRole })
+      // Update user data in localStorage if role switch is successful
+      if (res.data.success && res.data.data) {
+        const currentUser = this.getCurrentUser()
+        if (currentUser) {
+          const updatedUser = { ...currentUser, role: res.data.data.role }
+          localStorage.setItem('user', JSON.stringify(updatedUser))
+        }
+      }
+      return res.data
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to switch role',
+        errors: error.response?.data?.errors || []
+      };
+    }
+  },
+};

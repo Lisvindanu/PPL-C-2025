@@ -1,154 +1,112 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/templates/AuthLayout";
 import AuthCard from "../components/organisms/AuthCard";
 import FormGroup from "../components/molecules/FormGroup";
 import Button from "../components/atoms/Button";
-import RoleCard from "../components/molecules/RoleCard";
-import Icon from "../components/atoms/Icon";
-import { useAuth } from "../hooks/useAuth";
-import { validateEmail, validatePassword, validateName } from "../utils/validators";
+import { authService } from "../services/authService";
+import { validateName } from "../utils/validators";
 import LoadingOverlay from "../components/organisms/LoadingOverlay";
 import { useToast } from "../components/organisms/ToastProvider";
 
 export default function RegisterFreelancerPage() {
-  const [step, setStep] = useState(1);
-  const [role, setRole] = useState("freelancer");
-  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", password: "", ketentuan_agree: false });
-  const onChange = (e) => {
-    const value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
-    setForm((s) => ({ ...s, [e.target.name]: value }));
-  };
-
-  const { register, loading, error } = useAuth();
+  const [form, setForm] = useState({
+    nama_lengkap: "",
+    gelar: "",
+    no_telepon: "",
+    deskripsi: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
   const [errors, setErrors] = useState({});
   const toast = useToast();
 
-  // Check if user is already logged in
+  // Check if user is logged in, redirect to login if not
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
-      toast.show("Anda sudah login", "info");
-      navigate('/dashboard', { replace: true });
+    if (!token) {
+      toast.show("Silakan login terlebih dahulu", "info");
+      navigate("/login", { replace: true });
+      return;
+    }
+
+    // Check if user is already a freelancer
+    const user = authService.getCurrentUser();
+    if (user && user.role === "freelancer") {
+      toast.show("Anda sudah terdaftar sebagai freelancer", "info");
+      navigate("/dashboard", { replace: true });
     }
   }, [navigate, toast]);
+
+  const onChange = (e) => {
+    const value = e.target.value;
+    setForm((s) => ({ ...s, [e.target.name]: value }));
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     const newErrors = {
-      firstName: validateName(form.firstName, "First name"),
-      lastName: validateName(form.lastName, "Last name"),
-      email: validateEmail(form.email),
-      password: validatePassword(form.password),
+      nama_lengkap: validateName(form.nama_lengkap, "Nama lengkap"),
+      gelar: form.gelar.trim() ? null : "Gelar wajib diisi",
+      no_telepon: form.no_telepon.trim() ? null : "Nomor telepon wajib diisi",
     };
     setErrors(newErrors);
     if (Object.values(newErrors).some(Boolean)) return;
 
+    setLoading(true);
+    setError(null);
+
     try {
-      await register({
-        email: form.email,
-        password: form.password,
-        firstName: form.firstName,
-        lastName: form.lastName,
-        role: "freelancer",
-        ketentuan_agree: form.ketentuan_agree
+      const result = await authService.createFreelancerProfile({
+        nama_lengkap: form.nama_lengkap,
+        gelar: form.gelar,
+        no_telepon: form.no_telepon,
+        deskripsi: form.deskripsi || undefined,
       });
-      toast.show("Account created. Please login.", "success");
-      navigate("/login", { replace: true });
-    } catch (_) {
-      toast.show("Registration failed", "error");
+
+      if (result.success) {
+        toast.show("Profil freelancer berhasil dibuat!", "success");
+        navigate("/dashboard", { replace: true });
+      } else {
+        setError(result.message || "Gagal membuat profil freelancer");
+        toast.show(result.message || "Gagal membuat profil freelancer", "error");
+      }
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || "Gagal membuat profil freelancer";
+      setError(errorMessage);
+      toast.show(errorMessage, "error");
+    } finally {
+      setLoading(false);
     }
   };
-
-  const handleRoleSelect = (selectedRole) => {
-    setRole(selectedRole);
-    if (selectedRole === "freelancer") {
-      setStep(2);
-    } else {
-      navigate("/register/client");
-    }
-  };
-
-  if (step === 1) {
-    return (
-      <AuthLayout>
-        <div className="w-full max-w-4xl text-center">
-          <h2 className="text-[#1B1B1B] font-medium text-3xl mb-8 font-title">Bergabung sebagai klien atau pekerja lepas</h2>
-          <div className="grid grid-cols-2 gap-6 mb-8">
-            <RoleCard title="Saya seorang klien, sedang merekrut untuk sebuah proyek" icon={<Icon name="palette" size="xl" className="text-[#112D4E]" />} selected={role === "client"} onClick={() => handleRoleSelect("client")} />
-            <RoleCard title="Saya seorang pekerja lepas, sedang mencari pekerjaan" icon={<Icon name="briefcase" size="xl" className="text-[#112D4E]" />} selected={role === "freelancer"} onClick={() => handleRoleSelect("freelancer")} />
-          </div>
-          <Button variant="role" className="px-8" onClick={() => setStep(2)}>
-            Lamar sebagai Pekerja Lepas
-          </Button>
-          <div className="text-center mt-4 text-sm text-[#1B1B1B] font-body">
-            Sudah punya akun?{" "}
-            <Link to="/login" className="underline">
-              Masuk
-            </Link>
-          </div>
-        </div>
-      </AuthLayout>
-    );
-  }
 
   return (
-    <AuthLayout
-      title="Register Freelancer"
-      bottom={
-        <div className="absolute top-4 right-6 font-body text-[#112D4E]">
-          Di sini untuk merekrut pekerja?{" "}
-          <Link to="/register/client" className="underline">
-            Bergabung sebagai Klien
-          </Link>
-        </div>
-      }
-    >
-      <LoadingOverlay show={loading} text="Creating account..." />
-      <AuthCard
-        title="Buat Akun"
-        headerRight={
-          <Link to="/login" className="text-[#1B1B1B] text-sm underline">
-            {" "}
-            Masuk
-          </Link>
-        }
-      >
+    <AuthLayout title="Buat Profile Pekerja Lepas Anda">
+      <LoadingOverlay show={loading} text="Membuat profil freelancer..." />
+      <AuthCard title="Buat Profile Pekerja Lepas Anda">
         <form onSubmit={submit}>
-          <FormGroup label="Nama Pertama" name="firstName" value={form.firstName} onChange={onChange} error={errors.firstName} />
-          <FormGroup label="Nama Terakhir" name="lastName" value={form.lastName} onChange={onChange} error={errors.lastName} />
-          <FormGroup label="Email" name="email" type="email" value={form.email} onChange={onChange} error={errors.email} />
-          <FormGroup label="Kata Sandi" name="password" type="password" value={form.password} onChange={onChange} error={errors.password} />
-          <div className="text-sm text-[#112D4E] mb-4">
-            <input
-              type="checkbox"
-              name="ketentuan_agree"
-              checked={form.ketentuan_agree}
+          <FormGroup label="Nama Lengkap" name="nama_lengkap" value={form.nama_lengkap} onChange={onChange} error={errors.nama_lengkap} required />
+          <FormGroup label="Gelar" name="gelar" value={form.gelar} onChange={onChange} error={errors.gelar} placeholder="Contoh: Web Developer, Graphic Designer, dll" required />
+          <FormGroup label="Nomor Telepon" name="no_telepon" type="tel" value={form.no_telepon} onChange={onChange} error={errors.no_telepon} required />
+          <div className="mb-4 sm:mb-5">
+            <label htmlFor="deskripsi" className="block text-sm font-medium text-[#1B1B1B] mb-1.5 sm:mb-2">
+              Deskripsi / Bio
+            </label>
+            <textarea
+              id="deskripsi"
+              name="deskripsi"
+              value={form.deskripsi}
               onChange={onChange}
-              className="mr-2"
-              required
-            /> Dengan membuat akun, saya setuju dengan{" "}
-            <a href="#" className="underline">
-              Ketentuan
-            </a>{" "}
-            dan{" "}
-            <a href="#" className="underline">
-              Kebijakan Privasi
-            </a>{" "}
-            kami.
+              placeholder="Ceritakan tentang diri Anda (opsional)"
+              rows={4}
+              className="w-full px-3 sm:px-4 py-2 sm:py-2.5 border border-[#B3B3B3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#112D4E] focus:border-transparent text-sm sm:text-base"
+            />
+            {errors.deskripsi && <p className="text-red-500 text-xs sm:text-sm mt-1.5 sm:mt-2">{errors.deskripsi}</p>}
           </div>
           {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
           <Button type="submit" variant="neutral" className="w-full" disabled={loading}>
-            {loading ? "Loading..." : "Buat Akun"}
-          </Button>
-          <div className="flex items-center gap-4 text-[#8a8a8a] my-4">
-            <div className="flex-1 h-px bg-[#B3B3B3]" />
-            <span>Atau</span>
-            <div className="flex-1 h-px bg-[#B3B3B3]" />
-          </div>
-          <Button variant="outline" className="w-full" icon={<Icon name="google" size="md" />}>
-            Lanjutkan dengan Google
+            {loading ? "Memproses..." : "Daftar sebagai Pekerja Lepas"}
           </Button>
         </form>
       </AuthCard>
