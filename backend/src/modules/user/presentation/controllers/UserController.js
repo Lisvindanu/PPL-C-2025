@@ -175,6 +175,16 @@ class UserController {
         throw err;
       }
 
+      // Validate password strength (8 chars, letters, numbers, symbols)
+      const Password = require('../../domain/value-objects/Password');
+      try {
+        new Password(newPassword);
+      } catch (error) {
+        const err = new Error('Password does not meet strength requirements: minimum 8 characters, must include letters, numbers, and symbols');
+        err.statusCode = 400;
+        throw err;
+      }
+
       // Find user by email
       const user = await this.loginUser.userRepository.findByEmail(email);
       if (!user) {

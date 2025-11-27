@@ -8,11 +8,12 @@ class Password {
 
   static isStrong(value) {
     if (!value || typeof value !== 'string') return false;
-    // At least 8 chars, include letters and numbers
+    // At least 8 chars, include letters, numbers, and symbols
     const lengthOk = value.length >= 8;
     const hasLetter = /[A-Za-z]/.test(value);
     const hasNumber = /\d/.test(value);
-    return lengthOk && hasLetter && hasNumber;
+    const hasSymbol = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(value);
+    return lengthOk && hasLetter && hasNumber && hasSymbol;
   }
 }
 
