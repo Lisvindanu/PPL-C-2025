@@ -46,13 +46,17 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
-      <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
+      <Route
+        path="/register/freelancer"
+        element={
+          <ProtectedRoute>
+            <RegisterFreelancerPage />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
-      <Route
-        path="/reset-password/new-password"
-        element={<NewPasswordPage />}
-      />
+      <Route path="/reset-password/new-password" element={<NewPasswordPage />} />
       <Route path="/services" element={<ServiceListPage />} />
 
       <Route
@@ -120,13 +124,13 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/subkategori"
-        element={
-          <ProtectedRoute>
-            <AdminSubCategoryManagementPage />
-          </ProtectedRoute>
-        }
-      />
+        path="/admin/subkategori"
+        element={
+          <ProtectedRoute>
+                        <AdminSubCategoryManagementPage />         {" "}
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/transaction-trends"
         element={
@@ -246,10 +250,7 @@ export default function App() {
         }
       />
       <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
-      <Route
-        path="/payment/processing/:paymentId"
-        element={<PaymentProcessingPage />}
-      />
+      <Route path="/payment/processing/:paymentId" element={<PaymentProcessingPage />} />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />

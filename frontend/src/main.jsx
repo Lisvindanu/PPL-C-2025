@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App";
 import { ToastProvider } from "./components/organisms/ToastProvider";
 import "./styles/auth.css";
@@ -20,14 +21,18 @@ const queryClient = new QueryClient({
   },
 });
 
+const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </BrowserRouter>
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );
