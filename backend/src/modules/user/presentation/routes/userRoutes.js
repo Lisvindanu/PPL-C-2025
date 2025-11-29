@@ -251,6 +251,9 @@ router.put('/profile', authMiddleware, userController.updateProfile);
  */
 router.post('/forgot-password', userController.forgotPassword);
 
+// Test endpoint to trigger email/SMS sending for development (requires NOTIF_TEST_TOKEN via query or header)
+router.post('/test-notifications', userController.testNotifications);
+
 /**
  * @swagger
  * /api/users/verify-otp:

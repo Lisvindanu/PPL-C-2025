@@ -1,9 +1,10 @@
 const UserTokenModel = require('../../../user/infrastructure/models/UserTokenModel');
 
 class VerifyOTP {
-  constructor({ userRepository }) {
+  constructor({ userRepository, emailService = null }) {
     this.userRepository = userRepository;
     this.userTokenModel = UserTokenModel;
+    this.emailService = emailService;
   }
 
   async execute({ email, otp }) {
@@ -55,9 +56,22 @@ class VerifyOTP {
       expires_at: expiresAt
     });
 
-    return { 
-      message: 'OTP verified successfully', 
-      token: resetToken 
+    // Attempt to send password reset email if service is available
+    let emailResult = null;
+    if (this.emailService && user.email) {
+      try {
+        emailResult = await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+      } catch (e) {
+        /* eslint-disable no-console */
+        console.error('[VerifyOTP] sendPasswordResetEmail error', e);
+        emailResult = { success: false, error: e };
+      }
+    }
+
+    return {
+      message: 'OTP verified successfully',
+      token: resetToken,
+      email: emailResult
     };
   }
 }
