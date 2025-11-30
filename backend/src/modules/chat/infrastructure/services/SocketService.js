@@ -7,8 +7,13 @@ const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 
 class SocketService {
-    constructor() {
-        this.io = null;
+    constructor(server) {
+        this.onlineUsers = new Map();
+        this.setupSocketEvents();
+    }
+
+    async isUserOnline(userId) {
+        return this.onlineUsers.has(userId);
     }
 
     /**

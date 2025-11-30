@@ -32,6 +32,7 @@ class GetConversations {
 
     const result = conversation.map(conv => {
       const otherUser = conv.user1_id === userId ? conv.user2 : conv.user1;
+      const unreadCount = conv.getUnreadCountFor(userId);
 
       // Format data lawan bicara
       const participant = {
@@ -46,8 +47,6 @@ class GetConversations {
         timestamp: conv.pesan_terakhir_pada,
         // Read akan diimplementasikan nanti
       };
-
-      const unreadCount = 0;
 
       return {
         conversationId: conv.id,

@@ -101,29 +101,21 @@ class SequelizeConversationRepository {
   }
 
   async incrementUnreadCount(id, forUserId) {
-    // TODO: Implementasi increment unread count
-    // Determine mana yang di-increment: user1_unread_count atau user2_unread_count
-    //
-    // const conversation = await this.sequelize.models.Percakapan.findByPk(id);
-    // if (!conversation) throw new Error('Conversation not found');
+    const conversation = await this.Percakapan.findByPk(id);
+    if (!conversation) throw new Error('Conversation not found');
 
-    // const field = conversation.user1_id === forUserId ? 'user1_unread_count' : 'user2_unread_count';
-    // await conversation.increment(field);
+    const field = conversation.user1_id === forUserId ? 'user1_unread_count' : 'user2_unread_count';
 
-    // console.warn('incrementUnreadCount not implemented');
-    throw new Error('Not implemented - Conditional increment based on user');
+    await conversation.increment(field);
   }
 
   async resetUnreadCount(id, userId) {
-    // TODO: Implementasi reset unread count
-    // const conversation = await this.sequelize.models.Percakapan.findByPk(id);
-    // if (!conversation) return;
+    const conversation = await this.Percakapan.findByPk(id);
+    if (!conversation) return;
 
-    // const field = conversation.user1_id === userId ? 'user1_unread_count' : 'user2_unread_count';
-    // await conversation.update({ [field]: 0 });
+    const field = conversation.user1_id === userId ? 'user1_unread_count' : 'user2_unread_count';
 
-    // console.warn('resetUnreadCount not implemented');
-    throw new Error('Not implemented - Conditional update field');
+    await conversation.update({ [field]: 0 });
   }
 }
 
