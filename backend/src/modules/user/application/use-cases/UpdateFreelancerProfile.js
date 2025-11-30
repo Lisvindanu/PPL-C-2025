@@ -1,7 +1,16 @@
+const { validateFileType, validateFileSize } = require('../../../../shared/utils/fileValidator');
+
 class UpdateFreelancerProfile {
   constructor({ userRepository }) {
     this.userRepository = userRepository;
   }
+
+  /**
+   * Validate file size (for base64 or file path strings)
+   * @param {string} fileData - Base64 string or file path
+   * @param {string} fieldName - Field name for error message
+   */
+  // Using shared validators from src/shared/utils/fileValidator.js
 
   async execute(userId, profileData) {
     const user = await this.userRepository.findById(userId);
@@ -60,6 +69,12 @@ class UpdateFreelancerProfile {
     }
     if (profileData.avatar) userUpdates.avatar = profileData.avatar;
 
+    // Validate file types and sizes for user updates using shared util
+    if (userUpdates.avatar) {
+      validateFileType(userUpdates.avatar, 'Avatar');
+      validateFileSize(userUpdates.avatar, 'Avatar');
+    }
+
     // Apply user updates
     if (Object.keys(userUpdates).length > 0) {
       await user.update(userUpdates);
@@ -96,6 +111,16 @@ class UpdateFreelancerProfile {
     // Photo fields
     if (profileData.avatar !== undefined) profilePayload.avatar = profileData.avatar;
     if (profileData.foto_latar !== undefined) profilePayload.foto_latar = profileData.foto_latar;
+
+    // Validate file types and sizes for profile using shared util
+    if (profilePayload.avatar) {
+      validateFileType(profilePayload.avatar, 'Avatar');
+      validateFileSize(profilePayload.avatar, 'Avatar');
+    }
+    if (profilePayload.foto_latar) {
+      validateFileType(profilePayload.foto_latar, 'Background photo');
+      validateFileSize(profilePayload.foto_latar, 'Background photo');
+    }
 
     // Update profile
     if (Object.keys(profilePayload).length > 0) {
