@@ -1,13 +1,13 @@
-/**
- * Chat Controller
- * HTTP handler untuk chat endpoints
- */
 
 const SequelizeConversationRepository = require('../../infrastructure/repositories/SequelizeConversationRepository');
-const SequelizeMessageRepository = require('../../infrastructure/repositories/SequelizeMessageRepository'); // BARU
+const SequelizeMessageRepository = require('../../infrastructure/repositories/SequelizeMessageRepository');
 const GetConversations = require('../../application/use-cases/GetConversations');
-const SendMessage = require('../../application/use-cases/SendMessage');
 const GetMessages = require('../../application/use-cases/GetMessages');
+const SequelizeUserRepository = require('../../../user/infrastructure/repositories/SequelizeUserRepository');
+const EmailService = require('../../../payment/infrastructure/services/EmailService');
+const EmailNotificationService = require('../../infrastructure/services/EmailNotificationService');
+const SendMessage = require('../../application/use-cases/SendMessage');
+const MarkAsRead = require('../../application/use-cases/MarkAsRead');
 
 class ChatController {
   constructor(sequelize, socketService) {
@@ -17,10 +17,22 @@ class ChatController {
     // Inisialisasi repository
     this.conversationRepository = new SequelizeConversationRepository(sequelize);
     this.massageRepository = new SequelizeMessageRepository(sequelize);
+    this.userRepository = new SequelizeUserRepository(sequelize);
+    this.emailService = new EmailService(/* dependencies EmailService, misal: new Mailer() */);
+    this.notificationService = new EmailNotificationService(this.userRepository, this.emailService);
 
     // Inisialisasi use case
     this.getConversationsUseCase = new GetConversations(this.conversationRepository);
     this.getMessagesUseCase = new GetMessages(this.messageRepository, this.conversationRepository);
+
+    // Inisialisasi MarkAsRead
+    this.markAsReadUseCase = new MarkAsRead(
+      this.messageRepository,
+      this.conversationRepository,
+      this.socketService,
+      this.userRepository,
+      this.notificationService
+    );
 
     this.sendMessageUseCase = new SendMessage(
       this.messageRepository,
@@ -129,14 +141,23 @@ class ChatController {
    */
   async markAsRead(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur mark as read belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { id: percakapanId } = req.params;
+      const userId = req.user.userId;
+
+      await this.markAsReadUseCase.execute(percakapanId, userId);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Pesan berhasil ditandai sebagai terbaca'
       });
     } catch (error) {
+      console.error('Error marking as read:', error);
+      if (error.message.includes('Percakapan')) {
+        return res.status(404).json({ status: 'error', message: error.message });
+      }
       return res.status(500).json({
         status: 'error',
-        message: error.message
+        message: error.message || 'Internal Server Error'
       });
     }
   }

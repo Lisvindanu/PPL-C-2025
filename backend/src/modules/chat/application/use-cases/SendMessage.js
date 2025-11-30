@@ -1,22 +1,3 @@
-/**
- * Send Message Use Case
- *
- * Kirim pesan dalam percakapan.
- * Bisa text, image, atau file attachment.
- *
- * Kalo mau real-time, pake Socket.IO nanti.
- * Tapi sekarang REST API dulu aja, socket nanti belakangan.
- *
- * Steps:
- * 1. Validasi percakapan exist
- * 2. Validasi user adalah participant percakapan
- * 3. Validasi tipe pesan dan content
- * 4. Create message
- * 5. Update last_message di percakapan
- * 6. (Optional) Emit socket event buat real-time
- * 7. Kirim push notification
- */
-
 class SendMessage {
   constructor(
     messageRepository,
@@ -28,6 +9,7 @@ class SendMessage {
     this.conversationRepository = conversationRepository;
     this.socketService = socketService;
     this.notificationService = notificationService;
+    this.userRepository = userRepository;
   }
 
   /**
@@ -69,22 +51,29 @@ class SendMessage {
       pesan_terakhir_pada: newMessage.created_at
     });
 
-    // 6. BARU: Emit socket event buat real-time (C-2)
+    const receiverId = conversation.getOtherUserId(userId);
+    await this.conversationRepository.incrementUnreadCount(percakapanId, receiverId);
+
+    // 6. Emit socket event buat real-time (C-2)
     if (this.socketService) {
-      // Panggil method dari SocketService yang kita buat
       this.socketService.emitNewMessage(percakapanId, newMessage);
     }
 
-    // TODO: Emit socket event buat real-time (kalo pake Socket.IO)
-    // if (this.socketService) {
-    //   this.socketService.emitNewMessage(percakapanId, message);
-    // }
+    // 7. Kirim notifikasi email jika penerima offlineKirim notifikasi email jika penerima offline
+    if (this.notificationService && this.socketService && this.userRepository) {
+      const receiverId = conversation.getOtherUserId(userId);
 
-    // TODO: Kirim push notification ke receiver
-    // const receiverId = conversation.user1_id === userId ? conversation.user2_id : conversation.user1_id;
-    // if (this.notificationService) {
-    //   await this.notificationService.sendNewMessageNotification(receiverId, message);
-    // }
+      const isOnline = await this.socketService.isUserOnline(receiverId);
+
+      if (!isOnline) {
+        // userId adalah pengirim, receiverId adalah penerima
+        await this.notificationService.sendNewMessageNotification(
+          receiverId,
+          userId,
+          newMessage
+        );
+      }
+    }
 
     return newMessage;
 
