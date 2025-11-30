@@ -31,6 +31,7 @@ import CreateOrderPage from "./pages/CreateOrderPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OTPConfirmPage from "./pages/OTPConfirmPage";
 import NewPasswordPage from "./pages/NewPasswordPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
 import OrderListPage from "./pages/OrderListPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
@@ -54,6 +55,7 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
       <Route path="/reset-password/new-password" element={<NewPasswordPage />} />

@@ -152,6 +152,32 @@ export const authService = {
     }
   },
 
+  async verifyEmail(email, otp) {
+    try {
+      const res = await api.post("/users/verify-email", { email, otp });
+      return res.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to verify email",
+        errors: error.response?.data?.errors || [],
+      };
+    }
+  },
+
+  async resendVerificationOTP(email) {
+    try {
+      const res = await api.post("/users/resend-verification-otp", { email });
+      return res.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to resend OTP",
+        errors: error.response?.data?.errors || [],
+      };
+    }
+  },
+
   async forgotPassword(email) {
     try {
       const res = await api.post("/users/forgot-password", { email });

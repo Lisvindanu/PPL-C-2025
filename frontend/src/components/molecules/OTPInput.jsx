@@ -1,8 +1,18 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
-export default function OTPInput({ value, onChange, length = 6, disabled = false }) {
+export default function OTPInput({ value, onChange, length = 6, disabled = false, error = false }) {
   const inputRefs = useRef([]);
+  const [shake, setShake] = useState(false);
   const digits = value.split('').concat(Array(length).fill('')).slice(0, length);
+
+  // Trigger shake animation when error prop changes
+  useEffect(() => {
+    if (error) {
+      setShake(true);
+      const timer = setTimeout(() => setShake(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
 
   useEffect(() => {
     // Auto-focus first input on mount
@@ -53,7 +63,7 @@ export default function OTPInput({ value, onChange, length = 6, disabled = false
   };
 
   return (
-    <div className="flex gap-2 justify-center my-6">
+    <div className={`flex gap-2 justify-center my-6 ${shake ? 'animate-shake' : ''}`}>
       {digits.map((digit, index) => (
         <input
           key={index}
@@ -71,12 +81,24 @@ export default function OTPInput({ value, onChange, length = 6, disabled = false
             border-2 rounded-lg
             transition-all duration-200
             ${disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white'}
-            ${digit ? 'border-blue-500' : 'border-gray-300'}
-            focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none
+            ${error ? 'border-red-500 bg-red-50' : digit ? 'border-blue-500' : 'border-gray-300'}
+            ${!error && 'focus:border-blue-500 focus:ring-2 focus:ring-blue-200'}
+            ${error && 'focus:border-red-500 focus:ring-2 focus:ring-red-200'}
+            focus:outline-none
             hover:border-blue-400
           `}
         />
       ))}
+      <style jsx>{`
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+          20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        .animate-shake {
+          animation: shake 0.5s;
+        }
+      `}</style>
     </div>
   );
 }

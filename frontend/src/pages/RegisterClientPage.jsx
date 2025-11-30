@@ -71,15 +71,25 @@ export default function RegisterClientPage() {
     if (Object.values(newErrors).some(Boolean)) return;
 
     try {
-      await register({
+      const result = await register({
         email: form.email,
         password: form.password,
         firstName: form.firstName,
         lastName: form.lastName,
         ketentuan_agree: form.ketentuan_agree,
       });
-      toast.show("Account created. Please login.", "success");
-      navigate("/login", { replace: true });
+      
+      // Show OTP in development
+      if (result?.otp) {
+        console.log("🔧 Development OTP:", result.otp);
+        toast.show(`Dev OTP: ${result.otp}`, "info");
+      }
+      
+      toast.show("Account created. Please verify your email.", "success");
+      navigate("/verify-email", { 
+        state: { email: form.email },
+        replace: true 
+      });
     } catch (_) {
       toast.show("Registration failed", "error");
     }

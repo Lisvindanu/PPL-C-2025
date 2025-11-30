@@ -79,8 +79,24 @@ export default function OTPConfirmPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!otp) {
+    // Validation: OTP must be filled
+    if (!otp || otp.length === 0) {
       setError("Kode OTP harus diisi");
+      toast.show("Silakan masukkan kode OTP", "error");
+      return;
+    }
+
+    // Validation: OTP must be 6 digits
+    if (otp.length !== 6) {
+      setError("Kode OTP harus 6 digit");
+      toast.show("Kode OTP harus 6 digit", "error");
+      return;
+    }
+
+    // Validation: OTP must be numbers only
+    if (!/^\d{6}$/.test(otp)) {
+      setError("Kode OTP harus berupa angka");
+      toast.show("Kode OTP harus berupa angka", "error");
       return;
     }
 
@@ -98,11 +114,28 @@ export default function OTPConfirmPage() {
           replace: true,
         });
       } else {
-        setError(result.message || "Kode OTP tidak valid");
+        // Handle specific error messages
+        const errorMessage = result.message || "Kode OTP tidak valid";
+        setError(errorMessage);
+        
+        if (errorMessage.includes("expired") || errorMessage.includes("kadaluarsa")) {
+          toast.show("Kode OTP telah kadaluarsa. Silakan kirim ulang.", "error");
+        } else if (errorMessage.includes("already used") || errorMessage.includes("sudah digunakan")) {
+          toast.show("Kode OTP sudah digunakan. Silakan kirim ulang.", "error");
+        } else if (errorMessage.includes("Invalid") || errorMessage.includes("tidak valid")) {
+          toast.show("Kode OTP salah. Silakan coba lagi.", "error");
+        } else {
+          toast.show(errorMessage, "error");
+        }
+        
+        // Clear OTP input on error
+        setOtp("");
       }
     } catch (err) {
       console.error("Error:", err);
-      setError("Terjadi kesalahan saat memverifikasi kode OTP");
+      const errorMsg = "Terjadi kesalahan saat memverifikasi kode OTP";
+      setError(errorMsg);
+      toast.show(errorMsg, "error");
     } finally {
       setLoading(false);
     }
@@ -151,6 +184,7 @@ export default function OTPConfirmPage() {
               onChange={setOtp} 
               length={6}
               disabled={loading}
+              error={!!error}
             />
 
             {error && (

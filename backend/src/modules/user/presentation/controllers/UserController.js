@@ -11,6 +11,8 @@ const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
 const VerifyOTP = require('../../application/use-cases/VerifyOTP');
 const SendOTP = require('../../application/use-cases/SendOTP');
+const VerifyEmail = require('../../application/use-cases/VerifyEmail');
+const ResendVerificationOTP = require('../../application/use-cases/ResendVerificationOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
 const CreateFreelancerProfile = require('../../application/use-cases/CreateFreelancerProfile');
 const UpdateFreelancerProfile = require('../../application/use-cases/UpdateFreelancerProfile');
@@ -31,6 +33,8 @@ class UserController {
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
     this.verifyOTPUseCase = new VerifyOTP({ userRepository, emailService });
     this.sendOTPUseCase = new SendOTP({ userRepository });
+    this.verifyEmailUseCase = new VerifyEmail({ userRepository });
+    this.resendVerificationOTPUseCase = new ResendVerificationOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
     this.createFreelancerProfileUseCase = new CreateFreelancerProfile({ userRepository });
     this.updateFreelancerProfileUseCase = new UpdateFreelancerProfile({ userRepository });
@@ -255,6 +259,40 @@ class UserController {
         channels: channels || ['email']
       });
 
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  verifyEmail = async (req, res, next) => {
+    try {
+      const { email, otp } = req.body;
+      
+      if (!email || !otp) {
+        const err = new Error('Email and OTP are required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.verifyEmailUseCase.execute({ email, otp });
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  resendVerificationOTP = async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        const err = new Error('Email is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.resendVerificationOTPUseCase.execute({ email });
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
