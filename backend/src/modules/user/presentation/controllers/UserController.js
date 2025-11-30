@@ -10,6 +10,7 @@ const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
 const VerifyOTP = require('../../application/use-cases/VerifyOTP');
+const SendOTP = require('../../application/use-cases/SendOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
 const CreateFreelancerProfile = require('../../application/use-cases/CreateFreelancerProfile');
 const UpdateFreelancerProfile = require('../../application/use-cases/UpdateFreelancerProfile');
@@ -29,6 +30,7 @@ class UserController {
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
     this.verifyOTPUseCase = new VerifyOTP({ userRepository, emailService });
+    this.sendOTPUseCase = new SendOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
     this.createFreelancerProfileUseCase = new CreateFreelancerProfile({ userRepository });
     this.updateFreelancerProfileUseCase = new UpdateFreelancerProfile({ userRepository });
@@ -230,6 +232,29 @@ class UserController {
   verifyOTP = async (req, res, next) => {
     try {
       const result = await this.verifyOTPUseCase.execute(req.body);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  sendOTP = async (req, res, next) => {
+    try {
+      const { email, phoneNumber, purpose, channels } = req.body;
+      
+      if (!email) {
+        const err = new Error('Email is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.sendOTPUseCase.execute({
+        email,
+        phoneNumber,
+        purpose: purpose || 'verification',
+        channels: channels || ['email']
+      });
+
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);

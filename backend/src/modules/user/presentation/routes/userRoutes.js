@@ -256,6 +256,90 @@ router.post('/test-notifications', userController.testNotifications);
 
 /**
  * @swagger
+ * /api/users/send-otp:
+ *   post:
+ *     tags: [Users]
+ *     summary: Send OTP via Email/WhatsApp
+ *     description: Send OTP to user via email and/or WhatsApp for various purposes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "628123456789"
+ *                 description: Phone number with country code (optional, for WhatsApp)
+ *               purpose:
+ *                 type: string
+ *                 enum: [verification, password_reset, login, transaction]
+ *                 default: verification
+ *                 example: password_reset
+ *               channels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, whatsapp]
+ *                 default: ["email"]
+ *                 example: ["email", "whatsapp"]
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: OTP has been sent successfully
+ *                     channels:
+ *                       type: object
+ *                       properties:
+ *                         email:
+ *                           type: object
+ *                           properties:
+ *                             success:
+ *                               type: boolean
+ *                             messageId:
+ *                               type: string
+ *                         whatsapp:
+ *                           type: object
+ *                           properties:
+ *                             success:
+ *                               type: boolean
+ *                             messageId:
+ *                               type: string
+ *                     expiresIn:
+ *                       type: string
+ *                       example: "10 minutes"
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: User not found
+ *       429:
+ *         description: Rate limit exceeded
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/send-otp', userController.sendOTP);
+
+/**
+ * @swagger
  * /api/users/verify-otp:
  *   post:
  *     tags: [Users]

@@ -10,7 +10,8 @@ Backend server untuk SkillConnect - Marketplace Jasa dan Skill Lokal.
 - **JWT** - Authentication & authorization
 - **Socket.IO** - Real-time communication (chat)
 - **Swagger** - API documentation
-- **Nodemailer** - Email notifications
+- **Nodemailer** - Email notifications (Gmail SMTP)
+- **WhatsApp Cloud API** - WhatsApp notifications
 - **PDFKit** - Invoice generation
 
 ## 📁 Project Structure
