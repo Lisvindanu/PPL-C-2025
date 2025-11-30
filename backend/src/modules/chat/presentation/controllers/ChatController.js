@@ -29,15 +29,15 @@ class ChatController {
     this.markAsReadUseCase = new MarkAsRead(
       this.messageRepository,
       this.conversationRepository,
-      this.socketService,
-      this.userRepository,
-      this.notificationService
+      this.socketService
     );
 
     this.sendMessageUseCase = new SendMessage(
       this.messageRepository,
       this.conversationRepository,
-      this.socketService
+      this.socketService,
+      this.notificationService,
+      this.userRepository
     );
   }
 

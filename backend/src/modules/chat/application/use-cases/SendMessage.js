@@ -3,7 +3,8 @@ class SendMessage {
     messageRepository,
     conversationRepository,
     socketService = null,
-    notificationService = null
+    notificationService = null,
+    userRepository = null
   ) {
     this.messageRepository = messageRepository;
     this.conversationRepository = conversationRepository;
