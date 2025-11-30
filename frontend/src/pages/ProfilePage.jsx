@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
+import ConfirmModal from '../components/atoms/ConfirmModal'
+import { authService } from '../services/authService'
+import { useToast } from '../components/organisms/ToastProvider'
 import api from '../utils/axiosConfig'
 
 export default function ProfilePage() {
@@ -31,8 +34,24 @@ export default function ProfilePage() {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('token')
+    // kept for backward-compatibility; prefer confirmation modal
+    authService.logout();
     navigate('/login')
+  }
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const toast = useToast();
+
+  const performLogout = async () => {
+    try {
+      await authService.logout();
+      toast.show && toast.show('Anda telah logout', 'success');
+    } catch (e) {
+      // ignore
+    } finally {
+      setShowLogoutModal(false);
+      navigate('/login');
+    }
   }
 
   if (loading) {
@@ -220,7 +239,7 @@ export default function ProfilePage() {
                 </button>
 
                 <button
-                  onClick={handleLogout}
+                  onClick={() => setShowLogoutModal(true)}
                   className="w-full p-3 border border-red-200 rounded-lg hover:bg-red-50 text-left flex items-center gap-3"
                 >
                   <div className="w-10 h-10 rounded bg-red-100 flex items-center justify-center">
@@ -278,6 +297,15 @@ export default function ProfilePage() {
       </div>
 
       <Footer />
+      <ConfirmModal
+        open={showLogoutModal}
+        title="Konfirmasi Logout"
+        message="Anda akan keluar dari akun. Apakah Anda yakin ingin melanjutkan?"
+        onConfirm={performLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        confirmText="Ya, keluar"
+        cancelText="Batal"
+      />
     </div>
   )
 }
