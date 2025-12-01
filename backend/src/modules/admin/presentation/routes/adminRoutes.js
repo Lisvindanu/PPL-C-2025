@@ -45,6 +45,82 @@ module.exports = (adminController) => {
 
   /**
    * @swagger
+   * /api/admin/transactions:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get transaction list
+   *     description: Retrieve paginated list of payment transactions for admin dashboard
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *         description: Page number
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 10
+   *         description: Items per page
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [menunggu, berhasil, gagal, kadaluarsa, all]
+   *         description: Filter by payment status
+   *       - in: query
+   *         name: paymentGateway
+   *         schema:
+   *           type: string
+   *           enum: [midtrans, xendit, mock, manual, all]
+   *         description: Filter by payment gateway
+   *       - in: query
+   *         name: search
+   *         schema:
+   *           type: string
+   *         description: Search by user email or name
+   *       - in: query
+   *         name: startDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: Start date for date range filter
+   *       - in: query
+   *         name: endDate
+   *         schema:
+   *           type: string
+   *           format: date-time
+   *         description: End date for date range filter
+   *       - in: query
+   *         name: sortBy
+   *         schema:
+   *           type: string
+   *           enum: [created_at, dibayar_pada, total_bayar, status]
+   *         description: Sort field
+   *       - in: query
+   *         name: sortOrder
+   *         schema:
+   *           type: string
+   *           enum: [ASC, DESC]
+   *           default: DESC
+   *         description: Sort direction
+   *     responses:
+   *       200:
+   *         description: Transactions list retrieved successfully
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         $ref: '#/components/responses/ForbiddenError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/transactions', (req, res) => adminController.getTransactions(req, res));
+
+  /**
+   * @swagger
    * /api/admin/users:
    *   get:
    *     tags: [Admin]
