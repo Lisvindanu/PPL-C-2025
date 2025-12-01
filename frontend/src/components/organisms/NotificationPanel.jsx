@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
 import { adminService } from '../../services/adminService';
 
@@ -18,6 +19,7 @@ const smallDate = (iso) => {
 };
 
 const NotificationPanel = ({ onClose }) => {
+  const navigate = useNavigate();
   const [alerts, setAlerts] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -112,10 +114,15 @@ const NotificationPanel = ({ onClose }) => {
                     <circle cx="18" cy="6" r="3" fill="#2B6CB0"/>
                   </svg>
                 </div>
-                <h4 className="text-base font-semibold text-gray-900 mb-2">Hooray! You're up to date</h4>
                 <p className="text-sm text-gray-600 mb-4">Kami akan segera memberi tahu Anda apabila ada informasi baru</p>
                 <div className="w-full border-t border-gray-200" />
-                <button className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <button 
+                  onClick={() => {
+                    onClose();
+                    navigate('/admin/notifications');
+                  }}
+                  className="mt-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
                   Lihat semua notifikasi
                 </button>
               </div>
@@ -185,7 +192,22 @@ const NotificationPanel = ({ onClose }) => {
                         }
 
                         return (
-                          <li key={item.id} className="flex gap-3 items-center p-3 bg-white rounded border border-gray-100 shadow-sm">
+                          <li 
+                            key={item.id} 
+                            onClick={async () => {
+                              // Mark as read
+                              const readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+                              if (!readNotifications.includes(item.id)) {
+                                readNotifications.push(item.id);
+                                localStorage.setItem('readNotifications', JSON.stringify(readNotifications));
+                                // Dispatch event to update header count
+                                window.dispatchEvent(new CustomEvent('notificationRead'));
+                              }
+                              onClose();
+                              navigate(`/admin/fraud-report/${item.type}/${item.id}`);
+                            }}
+                            className="flex gap-3 items-center p-3 bg-white rounded border border-gray-100 shadow-sm cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                          >
                             <div className={`w-12 h-12 flex-shrink-0 rounded-full ${typeColor(item.type)} text-white flex items-center justify-center text-sm font-semibold`}>{getInitials(username)}</div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
@@ -209,7 +231,13 @@ const NotificationPanel = ({ onClose }) => {
       {/* Footer */}
       {!loading && !error && alerts && (alerts.total ?? 0) > 0 && (
         <div className="px-5 py-3 border-t border-gray-200 text-center">
-          <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <button 
+            onClick={() => {
+              onClose();
+              navigate('/admin/notifications');
+            }}
+            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+          >
             Lihat semua notifikasi
           </button>
         </div>

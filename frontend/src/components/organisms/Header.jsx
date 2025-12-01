@@ -33,7 +33,13 @@ export const Header = () => {
         if (mounted && res && res.success !== false) {
           // Backend returns an object like { anomalies: [], failedPayments: [], multipleFailures: [], total }
           const total = res.data?.total ?? res.total ?? 0;
-          setAlertCount(total);
+          
+          // Get read notifications from localStorage
+          const readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+          
+          // Calculate unread count
+          const unreadCount = Math.max(0, total - readNotifications.length);
+          setAlertCount(unreadCount);
         }
       } catch (e) {
         // ignore
@@ -42,7 +48,18 @@ export const Header = () => {
     fetchAlerts();
     // Poll every 30s for updated count
     const interval = setInterval(fetchAlerts, 30000);
-    return () => { mounted = false };
+    
+    // Listen for notification read events
+    const handleNotificationRead = () => {
+      fetchAlerts();
+    };
+    window.addEventListener('notificationRead', handleNotificationRead);
+    
+    return () => { 
+      mounted = false;
+      clearInterval(interval);
+      window.removeEventListener('notificationRead', handleNotificationRead);
+    };
   }, []);
 
   // Close panel when clicking outside

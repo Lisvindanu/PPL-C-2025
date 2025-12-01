@@ -367,5 +367,53 @@ export const adminService = {
         status
       }
     }
+  },
+
+  // Get all notifications
+  async getNotifications(filters = {}) {
+    try {
+      const response = await api.get('/admin/notifications', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch notifications',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Mark notification as read
+  async markNotificationRead(id) {
+    try {
+      const response = await api.put(`/admin/notifications/${id}/read`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to mark notification as read',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get fraud alert detail
+  async getFraudAlertDetail(type, id) {
+    try {
+      const response = await api.get(`/admin/fraud-alerts/${type}/${id}`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch fraud alert detail',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
   }
 }

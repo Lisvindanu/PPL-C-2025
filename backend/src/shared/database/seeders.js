@@ -510,3 +510,6 @@ if (require.main === module) {
 }
 
 module.exports = { runSeeders, seedUsers, seedKategori, seedLayanan };
+
+console.log("File ini tidak digunakan. Jalankan: src/shared/database/seeders/seed.js");
+

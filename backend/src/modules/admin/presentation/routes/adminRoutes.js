@@ -682,5 +682,96 @@ router.get('/logs/admin/:adminId', adminController.getLogsByAdminId.bind(adminCo
    */
 router.get('/logs', adminController.getAllLogs.bind(adminController));
 
+  /**
+   * @swagger
+   * /api/admin/notifications:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get all notifications for admin
+   *     description: Retrieve all fraud alert notifications for admin
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 20
+   *     responses:
+   *       200:
+   *         description: Notifications retrieved successfully
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         $ref: '#/components/responses/ForbiddenError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/notifications', adminController.getNotifications.bind(adminController));
+
+  /**
+   * @swagger
+   * /api/admin/notifications/{id}/read:
+   *   put:
+   *     tags: [Admin]
+   *     summary: Mark notification as read
+   *     description: Mark a notification as read
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Notification ID
+   *     responses:
+   *       200:
+   *         description: Notification marked as read
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.put('/notifications/:id/read', adminController.markNotificationRead.bind(adminController));
+
+  /**
+   * @swagger
+   * /api/admin/fraud-alerts/{type}/{id}:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get fraud alert detail
+   *     description: Retrieve detailed information about a specific fraud alert
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: path
+   *         name: type
+   *         required: true
+   *         schema:
+   *           type: string
+   *           enum: [failedPayment, multipleFailures, anomaly]
+   *         description: Type of fraud alert
+   *       - in: path
+   *         name: id
+   *         required: true
+   *         schema:
+   *           type: string
+   *         description: Alert ID
+   *     responses:
+   *       200:
+   *         description: Fraud alert detail retrieved
+   *       404:
+   *         $ref: '#/components/responses/NotFoundError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/fraud-alerts/:type/:id', adminController.getFraudAlertDetail.bind(adminController));
+
   return router;
 };

@@ -1,4 +1,5 @@
 const UserTokenModel = require('../../../user/infrastructure/models/UserTokenModel');
+const Password = require('../../domain/value-objects/Password');
 
 class ResetPassword {
   constructor({ userRepository, hashService }) {
@@ -8,6 +9,14 @@ class ResetPassword {
   }
 
   async execute({ email, token, newPassword }) {
+    // Validate password strength (8 chars, letters, numbers, symbols)
+    try {
+      new Password(newPassword);
+    } catch (error) {
+      const err = new Error('Password does not meet strength requirements: minimum 8 characters, must include letters, numbers, and symbols');
+      err.statusCode = 400;
+      throw err;
+    }
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       const err = new Error('User not found');
