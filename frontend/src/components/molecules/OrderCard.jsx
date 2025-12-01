@@ -1,5 +1,7 @@
 import Button from "../atoms/Button";
-import { Clock, RotateCcw, ShieldCheck, Headset, Star } from "lucide-react";
+import { Clock, RotateCcw, ShieldCheck, Headset, Star, Bookmark } from "lucide-react";
+import { useState } from "react";
+import SavedToast from "./SavedToast";
 
 function Row({ icon: IconCmp, label, value }) {
   return (
@@ -57,6 +59,9 @@ export default function OrderCard({
   onOrder,
   onContact,
 }) {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [showSavedToast, setShowSavedToast] = useState(false);
+
   const safeRating = Number.isFinite(Number(rating)) ? Number(rating) : 0;
   const safeReviews = Number.isFinite(Number(reviewCount))
     ? Number(reviewCount)
@@ -65,16 +70,40 @@ export default function OrderCard({
     ? Number(completed)
     : 0;
 
+  const handleBookmarkClick = () => {
+    setIsBookmarked((prev) => {
+      const next = !prev;
+      setShowSavedToast(true);
+      return next;
+    });
+  };
+
   return (
-    <aside className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm">
-      {/* Header harga */}
-      <div className="mb-3">
-        <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-          Harga
-        </p>
-        <p className="mt-1 text-2xl font-semibold text-[#2563EB]">
-          Rp. {Number(price || 0).toLocaleString("id-ID")}
-        </p>
+    <>
+      <aside className="rounded-2xl border border-neutral-200 bg-white p-4 sm:p-5 shadow-sm">
+        {/* Header harga + bookmark */}
+        <div className="mb-3 flex items-start justify-between gap-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+            Harga
+          </p>
+          <p className="mt-1 text-2xl font-semibold text-[#2563EB]">
+            Rp. {Number(price || 0).toLocaleString("id-ID")}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleBookmarkClick}
+          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-neutral-600 transition
+            ${isBookmarked ? "border-[#1D4ED8] bg-white" : "border-neutral-300 bg-white hover:bg-neutral-50"}
+          `}
+          aria-pressed={isBookmarked}
+        >
+          <Bookmark
+            className={`h-6 w-6 ${isBookmarked ? "fill-[#111827] text-[#111827]" : "text-neutral-600"}`}
+          />
+        </button>
       </div>
 
       {/* Rating & statistik pesanan */}
@@ -105,8 +134,8 @@ export default function OrderCard({
         <Row icon={Headset} label="Didukung customer servis 24/7" />
       </div>
 
-      {/* Tombol aksi */}
-      <div className="mt-5 flex flex-col gap-2">
+        {/* Tombol aksi */}
+        <div className="mt-5 flex flex-col gap-2">
         <Button
           variant="order"
           onClick={onOrder}
@@ -122,7 +151,14 @@ export default function OrderCard({
         >
           Hubungi Freelancer
         </Button>
-      </div>
-    </aside>
+        </div>
+      </aside>
+
+      <SavedToast
+        isOpen={showSavedToast}
+        onClose={() => setShowSavedToast(false)}
+        isSaved={isBookmarked}
+      />
+    </>
   );
 }
