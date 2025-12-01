@@ -5,8 +5,7 @@ import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
 import ServiceCardItem from '../components/molecules/ServiceCardItem'
 import { bookmarkService } from '../services/bookmarkService'
-import { serviceService } from '../services/serviceService'
-import { mapServiceDetailToFrontend } from '../utils/mapServiceToFrontend'
+import { favoriteService } from '../services/favoriteService'
 
 const BookmarkPage = () => {
   const navigate = useNavigate()
@@ -16,19 +15,58 @@ const BookmarkPage = () => {
   useEffect(() => {
     const load = async () => {
       try {
+        console.log('[BookmarkPage] Loading bookmarks from backend...');
+
+        // Fetch bookmarks from backend (with full service details from JOIN)
         const res = await bookmarkService.getBookmarks()
+
         if (!res.success) {
+          console.error('[BookmarkPage] Failed to load bookmarks:', res.message);
           setBookmarkedServices([])
+          setLoading(false)
           return
         }
-        const rows = res.data || []
-        const ids = rows.map(r => r.layanan_id).filter(Boolean)
-const details = await Promise.all(ids.map(async (id) => {
-          const d = await serviceService.getServiceById(id)
-          if (d.success && d.service) return { ...mapServiceDetailToFrontend(d.service), isSaved: true }
-          return null
-        }))
-        setBookmarkedServices(details.filter(Boolean))
+
+        const bookmarks = res.data || []
+        console.log('[BookmarkPage] Loaded bookmarks:', bookmarks.length);
+
+        if (bookmarks.length === 0) {
+          setBookmarkedServices([])
+          setLoading(false)
+          return
+        }
+
+        // Extract service IDs
+        const serviceIds = bookmarks.map(b => b.id);
+        console.log('[BookmarkPage] Service IDs:', serviceIds);
+
+        // Fetch favorite counts for all services
+        const countsResult = await favoriteService.getFavoriteCounts(serviceIds);
+        console.log('[BookmarkPage] Favorite counts result:', countsResult);
+
+        const favoriteCounts = countsResult.success ? countsResult.data : {};
+        console.log('[BookmarkPage] Favorite counts map:', favoriteCounts);
+
+        // Map services with favorite counts and proper formatting
+        const servicesWithCounts = bookmarks.map(service => {
+          const count = favoriteCounts[service.id] || 0;
+          console.log(`[BookmarkPage] Service ${service.id}: favoriteCount = ${count}`);
+          return {
+            ...service,
+            // Ensure price is an integer (remove .00 decimals)
+            price: parseInt(service.price) || 0,
+            // Ensure rating is a float
+            rating: parseFloat(service.rating) || 0,
+            // Ensure reviews is an integer
+            reviews: parseInt(service.reviews) || 0,
+            isSaved: true,
+            isBookmarked: true,
+            favoriteCount: count
+          };
+        });
+
+        console.log('[BookmarkPage] Final services with favorite counts:', servicesWithCounts);
+        setBookmarkedServices(servicesWithCounts)
       } catch (e) {
         console.error('[BookmarkPage] load error:', e)
         setBookmarkedServices([])

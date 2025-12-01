@@ -6,6 +6,14 @@ const authMiddleware = require('../../../../shared/middleware/authMiddleware');
 const favoriteController = new FavoriteController();
 
 /**
+ * @route   POST /api/favorites/counts
+ * @desc    Get favorite counts for multiple services
+ * @access  Public
+ * @body    { layanan_ids: string[] }
+ */
+router.post('/counts', favoriteController.getFavoriteCounts);
+
+/**
  * @route   GET /api/favorites
  * @desc    Get all favorites for current user
  * @access  Private (Client only)

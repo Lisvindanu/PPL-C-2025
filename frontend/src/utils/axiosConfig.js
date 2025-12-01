@@ -45,14 +45,18 @@ api.interceptors.response.use(
     return response
   },
   (error) => {
-    // Only log actual errors
-    if (error.response?.status !== 401) {
+    // Log errors except 404 on user profile (fallback to localStorage)
+    const isProfileNotFound = error.response?.status === 404 &&
+                              error.config?.url?.includes('/users/profile');
+
+    if (!isProfileNotFound && error.response?.status !== 401) {
       console.error('[axiosConfig] Response error:', {
         status: error.response?.status,
         url: error.config?.url,
         message: error.message
       })
     }
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token')

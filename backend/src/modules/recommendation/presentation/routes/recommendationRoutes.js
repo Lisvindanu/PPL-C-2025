@@ -706,6 +706,37 @@ module.exports = (recommendationController, favoriteController) => {
 
   /**
    * @swagger
+   * /api/recommendations/admin/monitoring-dashboard:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Dapatkan data monitoring dashboard lengkap
+   *     description: Endpoint untuk mendapatkan metrics, trends, dan tabel untuk monitoring dashboard
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: period
+   *         schema:
+   *           type: string
+   *           enum: [week, month, year]
+   *           default: week
+   *         description: Periode data yang akan ditampilkan
+   *     responses:
+   *       200:
+   *         description: Data monitoring dashboard berhasil diambil
+   *       401:
+   *         description: Unauthorized
+   *       500:
+   *         description: Internal server error
+   */
+  router.get(
+    '/admin/monitoring-dashboard',
+    authMiddleware,
+    (req, res) => recommendationController.getMonitoringDashboard(req, res)
+  );
+
+  /**
+   * @swagger
    * /api/recommendations/admin/model/status:
    *   get:
    *     tags: [Admin]

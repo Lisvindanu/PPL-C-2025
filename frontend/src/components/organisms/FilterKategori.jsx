@@ -79,11 +79,7 @@ export default function FilterKategori({ onFilterChange, activeFilter: externalA
               WebkitOverflowScrolling: 'touch'
             }}
           >
-            <style jsx>{`
-              div::-webkit-scrollbar {
-                display: none;
-              }
-            `}</style>
+            
             {categories.map((category) => (
               <button
                 key={category.id}

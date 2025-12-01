@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
-import { getServiceById } from "../utils/servicesData";
+import { bookmarkService } from "../services/bookmarkService";
+import { favoriteService } from "../services/favoriteService";
 import Navbar from "../components/organisms/Navbar";
 import Footer from "../components/organisms/Footer";
 import ServiceCardItem from "../components/molecules/ServiceCardItem";
@@ -27,20 +28,62 @@ export default function SavedPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadSaved = () => {
+  const loadSaved = async () => {
     try {
-      // Load from localStorage
-      const savedIds = JSON.parse(localStorage.getItem('saved') || '[]');
+      console.log('[SavedPage] Loading bookmarks from backend...');
 
-      // Get full service data
-      const savedServices = savedIds
-        .map(id => getServiceById(id))
-        .filter(Boolean)
-        .map(service => ({ ...service, isSaved: true }));
+      // Fetch bookmarks from backend
+      const result = await bookmarkService.getBookmarks();
 
+      if (!result.success) {
+        console.error('[SavedPage] Failed to load bookmarks:', result.message);
+        setSaved([]);
+        setLoading(false);
+        return;
+      }
+
+      const bookmarks = result.data || [];
+      console.log('[SavedPage] Loaded bookmarks:', bookmarks.length);
+
+      if (bookmarks.length === 0) {
+        setSaved([]);
+        setLoading(false);
+        return;
+      }
+
+      // Extract service IDs
+      const serviceIds = bookmarks.map(b => b.id);
+      console.log('[SavedPage] Service IDs:', serviceIds);
+
+      // Fetch favorite counts for all services
+      const countsResult = await favoriteService.getFavoriteCounts(serviceIds);
+      console.log('[SavedPage] Favorite counts result:', countsResult);
+
+      const favoriteCounts = countsResult.success ? countsResult.data : {};
+      console.log('[SavedPage] Favorite counts map:', favoriteCounts);
+
+      // Map services with favorite counts and proper formatting
+      const savedServices = bookmarks.map(service => {
+        const count = favoriteCounts[service.id] || 0;
+        console.log(`[SavedPage] Service ${service.id}: favoriteCount = ${count}`);
+        return {
+          ...service,
+          // Ensure price is an integer (remove .00 decimals)
+          price: parseInt(service.price) || 0,
+          // Ensure rating is a float
+          rating: parseFloat(service.rating) || 0,
+          // Ensure reviews is an integer
+          reviews: parseInt(service.reviews) || 0,
+          isSaved: true,
+          isBookmarked: true,
+          favoriteCount: count
+        };
+      });
+
+      console.log('[SavedPage] Final services with favorite counts:', savedServices);
       setSaved(savedServices);
     } catch (err) {
-      console.error("Error loading saved:", err);
+      console.error("[SavedPage] Error loading saved:", err);
       setSaved([]);
     } finally {
       setLoading(false);
@@ -115,7 +158,7 @@ export default function SavedPage() {
                   key={service.id}
                   service={service}
                   onClick={() => handleServiceClick(service)}
-                  onSaveToggle={handleSaveToggle}
+                  onBookmarkToggle={handleSaveToggle}
                   fullWidth={true}
                 />
               ))}

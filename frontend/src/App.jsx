@@ -39,8 +39,6 @@ import OrderDetailPage from "./pages/OrderDetailPage";
 import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import AdminRecommendationDashboardPage from "./pages/admin/AdminRecommendationDashboardPage";
-import AdminModelManagementPage from "./pages/admin/AdminModelManagementPage";
-import AdminModelEvaluationPage from "./pages/admin/AdminModelEvaluationPage";
 
 export default function App() {
   return (
@@ -146,22 +144,6 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/recommendations/model"
-        element={
-          <ProtectedRoute>
-            <AdminModelManagementPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/admin/recommendations/evaluation"
-        element={
-          <ProtectedRoute>
-            <AdminModelEvaluationPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
         path="/bookmarks"
         element={
           <ProtectedRoute>
@@ -178,7 +160,7 @@ export default function App() {
         }
       />
       <Route
-        path="/layanan-tersembunyi"
+        path="/hide-rekomendasi"
         element={
           <ProtectedRoute>
             <HiddenRecommendationsPage />

@@ -38,6 +38,7 @@ export const mapServiceDetailToFrontend = (backendService) => {
     revisi: formatBatasRevisi(backendService.batas_revisi),
     thumbnail: backendService.thumbnail || '/asset/layanan/Layanan.png',
     gambar: backendService.gambar || [],
+    favoriteCount: parseInt(backendService.favorite_count ?? backendService.favoriteCount ?? 0),
     // Keep original for reference
     waktu_pengerjaan: backendService.waktu_pengerjaan,
     batas_revisi: backendService.batas_revisi

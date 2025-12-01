@@ -7,16 +7,20 @@ class RemoveFavorite {
     try {
       const deleted = await this.favoriteRepository.delete(userId, layananId);
 
+      // Idempotent delete: even if not found, return success
+      // The desired state (favorite removed) is already achieved
       if (!deleted) {
         return {
-          success: false,
-          message: 'Favorit tidak ditemukan'
+          success: true,
+          message: 'Layanan sudah tidak ada di favorit',
+          wasDeleted: false // Optional: indicates it was already removed
         };
       }
 
       return {
         success: true,
-        message: 'Layanan berhasil dihapus dari favorit'
+        message: 'Layanan berhasil dihapus dari favorit',
+        wasDeleted: true
       };
     } catch (error) {
       return {

@@ -56,6 +56,10 @@ class SequelizeServiceRepository {
     // expose nama kategori
     layananCols.push("k.nama AS nama_kategori");
     layananCols.push("CONCAT(u.nama_depan, ' ', u.nama_belakang) AS freelancer_name");
+
+    // Count favorites for this service
+    layananCols.push("(SELECT COUNT(*) FROM favorit f WHERE f.layanan_id = l.id) AS favorite_count");
+
     return layananCols.join(", ");
   }
 

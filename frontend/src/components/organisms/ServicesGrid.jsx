@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import CategoryServiceSection from "./CategoryServiceSection";
 import { serviceService } from "../../services/serviceService";
+import { favoriteService } from "../../services/favoriteService";
 
 export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFilter }) {
   const [categoriesWithServices, setCategoriesWithServices] = useState([]);
@@ -30,6 +31,12 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFi
           throw new Error("Failed to fetch services");
         }
 
+        // Fetch favorite counts for ALL services
+        const allServiceIds = servicesResult.services.map(s => s.id);
+        const countsResult = await favoriteService.getFavoriteCounts(allServiceIds);
+        const favoriteCounts = countsResult.success ? countsResult.data : {};
+        console.log('[ServicesGrid] Favorite counts:', favoriteCounts);
+
         // Group services by category
         const grouped = categoriesResult.categories.map(category => {
           const categoryServices = servicesResult.services
@@ -44,6 +51,8 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFi
               rating: parseFloat(service.rating) || 0,
               reviews: parseInt(service.jumlah_ulasan || service.reviews) || 0,
               price: parseInt(service.harga) || 0,
+              thumbnail: service.thumbnail,
+              favoriteCount: favoriteCounts[service.id] || 0
             }));
 
           return {
@@ -54,6 +63,7 @@ export default function ServicesGrid({ onServiceClick, onCategoryClick, activeFi
           };
         }).filter(cat => cat.services.length > 0); // Only show categories with services
 
+        console.log('[ServicesGrid] Grouped categories with favorite counts:', grouped);
         setCategoriesWithServices(grouped);
       } catch (err) {
         console.error("Error fetching services:", err);

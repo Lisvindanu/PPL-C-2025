@@ -3,14 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import ServiceCardItem from "../molecules/ServiceCardItem";
 import RemoveRecommendationModal from "../molecules/RemoveRecommendationModal";
-import { allServices } from "../../utils/servicesData";
 import { serviceService } from "../../services/serviceService";
-
-// Get random 10 services for recommendations (MOCK FALLBACK)
-const getRandomRecommendations = () => {
-  const shuffled = [...allServices].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, 10);
-};
+import { favoriteService } from "../../services/favoriteService";
 
 const RecommendationCard = forwardRef(({ service, onClick, onHide, onFavoriteToggle }, ref) => {
   return (
@@ -23,27 +17,30 @@ const RecommendationCard = forwardRef(({ service, onClick, onHide, onFavoriteTog
       transition={{ duration: 0.3 }}
       className="relative w-64 flex-shrink-0"
     >
-      {/* Hide Button - positioned over the card */}
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          onHide(service);
-        }}
-        className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full bg-white border border-neutral-300 flex items-center justify-center hover:bg-neutral-100 hover:border-neutral-400 transition-all duration-200 shadow-md"
-        aria-label="Sembunyikan dari rekomendasi"
-        title="Sembunyikan rekomendasi ini"
-      >
-        <i className="fas fa-eye-slash text-neutral-600 text-xs pointer-events-none" />
-      </button>
+      {/* Service Card with custom styling for category badge */}
+      <div className="relative">
+        {/* Hide Button - positioned at top-right corner INSIDE the card */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onHide(service);
+          }}
+          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-neutral-900/80 backdrop-blur-sm text-white flex items-center justify-center hover:bg-red-500 transition-all duration-200 shadow-lg"
+          aria-label="Sembunyikan dari rekomendasi"
+          title="Sembunyikan rekomendasi ini"
+        >
+          <i className="fas fa-times text-xs pointer-events-none" />
+        </button>
 
-      {/* Service Card - exactly same as popular services */}
-      <ServiceCardItem
-        service={service}
-        onClick={onClick}
-        onFavoriteToggle={onFavoriteToggle}
-        fullWidth={false}
-      />
+        {/* Service Card - exactly same as popular services */}
+        <ServiceCardItem
+          service={service}
+          onClick={onClick}
+          onFavoriteToggle={onFavoriteToggle}
+          fullWidth={false}
+        />
+      </div>
     </motion.div>
   );
 });
@@ -53,11 +50,13 @@ RecommendationCard.displayName = 'RecommendationCard';
 export default function RecommendationSection({ onServiceClick, onFavoriteToggle }) {
   const navigate = useNavigate();
   const [recommendations, setRecommendations] = useState([]);
+  const [allRecommendations, setAllRecommendations] = useState([]); // Store all recommendations
   const [loading, setLoading] = useState(true);
   const [hiddenCount, setHiddenCount] = useState(0);
   const [showHideModal, setShowHideModal] = useState(false);
   const [serviceToHide, setServiceToHide] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('all');
   const scrollContainerRef = useRef(null);
 
   // Load hidden recommendations from localStorage
@@ -77,17 +76,23 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     const fetchRecommendations = async () => {
       try {
         setLoading(true);
+
         const hidden = getHiddenRecommendations();
         setHiddenCount(hidden.length);
 
-        // Try to get cached recommendations first (v3 for 10 cards with mock fallback)
-        const cachedKey = 'cachedRecommendations_v3';
+        // Try to get cached recommendations first (v9 - cleaned invalid IDs)
+        // Note: versionChecker.js handles global cache cleanup
+        const cachedKey = 'cachedRecommendations_v9';
         const cached = sessionStorage.getItem(cachedKey);
 
         if (cached) {
           try {
             const parsedCache = JSON.parse(cached);
             console.log('[RecommendationSection] Using cached recommendations:', parsedCache.length, 'cards');
+
+            // Store all recommendations
+            setAllRecommendations(parsedCache);
+
             const visible = parsedCache.filter(s => !hidden.includes(s.id));
             setRecommendations(visible);
             setLoading(false);
@@ -121,41 +126,52 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
             rating: parseFloat(service.rating_rata_rata || service.rating || 0),
             reviews: parseInt(service.jumlah_rating || service.jumlah_ulasan || service.reviews || 0),
             price: parseFloat(service.harga || service.price || 0),
+            thumbnail: service.thumbnail,
           }));
 
-          let selected;
-          // If less than 10 services from backend, use mock data
-          if (mappedServices.length < 10) {
-            console.log('[RecommendationSection] Only', mappedServices.length, 'services from backend, using mock data');
-            selected = getRandomRecommendations();
-          } else {
-            // Shuffle once and always take exactly 10 services
-            const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
-            selected = shuffled.slice(0, 10);
-          }
+          // Use backend services only (no mock data fallback)
+          // Shuffle once and take up to 10 services (or less if not enough services)
+          const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
+          const selected = shuffled.slice(0, Math.min(10, mappedServices.length));
+          console.log('[RecommendationSection] Using', selected.length, 'services from backend (no mock data)');
+          console.log('[RecommendationSection] Service IDs:', selected.map(s => s.id).join(', '));
 
-          // Cache the recommendations for this session
-          sessionStorage.setItem(cachedKey, JSON.stringify(selected));
+          // Fetch favorite counts for all selected services
+          const serviceIds = selected.map(s => s.id);
+          const countsResult = await favoriteService.getFavoriteCounts(serviceIds);
+          const favoriteCounts = countsResult.success ? countsResult.data : {};
+          console.log('[RecommendationSection] Favorite counts:', favoriteCounts);
+
+          // Add favorite counts to services
+          const servicesWithCounts = selected.map(service => ({
+            ...service,
+            favoriteCount: favoriteCounts[service.id] || 0
+          }));
+          console.log('[RecommendationSection] Services with favorite counts:', servicesWithCounts);
+
+          // Sort by favorite count (highest first) - show most loved services first
+          const sortedServices = [...servicesWithCounts].sort((a, b) => b.favoriteCount - a.favoriteCount);
+          console.log('[RecommendationSection] Sorted by favorite count:', sortedServices.map(s => `${s.title}: ${s.favoriteCount}`));
+
+          // Cache the recommendations for this session (with favorite counts, sorted)
+          sessionStorage.setItem(cachedKey, JSON.stringify(sortedServices));
+
+          // Store all recommendations
+          setAllRecommendations(sortedServices);
 
           // Filter out hidden ones
-          const visible = selected.filter(s => !hidden.includes(s.id));
+          const visible = sortedServices.filter(s => !hidden.includes(s.id));
           setRecommendations(visible);
         } else {
-          // Fallback to mock data
-          console.log('[RecommendationSection] No services from backend, using mock data');
-          const mockRecs = getRandomRecommendations();
-          sessionStorage.setItem(cachedKey, JSON.stringify(mockRecs));
-          const visible = mockRecs.filter(s => !hidden.includes(s.id));
-          setRecommendations(visible);
+          // No services from backend - show empty
+          console.log('[RecommendationSection] No services from backend');
+          setRecommendations([]);
         }
       } catch (error) {
         if (cancelled) return;
         console.error('[RecommendationSection] Error fetching recommendations:', error);
-        // Fallback to mock data
-        const mockRecs = getRandomRecommendations();
-        const hidden = getHiddenRecommendations();
-        const visible = mockRecs.filter(s => !hidden.includes(s.id));
-        setRecommendations(visible);
+        // Show empty on error
+        setRecommendations([]);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -168,6 +184,45 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     };
   }, []);
 
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        console.log('[RecommendationSection] Fetching categories...');
+        const result = await serviceService.getCategories();
+        console.log('[RecommendationSection] Categories result:', result);
+        if (result.success && result.categories) {
+          console.log('[RecommendationSection] Categories loaded:', result.categories.length, 'categories');
+          console.log('[RecommendationSection] Category list:', result.categories.map(c => c.nama).join(', '));
+          setCategories(result.categories);
+        } else {
+          console.warn('[RecommendationSection] Failed to load categories:', result);
+        }
+      } catch (error) {
+        console.error('[RecommendationSection] Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Filter recommendations by category
+  useEffect(() => {
+    const hidden = getHiddenRecommendations();
+
+    if (selectedCategory === 'all') {
+      // Show all recommendations (minus hidden)
+      const visible = allRecommendations.filter(s => !hidden.includes(s.id));
+      setRecommendations(visible);
+    } else {
+      // Filter by category and hidden
+      const filtered = allRecommendations.filter(s =>
+        s.category === selectedCategory && !hidden.includes(s.id)
+      );
+      setRecommendations(filtered);
+    }
+  }, [selectedCategory, allRecommendations]);
+
   // Listen to changes from HiddenRecommendationsPage
   useEffect(() => {
     const handleHiddenChanged = () => {
@@ -175,13 +230,21 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
       const hidden = getHiddenRecommendations();
       setHiddenCount(hidden.length);
 
-      // Also update visible recommendations
-      const cachedKey = 'cachedRecommendations_v3';
+      // Also update visible recommendations with category filter
+      const cachedKey = 'cachedRecommendations_v9';
       const cached = sessionStorage.getItem(cachedKey);
       if (cached) {
         try {
           const parsedCache = JSON.parse(cached);
-          const visible = parsedCache.filter(s => !hidden.includes(s.id));
+          setAllRecommendations(parsedCache);
+
+          // Apply category filter
+          let filtered = parsedCache;
+          if (selectedCategory !== 'all') {
+            filtered = parsedCache.filter(s => s.category === selectedCategory);
+          }
+
+          const visible = filtered.filter(s => !hidden.includes(s.id));
           setRecommendations(visible);
         } catch (error) {
           console.error('[RecommendationSection] Error updating after hidden change:', error);
@@ -193,7 +256,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
     return () => {
       window.removeEventListener('hiddenRecommendationsChanged', handleHiddenChanged);
     };
-  }, []);
+  }, [selectedCategory]);
 
   const handleHideClick = (service) => {
     setServiceToHide(service);
@@ -229,12 +292,20 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
 
     // Get cached recommendations
     try {
-      const cachedKey = 'cachedRecommendations_v3';
+      const cachedKey = 'cachedRecommendations_v9';
       const cached = sessionStorage.getItem(cachedKey);
 
       if (cached) {
         const parsedCache = JSON.parse(cached);
-        setRecommendations(parsedCache);
+        setAllRecommendations(parsedCache);
+
+        // Apply category filter
+        if (selectedCategory === 'all') {
+          setRecommendations(parsedCache);
+        } else {
+          const filtered = parsedCache.filter(s => s.category === selectedCategory);
+          setRecommendations(filtered);
+        }
       } else {
         // Re-fetch if no cache
         const result = await serviceService.getAllServices({
@@ -246,27 +317,47 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
         if (result.success && result.services && result.services.length > 0) {
           const mappedServices = result.services.map(service => ({
             id: service.id,
-            title: service.judul || service.title,
-            category: service.nama_kategori || service.category || 'Lainnya',
-            freelancer: service.freelancer?.nama_lengkap || service.freelancer || 'Freelancer',
+            slug: service.slug,
+            title: service.judul || service.nama_layanan || service.title,
+            category: service.nama_kategori || service.kategori_nama || service.category || 'Lainnya',
+            freelancer: service.freelancer?.nama_lengkap || service.freelancer_name || service.freelancer || 'Freelancer',
             rating: parseFloat(service.rating_rata_rata || service.rating || 0),
-            reviews: parseInt(service.jumlah_rating || service.reviews || 0),
+            reviews: parseInt(service.jumlah_rating || service.jumlah_ulasan || service.reviews || 0),
             price: parseFloat(service.harga || service.price || 0),
-            slug: service.slug
+            thumbnail: service.thumbnail,
           }));
+
           const shuffled = [...mappedServices].sort(() => 0.5 - Math.random());
           const selected = shuffled.slice(0, Math.min(10, mappedServices.length));
-          sessionStorage.setItem(cachedKey, JSON.stringify(selected));
-          setRecommendations(selected);
+
+          // Fetch favorite counts
+          const serviceIds = selected.map(s => s.id);
+          const countsResult = await favoriteService.getFavoriteCounts(serviceIds);
+          const favoriteCounts = countsResult.success ? countsResult.data : {};
+
+          const servicesWithCounts = selected.map(service => ({
+            ...service,
+            favoriteCount: favoriteCounts[service.id] || 0
+          }));
+
+          // Sort by favorite count
+          const sortedServices = [...servicesWithCounts].sort((a, b) => b.favoriteCount - a.favoriteCount);
+
+          sessionStorage.setItem(cachedKey, JSON.stringify(sortedServices));
+          setAllRecommendations(sortedServices);
+
+          // Apply category filter
+          if (selectedCategory === 'all') {
+            setRecommendations(sortedServices);
+          } else {
+            const filtered = sortedServices.filter(s => s.category === selectedCategory);
+            setRecommendations(filtered);
+          }
         }
       }
     } catch (error) {
       console.error('[RecommendationSection] Error restoring:', error);
     }
-  };
-
-  const toggleExpanded = () => {
-    setIsExpanded(prev => !prev);
   };
 
   const scroll = (direction) => {
@@ -323,7 +414,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                       </span>
                       {" · "}
                       <button
-                        onClick={() => navigate('/layanan-tersembunyi')}
+                        onClick={() => navigate('/hide-rekomendasi')}
                         className="text-[#4782BE] hover:text-[#1D375B] hover:underline font-medium"
                       >
                         Lihat Semua
@@ -333,6 +424,39 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                 </p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Category Filter Dropdown */}
+                <div className="relative" onClick={(e) => e.stopPropagation()}>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      setSelectedCategory(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-4 py-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 transition-all shadow-sm text-sm font-medium text-neutral-700 cursor-pointer appearance-none pr-10"
+                    title="Filter berdasarkan kategori"
+                    style={{
+                      backgroundImage: 'none'
+                    }}
+                  >
+                    <option value="all" className="bg-white text-neutral-700 py-2">Semua Kategori</option>
+                    {categories.length > 0 ? (
+                      categories.map((category) => (
+                        <option
+                          key={category.id}
+                          value={category.nama}
+                          className="bg-white text-neutral-700 py-2"
+                        >
+                          {category.nama}
+                        </option>
+                      ))
+                    ) : (
+                      <option disabled className="bg-white text-neutral-400 py-2">Memuat kategori...</option>
+                    )}
+                  </select>
+                  <i className="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-neutral-600 text-xs pointer-events-none" />
+                </div>
+
                 {hiddenCount > 0 && (
                   <button
                     onClick={handleRestoreAll}
@@ -345,24 +469,13 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                     </span>
                   </button>
                 )}
-                <button
-                  onClick={toggleExpanded}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white border border-neutral-200 hover:bg-neutral-50 transition-all shadow-sm"
-                  title={isExpanded ? 'Sembunyikan Section' : 'Tampilkan Section'}
-                >
-                  <i className={`fas fa-eye${isExpanded ? '-slash' : ''} text-neutral-600`} />
-                  <span className="text-sm font-medium text-neutral-700">
-                    {isExpanded ? 'Sembunyikan' : 'Tampilkan'}
-                  </span>
-                </button>
               </div>
             </div>
           </motion.div>
 
           {/* Recommendations Carousel */}
-          {isExpanded && (
-            <>
-              {recommendations.length > 0 ? (
+          <>
+            {recommendations.length > 0 ? (
                 <div className="flex items-center gap-4">
                   {/* Scroll Left Button */}
                   <button
@@ -426,7 +539,6 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
                 </div>
               )}
             </>
-          )}
         </div>
       </section>
 

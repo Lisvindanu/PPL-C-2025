@@ -3,6 +3,7 @@ const GetFavorites = require('../../application/use-cases/GetFavorites');
 const AddFavorite = require('../../application/use-cases/AddFavorite');
 const RemoveFavorite = require('../../application/use-cases/RemoveFavorite');
 const CheckFavorite = require('../../application/use-cases/CheckFavorite');
+const GetFavoriteCounts = require('../../application/use-cases/GetFavoriteCounts');
 
 class FavoriteController {
   constructor() {
@@ -12,6 +13,7 @@ class FavoriteController {
     this.addFavoriteUseCase = new AddFavorite(favoriteRepository);
     this.removeFavoriteUseCase = new RemoveFavorite(favoriteRepository);
     this.checkFavoriteUseCase = new CheckFavorite(favoriteRepository);
+    this.getFavoriteCountsUseCase = new GetFavoriteCounts(favoriteRepository);
   }
 
   /**
@@ -161,6 +163,40 @@ class FavoriteController {
       const result = await this.checkFavoriteUseCase.execute(userId, layananId);
 
       res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  /**
+   * Get favorite counts for multiple services
+   * POST /api/favorites/counts
+   * Body: { layanan_ids: string[] }
+   * Public endpoint - no auth required
+   */
+  getFavoriteCounts = async (req, res, next) => {
+    try {
+      const { layanan_ids } = req.body;
+
+      if (!layanan_ids || !Array.isArray(layanan_ids)) {
+        const err = new Error('layanan_ids must be an array');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      if (layanan_ids.length === 0) {
+        return res.json({
+          success: true,
+          data: {}
+        });
+      }
+
+      const counts = await this.getFavoriteCountsUseCase.execute(layanan_ids);
+
+      res.json({
+        success: true,
+        data: counts
+      });
     } catch (err) {
       next(err);
     }

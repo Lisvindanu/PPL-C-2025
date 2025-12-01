@@ -8,10 +8,13 @@ class AddFavorite {
       // Check if already favorited
       const exists = await this.favoriteRepository.exists(userId, layananId);
 
+      // Idempotent add: if already exists, return success
+      // The desired state (favorite added) is already achieved
       if (exists) {
         return {
-          success: false,
-          message: 'Layanan sudah ada di favorit'
+          success: true,
+          message: 'Layanan sudah ada di favorit',
+          data: { alreadyExists: true }
         };
       }
 
@@ -20,7 +23,7 @@ class AddFavorite {
       return {
         success: true,
         message: 'Layanan berhasil ditambahkan ke favorit',
-        data: { favorite }
+        data: { favorite, alreadyExists: false }
       };
     } catch (error) {
       return {

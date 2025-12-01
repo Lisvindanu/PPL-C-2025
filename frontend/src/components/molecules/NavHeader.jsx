@@ -5,7 +5,7 @@ import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
 import useUserIdentity from "../../hooks/useUserIdentity";
 
-function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onFavorites, onBookmarks, onOrders, onLogout }) {
+function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard, onBookmarks, onOrders, onLogout }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -41,9 +41,6 @@ function ProfileDropdown({ name, email, avatarUrl, role, onProfile, onDashboard,
           </button>
           {role === "client" && (
             <>
-              <button type="button" role="menuitem" onClick={onFavorites} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
-                Favorit Anda
-              </button>
               <button type="button" role="menuitem" onClick={onBookmarks} className="w-full px-4 py-2 text-left text-sm hover:bg-neutral-50">
                 Disimpan
               </button>
@@ -87,7 +84,6 @@ export default function NavHeader() {
   const handleRegister = () => navigate("/register/client");
   const handleProfile = () => navigate("/profile");
   const handleDashboard = () => navigate("/dashboard");
-  const handleFavorites = () => navigate("/favorit");
   const handleBookmarks = () => navigate("/bookmarks");
   const handleOrders = () => navigate("/orders");
   const handleLogout = () => {
@@ -124,7 +120,6 @@ export default function NavHeader() {
               role={userRole}
               onProfile={handleProfile}
               onDashboard={handleDashboard}
-              onFavorites={handleFavorites}
               onBookmarks={handleBookmarks}
               onOrders={handleOrders}
               onLogout={handleLogout}

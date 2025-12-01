@@ -1,12 +1,15 @@
 import { motion } from "framer-motion";
-import { useState, useEffect, startTransition } from "react";
+import { useState, useEffect, useRef, startTransition } from "react";
+import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 import { favoriteService } from "../../services/favoriteService";
 import { bookmarkService } from "../../services/bookmarkService";
+import { isFavorited, addFavorite as addFavoriteToStorage, removeFavorite as removeFavoriteFromStorage } from "../../utils/favoriteStorage";
 import FavoriteToast from "./FavoriteToast";
 import SavedToast from "./SavedToast";
 import UnfavoriteConfirmModal from "./UnfavoriteConfirmModal";
 import UnsaveConfirmModal from "./UnsaveConfirmModal";
+import RecommendationPopup from "./RecommendationPopup";
 
 export default function ServiceCardItem({
   service,
@@ -20,8 +23,7 @@ export default function ServiceCardItem({
 
   const getFavoriteStatus = () => {
     if (!user) return false;
-    const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-    return favorites.includes(service.id);
+    return isFavorited(service.id);
   };
 
   // Initial saved status: rely on prop if provided (e.g., SavedPage), fallback to false
@@ -34,13 +36,23 @@ export default function ServiceCardItem({
   const [showUnfavoriteModal, setShowUnfavoriteModal] = useState(false);
   const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
   const [pendingBookmarkOperation, setPendingBookmarkOperation] = useState(false);
+  const [showRecommendationPopup, setShowRecommendationPopup] = useState(false);
+  const [favoriteCount, setFavoriteCount] = useState(service.favoriteCount || 0);
+  const hasHydratedRef = useRef(false);
 
   // Ensure initial bookmark state reflects server on refresh/navigation
+  // Only hydrate ONCE on mount, don't re-run on every render
   useEffect(() => {
     let cancelled = false;
 
     const hydrateBookmarkState = async () => {
       if (!user || !isClient || !service?.id) return;
+
+      // Only hydrate once per service
+      if (hasHydratedRef.current) {
+        console.log('[ServiceCardItem] Already hydrated, skipping');
+        return;
+      }
 
       // Don't override state if there's a pending optimistic operation
       if (pendingBookmarkOperation) {
@@ -49,10 +61,13 @@ export default function ServiceCardItem({
       }
 
       try {
+        console.log('[ServiceCardItem] Hydrating bookmark state for:', service.id);
         const res = await bookmarkService.isBookmarked(service.id);
         if (cancelled) return;
         if (res?.success && typeof res.data?.isBookmarked === "boolean") {
+          console.log('[ServiceCardItem] Hydrated bookmark state:', res.data.isBookmarked);
           setIsBookmarked(res.data.isBookmarked);
+          hasHydratedRef.current = true;
         }
       } catch (_) {
         // ignore - keep current optimistic state
@@ -63,10 +78,11 @@ export default function ServiceCardItem({
     return () => {
       cancelled = true;
     };
-  }, [user, isClient, service?.id, pendingBookmarkOperation]);
+  }, [user, isClient, service?.id]);
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
+    e.preventDefault();
     console.log('[ServiceCardItem] handleFavoriteClick called', {
       serviceId: service.id,
       user: !!user,
@@ -91,23 +107,12 @@ export default function ServiceCardItem({
       try {
         console.log('[ServiceCardItem] Adding to favorites, service ID:', service.id);
 
-        // Update localStorage immediately (offline-first)
-        const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-        console.log('[ServiceCardItem] Current favorites before add:', favorites);
-
-        if (!favorites.includes(service.id)) {
-          favorites.push(service.id);
-        }
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-        console.log('[ServiceCardItem] Favorites after add:', favorites);
-
-        // Trigger custom event for same tab (StorageEvent only works cross-tab)
-        window.dispatchEvent(new CustomEvent('favoritesChanged', {
-          detail: { favorites, serviceId: service.id, action: 'add' }
-        }));
+        // Update localStorage immediately using utility (offline-first)
+        addFavoriteToStorage(service.id);
 
         // Update UI instantly
         setIsFavorite(true);
+        setFavoriteCount(prev => prev + 1); // Optimistic increment
         if (onFavoriteToggle) {
           onFavoriteToggle(service.id, true);
         }
@@ -115,10 +120,28 @@ export default function ServiceCardItem({
         // Show toast notification
         setShowToast(true);
 
+        // Show recommendation popup after short delay - TEMPORARILY HIDDEN
+        // setTimeout(() => {
+        //   setShowRecommendationPopup(true);
+        // }, 500);
+
         // Sync to backend in background (don't block UI)
-        favoriteService.toggleFavorite(service.id, true).catch((err) => {
-          console.log("[ServiceCardItem] Backend favorite sync failed:", err);
-          // Keep localStorage state, don't revert
+        favoriteService.toggleFavorite(service.id, true).then((result) => {
+          if (!result.success) {
+            console.error("[ServiceCardItem] Backend favorite sync failed:", result.message);
+
+            // If service not found in backend, revert the favorite
+            if (result.message?.includes('tidak ditemukan') || result.message?.includes('not found')) {
+              console.warn('[ServiceCardItem] Service not found in backend, reverting favorite');
+              setIsFavorite(false);
+              removeFavoriteFromStorage(service.id);
+
+              // Show error toast
+              alert('Layanan tidak ditemukan di server. Silakan refresh halaman.');
+            }
+          } else {
+            console.log('[ServiceCardItem] Backend favorite synced successfully');
+          }
         });
       } catch (error) {
         console.error("[ServiceCardItem] Error adding favorite:", error);
@@ -131,21 +154,12 @@ export default function ServiceCardItem({
 
     startTransition(() => {
       try {
-        // Update localStorage immediately (offline-first)
-        const favorites = JSON.parse(localStorage.getItem("favorites") || "[]");
-        const index = favorites.indexOf(service.id);
-        if (index > -1) {
-          favorites.splice(index, 1);
-        }
-        localStorage.setItem("favorites", JSON.stringify(favorites));
-
-        // Trigger custom event for same tab (StorageEvent only works cross-tab)
-        window.dispatchEvent(new CustomEvent('favoritesChanged', {
-          detail: { favorites, serviceId: service.id, action: 'remove' }
-        }));
+        // Update localStorage immediately using utility (offline-first)
+        removeFavoriteFromStorage(service.id);
 
         // Update UI instantly
         setIsFavorite(false);
+        setFavoriteCount(prev => Math.max(0, prev - 1)); // Optimistic decrement (don't go below 0)
         if (onFavoriteToggle) {
           onFavoriteToggle(service.id, false);
         }
@@ -166,12 +180,15 @@ export default function ServiceCardItem({
 
   const handleBookmarkClick = (e) => {
     e.stopPropagation();
+    e.preventDefault();
+    console.log('[ServiceCardItem] ========== BOOKMARK CLICK ==========');
     console.log('[ServiceCardItem] handleBookmarkClick called', {
       serviceId: service.id,
       user: !!user,
       isClient,
       isBookmarked
     });
+    console.trace('[ServiceCardItem] Bookmark click trace');
 
     if (!user || !isClient) {
       console.warn('[ServiceCardItem] User not logged in or not a client');
@@ -260,22 +277,24 @@ export default function ServiceCardItem({
       <motion.div
         whileHover={{ y: -8 }}
         transition={{ duration: 0.3 }}
-        onClick={onClick}
-        className={`cursor-pointer group ${
+        className={`group ${
           fullWidth ? "w-full" : "flex-shrink-0 w-64"
         }`}
       >
         <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
           {/* Image */}
-          <div className="relative h-40 overflow-hidden bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD]">
+          <div
+            className="relative h-40 overflow-hidden bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] cursor-pointer"
+            onClick={onClick}
+          >
             <img
               src={thumbnailSrc}
               alt={service.title}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
             />
             {/* Category Badge */}
-            <div className="absolute top-3 left-3">
-              <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-[#1D375B]">
+            <div className="absolute top-3 left-3 max-w-[140px]">
+              <span className="px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-semibold text-[#1D375B] truncate inline-block max-w-full">
                 {service.category}
               </span>
             </div>
@@ -283,7 +302,10 @@ export default function ServiceCardItem({
 
           {/* Content */}
           <div className="relative p-4">
-            <h3 className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 group-hover:text-[#4782BE] transition-colors">
+            <h3
+              className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 group-hover:text-[#4782BE] transition-colors cursor-pointer"
+              onClick={onClick}
+            >
               {service.title}
             </h3>
 
@@ -295,55 +317,70 @@ export default function ServiceCardItem({
               </span>
             </div>
 
-            {/* Rating & Price */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-1">
-                <i className="fas fa-star text-yellow-400 text-sm" />
-                <span className="text-sm font-semibold text-neutral-900">
-                  {service.rating}
-                </span>
-                <span className="text-sm text-neutral-500">
-                  ({service.reviews})
-                </span>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-neutral-500">Mulai dari</div>
-                <div className="text-lg font-bold text-[#4782BE]">
-                  Rp {service.price.toLocaleString("id-ID")}
-                </div>
+            {/* Rating */}
+            <div className="flex items-center gap-1 mb-3">
+              <i className="fas fa-star text-yellow-400 text-sm" />
+              <span className="text-sm font-semibold text-neutral-900">
+                {service.rating}
+              </span>
+              <span className="text-sm text-neutral-500">
+                ({service.reviews})
+              </span>
+            </div>
+
+            {/* Price */}
+            <div className="mb-3">
+              <div className="text-xs text-neutral-500 mb-1">Mulai dari</div>
+              <div className="text-lg font-bold text-[#4782BE]">
+                Rp {service.price.toLocaleString("id-ID")}
               </div>
             </div>
 
-            {/* Favorite & Bookmark Icons - Only show for logged in clients */}
-            {isClient && (
-              <div className="flex items-center gap-3">
+            {/* Bottom Row: Favorite Count & Bookmark Icon */}
+            <div className="flex items-center justify-between">
+              {/* Favorite Section - Bottom Left */}
+              <div className="flex items-center gap-2">
+                {/* Favorite Button - Always show as red solid heart */}
                 <button
                   type="button"
                   onClick={handleFavoriteClick}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all"
-                  aria-label="Tambah ke favorit"
+                  disabled={!isClient}
+                  className={`flex items-center justify-center transition-all ${
+                    isClient ? "hover:scale-110 cursor-pointer" : "cursor-not-allowed"
+                  }`}
+                  aria-label={isFavorite ? "Hapus dari favorit" : "Tambah ke favorit"}
+                  title={!isClient ? "Login untuk menyukai layanan" : (isFavorite ? "Hapus dari favorit" : "Tambah ke favorit")}
                 >
                   <i
-                    className={`${isFavorite ? "fas" : "far"} fa-heart ${
-                      isFavorite ? "text-red-500" : "text-neutral-600"
-                    } text-lg transition-all duration-200 pointer-events-none`}
+                    className="fas fa-heart text-red-500 text-3xl transition-all duration-200 pointer-events-none"
                   />
                 </button>
-
-                <button
-                  type="button"
-                  onClick={handleBookmarkClick}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-neutral-50 hover:bg-neutral-100 transition-all"
-                  aria-label="Simpan layanan"
-                >
-                  <i
-                    className={`${isBookmarked ? "fas" : "far"} fa-bookmark ${
-                      isBookmarked ? "text-neutral-900" : "text-neutral-600"
-                    } text-lg transition-all duration-200 pointer-events-none`}
-                  />
-                </button>
+                {/* Favorite Count - Always show */}
+                <div className="flex items-center gap-1 pointer-events-none" title={`${favoriteCount} orang menyukai layanan ini`}>
+                  <span className="text-sm font-medium text-neutral-700">
+                    {favoriteCount}
+                  </span>
+                </div>
               </div>
-            )}
+
+              {/* Bookmark Icon - Bottom Right - Always show in default state if not logged in */}
+              <button
+                type="button"
+                onClick={handleBookmarkClick}
+                disabled={!isClient}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-all ${
+                  isClient ? "hover:bg-neutral-100 cursor-pointer" : "cursor-not-allowed"
+                }`}
+                aria-label="Simpan layanan"
+                title={!isClient ? "Login untuk menyimpan layanan" : (isBookmarked ? "Hapus dari simpanan" : "Simpan layanan")}
+              >
+                <i
+                  className={`${isClient && isBookmarked ? "fas" : "far"} fa-bookmark ${
+                    isClient && isBookmarked ? "text-neutral-900" : "text-neutral-600"
+                  } text-3xl transition-all duration-200 pointer-events-none`}
+                />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -375,6 +412,12 @@ export default function ServiceCardItem({
         onClose={() => setShowUnbookmarkModal(false)}
         onConfirm={handleConfirmUnbookmark}
         serviceName={service.title}
+      />
+      {/* Recommendation Popup - Shows after favoriting */}
+      <RecommendationPopup
+        isOpen={showRecommendationPopup}
+        onClose={() => setShowRecommendationPopup(false)}
+        currentService={service}
       />
     </>
   );

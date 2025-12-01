@@ -35,7 +35,11 @@ export default function useUserIdentity() {
               return;
             }
           } catch (error) {
-            console.error('API Error:', error);
+            // Silent fail - endpoint might be unavailable
+            // Fall back to localStorage user data below
+            if (error.response?.status !== 404) {
+              console.warn('[useUserIdentity] Profile fetch failed:', error.message);
+            }
           }
         }
 

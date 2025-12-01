@@ -10,10 +10,10 @@ export default function Logo({ size = "md", className = "", ...props }) {
 
   return (
     <div className={`flex items-center justify-center ${className}`} {...props}>
-      <img 
-        src="/assets/logo.png" 
-        alt="Skill Connect Logo" 
-        className={`${currentSize} h-auto`} 
+      <img
+        src="/assets/logo.png"
+        alt="Skill Connect Logo"
+        className={`${currentSize} h-auto`}
       />
     </div>
   );

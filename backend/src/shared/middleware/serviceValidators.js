@@ -175,14 +175,10 @@ const listServicesQueryValidator = [
     .matches(DECIMAL_PATTERN)
     .withMessage("harga_max harus berupa angka valid"),
 
-  query("page")
-    .optional()
-    .isInt({ min: 1 })
+  query("page").optional().toInt().isInt({ min: 1 })
     .withMessage("page harus berupa angka minimal 1"),
 
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 100 })
+  query("limit").optional().toInt().isInt({ min: 1, max: 100 })
     .withMessage("limit harus berupa angka antara 1-100"),
 
   query("sortBy")
@@ -225,14 +221,10 @@ const searchServicesQueryValidator = [
     .matches(DECIMAL_PATTERN)
     .withMessage("harga_max harus berupa angka valid"),
 
-  query("page")
-    .optional()
-    .isInt({ min: 1 })
+  query("page").optional().toInt().isInt({ min: 1 })
     .withMessage("page harus berupa angka minimal 1"),
 
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 100 })
+  query("limit").optional().toInt().isInt({ min: 1, max: 100 })
     .withMessage("limit harus berupa angka antara 1-100"),
 
   query("sortBy")
@@ -254,14 +246,10 @@ const myServicesQueryValidator = [
     .isIn(["draft", "aktif", "nonaktif"])
     .withMessage("Status harus 'draft', 'aktif', atau 'nonaktif'"),
 
-  query("page")
-    .optional()
-    .isInt({ min: 1 })
+  query("page").optional().toInt().isInt({ min: 1 })
     .withMessage("page harus berupa angka minimal 1"),
 
-  query("limit")
-    .optional()
-    .isInt({ min: 1, max: 100 })
+  query("limit").optional().toInt().isInt({ min: 1, max: 100 })
     .withMessage("limit harus berupa angka antara 1-100"),
 
   query("sortBy")

@@ -585,6 +585,78 @@ class RecommendationController {
   }
 
   /**
+   * GET /api/recommendations/admin/monitoring-dashboard
+   * Get monitoring dashboard data with metrics, trends, and tables
+   */
+  async getMonitoringDashboard(req, res) {
+    try {
+      const period = req.query.period || 'week';
+
+      // Return mock data for now
+      const dashboardData = {
+        totalRecommendations: 2450,
+        totalFavorites: 1223,
+        totalTransactions: 453,
+        favoriteTrend: [
+          { name: "Sen", value: 275 },
+          { name: "Sel", value: 385 },
+          { name: "Rab", value: 365 },
+          { name: "Kam", value: 450 },
+          { name: "Jum", value: 305 },
+          { name: "Sab", value: 235 },
+          { name: "Min", value: 208 }
+        ],
+        transactionTrend: [
+          { name: "Sen", value: 125 },
+          { name: "Sel", value: 155 },
+          { name: "Rab", value: 143 },
+          { name: "Kam", value: 185 },
+          { name: "Jum", value: 110 },
+          { name: "Sab", value: 90 },
+          { name: "Min", value: 75 }
+        ],
+        topFavoriteUsers: [
+          { username: "Ahmad Rizki", count: 431, service: "UI/UX Design" },
+          { username: "SatriaWibawa", count: 211, service: "Web Dev" },
+          { username: "DewiKartika", count: 135, service: "UI/UX Design" },
+          { username: "BagasSenja", count: 87, service: "UI/UX Design" }
+        ],
+        topTransactionUsers: [
+          { username: "Ahmad Rizki", count: 31, service: "UI/UX Design" },
+          { username: "SatriaWibawa", count: 11, service: "Web Dev" },
+          { username: "DewiKartika", count: 13, service: "UI/UX Design" },
+          { username: "BagasSenja", count: 8, service: "UI/UX Design" }
+        ],
+        topRecommendedServices: [
+          { user: "Ahmad Rizki", recommendations: 2100, percentage: "55%" },
+          { user: "SatriaWibawa", recommendations: 1400, percentage: "50.4%" },
+          { user: "DewiKartika", recommendations: 1941, percentage: "47.5%" },
+          { user: "BagasSenja", recommendations: 897, percentage: "35%" },
+          { user: "BogasSenja", recommendations: 722, percentage: "31.2%" },
+          { user: "RizkiNirmala", recommendations: 598, percentage: "16.7%" },
+          { user: "LaraisCahaya", recommendations: 566, percentage: "13.2%" },
+          { user: "BintangKusuma", recommendations: 548, percentage: "8.6%" },
+          { user: "RamaPratama", recommendations: 516, percentage: "6.6%" },
+          { user: "AnggaSaputra", recommendations: 377, percentage: "3.8%" }
+        ]
+      };
+
+      return res.status(200).json({
+        success: true,
+        message: 'Monitoring dashboard data retrieved successfully',
+        data: dashboardData
+      });
+    } catch (error) {
+      console.error('RecommendationController.getMonitoringDashboard Error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Internal server error',
+        error: error.message
+      });
+    }
+  }
+
+  /**
    * GET /api/recommendations/admin/model/status
    * Get model status and information
    */

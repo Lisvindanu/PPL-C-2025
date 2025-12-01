@@ -28,6 +28,12 @@ export const favoriteService = {
       const response = await api.post('/favorites', { layanan_id: serviceId });
       return response.data;
     } catch (error) {
+      console.error('[favoriteService] Add favorite error:', {
+        status: error.response?.status,
+        message: error.message,
+        serverMessage: error.response?.data?.message,
+        serverData: error.response?.data
+      });
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to add favorite',
@@ -46,6 +52,11 @@ export const favoriteService = {
       const response = await api.delete(`/favorites/${serviceId}`);
       return response.data;
     } catch (error) {
+      console.error('[favoriteService] Remove favorite error:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to remove favorite',
@@ -82,6 +93,27 @@ export const favoriteService = {
         success: false,
         message: error.response?.data?.message || 'Failed to check favorite status',
         data: { isFavorite: false }
+      };
+    }
+  },
+
+  /**
+   * Get favorite counts for multiple services
+   * @param {Array<string>} serviceIds - Array of service IDs
+   * @returns {Promise} - Response with counts map { serviceId: count }
+   */
+  async getFavoriteCounts(serviceIds) {
+    try {
+      const response = await api.post('/favorites/counts', {
+        layanan_ids: serviceIds
+      });
+      return response.data;
+    } catch (error) {
+      console.error('[favoriteService] Get favorite counts error:', error);
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to get favorite counts',
+        data: {}
       };
     }
   }

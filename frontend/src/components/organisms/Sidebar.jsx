@@ -184,26 +184,6 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
                       >
                         Dashboard Monitoring
                       </button>
-                      <button
-                        onClick={() => navigate('/admin/recommendations/model')}
-                        className={`text-left px-3 py-2 rounded transition-all ${
-                          activeMenu === 'recommendations-model'
-                            ? 'bg-[#4782BE]/10 text-[#4782BE] font-medium border-l-2 border-[#4782BE] -ml-[2px]'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        Manajemen Model
-                      </button>
-                      <button
-                        onClick={() => navigate('/admin/recommendations/evaluation')}
-                        className={`text-left px-3 py-2 rounded transition-all ${
-                          activeMenu === 'recommendations-evaluation'
-                            ? 'bg-[#4782BE]/10 text-[#4782BE] font-medium border-l-2 border-[#4782BE] -ml-[2px]'
-                            : 'text-gray-600 hover:bg-gray-100'
-                        }`}
-                      >
-                        Evaluasi Model
-                      </button>
                     </div>
                   )}
                 </div>
@@ -349,26 +329,6 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
                             }`}
                           >
                             Dashboard Monitoring
-                          </button>
-                          <button
-                            onClick={() => { navigate('/admin/recommendations/model'); setMobileOpen(false); }}
-                            className={`text-left px-3 py-2 rounded transition-all ${
-                              activeMenu === 'recommendations-model'
-                                ? 'bg-[#4782BE]/10 text-[#4782BE] font-medium border-l-2 border-[#4782BE] -ml-[2px]'
-                                : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                          >
-                            Manajemen Model
-                          </button>
-                          <button
-                            onClick={() => { navigate('/admin/recommendations/evaluation'); setMobileOpen(false); }}
-                            className={`text-left px-3 py-2 rounded transition-all ${
-                              activeMenu === 'recommendations-evaluation'
-                                ? 'bg-[#4782BE]/10 text-[#4782BE] font-medium border-l-2 border-[#4782BE] -ml-[2px]'
-                                : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                          >
-                            Evaluasi Model
                           </button>
                         </div>
                       )}

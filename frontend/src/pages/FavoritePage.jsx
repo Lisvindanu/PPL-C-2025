@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../services/authService";
-import { getServiceById } from "../utils/servicesData";
 import { serviceService } from "../services/serviceService";
+import { getFavoriteIds, clearAllFavorites } from "../utils/favoriteStorage";
 import Navbar from "../components/organisms/Navbar";
 import Footer from "../components/organisms/Footer";
 import ServiceCardItem from "../components/molecules/ServiceCardItem";
@@ -24,6 +24,16 @@ export default function FavoritePage() {
       navigate("/");
       return;
     }
+
+    // ONE-TIME CLEANUP: Clear old favorites with invalid IDs
+    // TODO: Remove this after first deployment
+    const hasCleanedUp = localStorage.getItem('favorites_cleaned_v1');
+    if (!hasCleanedUp) {
+      console.log('[FavoritePage] Running one-time cleanup of old favorites');
+      clearAllFavorites();
+      localStorage.setItem('favorites_cleaned_v1', 'true');
+    }
+
     loadFavorites();
 
     // Reload favorites when window gains focus (user switches back to tab)
@@ -35,7 +45,7 @@ export default function FavoritePage() {
 
     // Reload favorites when localStorage changes (from other tabs)
     const handleStorage = (e) => {
-      if (e.key === 'favorites') {
+      if (e.key === 'favorites_v2' || e.key === 'favorites') {
         console.log('[FavoritePage] Storage event detected, reloading favorites');
         loadFavorites();
       }
@@ -60,8 +70,8 @@ export default function FavoritePage() {
   const loadFavorites = async () => {
     try {
       setLoading(true);
-      // Load from localStorage
-      const favoriteIds = JSON.parse(localStorage.getItem('favorites') || '[]');
+      // Load from favoriteStorage utility (handles migration automatically)
+      const favoriteIds = getFavoriteIds();
 
       if (favoriteIds.length === 0) {
         setFavorites([]);
@@ -71,38 +81,31 @@ export default function FavoritePage() {
 
       console.log('[FavoritePage] Loading favorites for IDs:', favoriteIds);
 
-      // Try to get services from both mock data and backend
+      // Load services from backend ONLY (no mock data)
       const favoriteServices = [];
 
       for (const id of favoriteIds) {
-        // First try mock data (UUID format)
-        let service = getServiceById(id);
-
-        // If not found in mock data, try backend (numeric ID)
-        if (!service && typeof id === 'number') {
-          try {
-            const result = await serviceService.getServiceById(id);
-            if (result.success && result.service) {
-              // Map backend service to frontend format
-              service = {
-                id: result.service.id,
-                title: result.service.judul || result.service.title,
-                category: result.service.nama_kategori || result.service.category || 'Lainnya',
-                freelancer: result.service.freelancer?.nama_lengkap || result.service.freelancer || 'Freelancer',
-                rating: parseFloat(result.service.rating_rata_rata || result.service.rating || 0),
-                reviews: parseInt(result.service.jumlah_rating || result.service.reviews || 0),
-                price: parseFloat(result.service.harga || result.service.price || 0),
-                slug: result.service.slug,
-                thumbnail: result.service.thumbnail
-              };
-            }
-          } catch (error) {
-            console.error('[FavoritePage] Error fetching service from backend:', error);
+        try {
+          const result = await serviceService.getServiceById(id);
+          if (result.success && result.service) {
+            // Map backend service to frontend format
+            const service = {
+              id: result.service.id,
+              title: result.service.judul || result.service.title,
+              category: result.service.nama_kategori || result.service.category || 'Lainnya',
+              freelancer: result.service.freelancer?.nama_lengkap || result.service.freelancer || 'Freelancer',
+              rating: parseFloat(result.service.rating_rata_rata || result.service.rating || 0),
+              reviews: parseInt(result.service.jumlah_rating || result.service.reviews || 0),
+              price: parseFloat(result.service.harga || result.service.price || 0),
+              slug: result.service.slug,
+              thumbnail: result.service.thumbnail
+            };
+            favoriteServices.push({ ...service, isFavorite: true });
+          } else {
+            console.warn('[FavoritePage] Service not found in backend:', id);
           }
-        }
-
-        if (service) {
-          favoriteServices.push({ ...service, isFavorite: true });
+        } catch (error) {
+          console.error('[FavoritePage] Error fetching service from backend:', id, error);
         }
       }
 
@@ -183,7 +186,7 @@ export default function FavoritePage() {
             <div className="mb-4 text-sm text-neutral-600">
               {favorites.length} layanan favorit
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
               {favorites.map((service) => (
                 <ServiceCardItem
                   key={service.id}
