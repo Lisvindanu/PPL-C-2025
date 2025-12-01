@@ -35,7 +35,31 @@ class GetOrderById {
       throw err;
     }
 
-    return { success: true, data: order };
+    const adjustedOrder = this.applyPaymentStatus(order);
+
+    return { success: true, data: adjustedOrder };
+  }
+
+  /**
+   * Jika ada pembayaran sukses untuk pesanan ini namun status order masih
+   * 'menunggu_pembayaran', tampilkan ke FE sebagai 'dibayar' tanpa mengubah DB.
+   */
+  applyPaymentStatus(order) {
+    if (!order || !Array.isArray(order.pembayaran)) {
+      return order;
+    }
+
+    const hasSuccessfulPayment = order.pembayaran.some((payment) => {
+      if (!payment || !payment.status) return false;
+      const normalized = String(payment.status).toLowerCase();
+      return ['berhasil', 'success', 'paid', 'settlement'].includes(normalized);
+    });
+
+    if (hasSuccessfulPayment && order.status === 'menunggu_pembayaran') {
+      return { ...order, status: 'dibayar' };
+    }
+
+    return order;
   }
 }
 
