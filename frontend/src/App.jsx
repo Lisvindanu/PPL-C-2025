@@ -25,6 +25,8 @@ import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import PaymentGatewayPage from "./pages/payment/PaymentGatewayPage";
 import PaymentProcessingPage from "./pages/payment/PaymentProcessingPage";
+import FreelancerEarningsPage from "./pages/FreelancerEarningsPage";
+import ClientSpendingPage from "./pages/ClientSpendingPage";
 import BookmarkPage from "./pages/BookmarkPage";
 import ServiceListPage from "./pages/ServiceListPage";
 import CreateOrderPage from "./pages/CreateOrderPage";
@@ -289,6 +291,24 @@ export default function App() {
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
+
+      {/* Analytics */}
+      <Route
+        path="/analytics/earnings"
+        element={
+          <ProtectedRoute>
+            <FreelancerEarningsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics/spending"
+        element={
+          <ProtectedRoute>
+            <ClientSpendingPage />
+          </ProtectedRoute>
+        }
+      />
 
       {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
