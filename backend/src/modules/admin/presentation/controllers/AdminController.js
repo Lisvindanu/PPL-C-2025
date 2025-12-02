@@ -7,6 +7,7 @@ class AdminController {
     getUserAnalyticsUseCase,
     getRevenueAnalyticsUseCase,
     getOrderAnalyticsUseCase,
+    getTransactionListUseCase,
     blockUserUseCase,
     unblockUserUseCase,
     blockServiceUseCase,
@@ -24,6 +25,7 @@ class AdminController {
     this.getUserAnalyticsUseCase = getUserAnalyticsUseCase;
     this.getRevenueAnalyticsUseCase = getRevenueAnalyticsUseCase;
     this.getOrderAnalyticsUseCase = getOrderAnalyticsUseCase;
+    this.getTransactionListUseCase = getTransactionListUseCase;
     this.blockUserUseCase = blockUserUseCase;
     this.unblockUserUseCase = unblockUserUseCase;
     this.blockServiceUseCase = blockServiceUseCase;
@@ -345,6 +347,52 @@ async unblockUser(req, res) {
       });
     } catch (error) {
       console.error('Error in getOrderAnalytics:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  async getTransactions(req, res) {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        status = 'all',
+        paymentGateway = 'all',
+        search,
+        startDate,
+        endDate,
+        sortBy,
+        sortOrder
+      } = req.query;
+
+      const result = await this.getTransactionListUseCase.execute({
+        page,
+        limit,
+        status,
+        paymentGateway,
+        search,
+        startDate,
+        endDate,
+        sortBy,
+        sortOrder
+      });
+
+      res.json({
+        success: true,
+        message: 'Transactions retrieved',
+        data: result.data,
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages
+        }
+      });
+    } catch (error) {
+      console.error('Error in getTransactions:', error);
       res.status(500).json({
         success: false,
         error: error.message

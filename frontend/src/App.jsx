@@ -10,6 +10,7 @@ import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
 import AdminCategoryManagementPage from "./pages/AdminCategoryManagementPage";
 import AdminSubCategoryManagementPage from "./pages/AdminSubCategoryManagementPage";
 import TransactionTrendsPage from "./pages/TransactionTrendsPage";
+import AdminTransactionsPage from "./pages/AdminTransactionsPage";
 import ProfilePage from "./pages/ProfilePage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import FreelancerProfilePage from "./pages/FreelancerProfilePage";
@@ -133,6 +134,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminSubCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/transactions"
+        element={
+          <ProtectedRoute>
+            <AdminTransactionsPage />
           </ProtectedRoute>
         }
       />
