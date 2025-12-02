@@ -80,6 +80,7 @@ export default function LoginPage() {
     const newErrors = { email: emailErr, password: passErr };
     setErrors(newErrors);
     if (emailErr || passErr) return;
+    
     try {
       await login(form);
       toast.show("Logged in successfully", "success");
@@ -91,8 +92,22 @@ export default function LoginPage() {
       } else {
         navigate("/dashboard", { replace: true });
       }
-    } catch (_) {
-      toast.show("Invalid email or password", "error");
+    } catch (err) {
+      // Check if error is email not verified
+      if (err?.code === 'EMAIL_NOT_VERIFIED' || err?.message?.includes('not verified')) {
+        toast.show("Email belum diverifikasi. Silakan verifikasi email Anda terlebih dahulu.", "error");
+        // Redirect to email verification page
+        setTimeout(() => {
+          navigate("/verify-email", { 
+            state: { email: form.email },
+            replace: true 
+          });
+        }, 2000);
+      } else {
+        // Clear only password field on error, keep email
+        setForm(prev => ({ ...prev, password: "" }));
+        toast.show("Email atau password salah", "error");
+      }
     }
   };
 
