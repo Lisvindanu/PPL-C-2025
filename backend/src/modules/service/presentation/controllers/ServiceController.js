@@ -125,13 +125,34 @@ class ServiceController {
   /**
    * GET /api/services/search
    * Search services (public)
+   *
+   * Dipakai oleh halaman Pencarian:
+   * - q (keyword)
+   * - kategori_id (filter kategori)
+   * - harga_min / harga_max (range harga)
+   * - rating_min (filter rating minimum)
+   * - page, limit (pagination)
+   * - sortBy + sortOrder (sorting: created_at, harga, rating_rata_rata, total_pesanan)
    */
   async searchServices(req, res) {
     try {
-      const result = await this.searchServicesUseCase.execute(req.query || {});
+      const filters = {
+        q: req.query.q,
+        kategori_id: req.query.kategori_id,
+        harga_min: req.query.harga_min,
+        harga_max: req.query.harga_max,
+        rating_min: req.query.rating_min,
+        page: req.query.page,
+        limit: req.query.limit,
+        sortBy: req.query.sortBy,
+        sortDir: this.toSortDir(req.query),
+        status: req.query.status,
+      };
+
+      const result = await this.searchServicesUseCase.execute(filters);
       return this.ok(res, "Services search retrieved successfully", result);
     } catch (error) {
-      return this.err(res, error);
+      return this.err(res, error, 400);
     }
   }
 
@@ -182,7 +203,7 @@ class ServiceController {
           .json({ status: "error", message: "Service not found" });
       }
 
-      // 2. Ambil data freelancer dari tabel users (SELECT * supaya aman)
+      // 2. Ambil data freelancer dari tabel users
       let freelancer = null;
       if (svc.freelancer_id) {
         try {

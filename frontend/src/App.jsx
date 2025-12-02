@@ -41,9 +41,13 @@ import RiwayatPesananPage from "./pages/RiwayatPesananPage";
 import AllNotificationsPage from "./pages/AllNotificationsPage";
 import FraudReportDetailPage from "./pages/FraudReportDetailPage";
 
+// ⬇️ import halaman pencarian baru
+import SearchPage from "./pages/SearchPage";
+
 export default function App() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
@@ -58,9 +62,22 @@ export default function App() {
       <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
-      <Route path="/reset-password/new-password" element={<NewPasswordPage />} />
+      <Route
+        path="/reset-password/new-password"
+        element={<NewPasswordPage />}
+      />
+
+      {/* List layanan publik */}
       <Route path="/services" element={<ServiceListPage />} />
 
+      {/* Halaman detail layanan pakai slug */}
+      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
+      {/* 🔍 Halaman Pencarian (public) */}
+      {/* Contoh: /search?q=UIUX%20Desainer%20Website */}
+      <Route path="/search" element={<SearchPage />} />
+
+      {/* Dashboard client */}
       <Route
         path="/dashboard"
         element={
@@ -69,27 +86,13 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin routes */}
       <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute>
-            <OrderListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders/:id"
-        element={
-          <ProtectedRoute>
-            <OrderDetailPage />
           </ProtectedRoute>
         }
       />
@@ -129,7 +132,7 @@ export default function App() {
         path="/admin/subkategori"
         element={
           <ProtectedRoute>
-                        <AdminSubCategoryManagementPage />         {" "}
+            <AdminSubCategoryManagementPage />
           </ProtectedRoute>
         }
       />
@@ -157,6 +160,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Client bookmarks & favorite */}
       <Route
         path="/bookmarks"
         element={
@@ -182,6 +187,7 @@ export default function App() {
         }
       />
 
+      {/* Freelancer service management */}
       <Route
         path="/freelance/service"
         element={
@@ -214,6 +220,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Profile */}
       <Route
         path="/profile"
         element={
@@ -230,11 +238,30 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Freelancer public profile */}
       <Route path="/freelancer/:id/detail" element={<FreelancerDetailPage />} />
       <Route path="/freelancer/:id" element={<FreelancerProfilePage />} />
 
-      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+      {/* Orders (client) */}
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <OrderListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/:id"
+        element={
+          <ProtectedRoute>
+            <OrderDetailPage />
+          </ProtectedRoute>
+        }
+      />
 
+      {/* Create order */}
       <Route
         path="/create-order/:id"
         element={
@@ -251,13 +278,19 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Payment */}
       <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
-      <Route path="/payment/processing/:paymentId" element={<PaymentProcessingPage />} />
+      <Route
+        path="/payment/processing/:paymentId"
+        element={<PaymentProcessingPage />}
+      />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
       <Route path="/payment/pending" element={<PaymentPendingPage />} />
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
 
+      {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
