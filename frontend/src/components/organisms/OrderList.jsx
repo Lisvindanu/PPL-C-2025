@@ -4,8 +4,8 @@ import OrderCard from '../molecules/OrderCard'
 const OrderList = ({ orders = [], onOrderClick, loading }) => {
   const [filter, setFilter] = useState('all')
 
-  const filteredOrders = filter === 'all' 
-    ? orders 
+  const filteredOrders = filter === 'all'
+    ? orders
     : orders.filter(order => order.status === filter)
 
   const filterOptions = [
@@ -25,8 +25,8 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
           <button
             key={option.value}
             className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-colors ${
-              filter === option.value 
-                ? 'bg-blue-600 text-white shadow-md' 
+              filter === option.value
+                ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
             }`}
             onClick={() => setFilter(option.value)}
@@ -34,8 +34,8 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
             {option.label}
             {option.count > 0 && (
               <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${
-                filter === option.value 
-                  ? 'bg-blue-500 text-white' 
+                filter === option.value
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700'
               }`}>
                 {option.count}
@@ -58,8 +58,8 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
           </svg>
           <p className="mt-4 text-gray-600 font-medium">Tidak ada pesanan</p>
           <p className="mt-1 text-sm text-gray-500">
-            {filter === 'all' 
-              ? 'Anda belum memiliki pesanan' 
+            {filter === 'all'
+              ? 'Anda belum memiliki pesanan'
               : `Tidak ada pesanan dengan status "${filterOptions.find(o => o.value === filter)?.label}"`
             }
           </p>
@@ -85,7 +85,8 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
             return (
               <div
                 key={order.id}
-                className="bg-white rounded-lg shadow border border-gray-200 p-4 flex flex-col gap-3"
+                onClick={() => onOrderClick && onOrderClick(order.id)}
+                className="bg-white rounded-lg shadow border border-gray-200 p-4 flex flex-col gap-3 cursor-pointer hover:shadow-lg hover:border-blue-300 transition-all"
               >
                 {/* Header info pesanan */}
                 <div className="flex items-start justify-between gap-3">
@@ -131,6 +132,7 @@ const OrderList = ({ orders = [], onOrderClick, loading }) => {
                   completed={order.completed}
                   waktu_pengerjaan={order.waktu_pengerjaan}
                   batas_revisi={order.batas_revisi}
+                  status={order.status} // Pass status untuk conditional rendering buttons
                   onOrder={() => onOrderClick && onOrderClick(order.id)}
                   onContact={() => onOrderClick && onOrderClick(order.id)}
                 />

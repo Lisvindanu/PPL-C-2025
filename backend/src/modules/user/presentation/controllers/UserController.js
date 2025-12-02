@@ -24,6 +24,9 @@ class UserController {
     const jwtService = new JwtService();
     const emailService = new EmailService();
 
+    // Store jwtService as instance property for use in other methods
+    this.jwtService = jwtService;
+
     this.registerUser = new RegisterUser({ userRepository, hashService, emailService });
     this.loginUser = new LoginUser({ userRepository, hashService, jwtService });
     this.registerWithGoogleUseCase = new RegisterWithGoogle({ userRepository, jwtService, emailService });
@@ -370,7 +373,18 @@ class UserController {
 
       const { role } = req.body;
       const result = await this.changeUserRoleUseCase.execute(userId, role);
-      res.json({ success: true, data: result });
+
+      // Generate new JWT token with updated role
+      // This ensures frontend gets a valid token with the new role
+      const token = this.jwtService.generate(userId, result.role);
+
+      res.json({
+        success: true,
+        data: {
+          ...result,
+          token  // Include new token in response
+        }
+      });
     } catch (err) {
       next(err);
     }

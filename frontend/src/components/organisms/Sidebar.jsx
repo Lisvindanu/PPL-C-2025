@@ -66,7 +66,7 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
     { id: 'users', icon: <UserPen size={18} />, label: 'Manajemen Pengguna', path: '/admin/users'}, 
     // services will be rendered as a dropdown below
     { id: 'services-group', icon: <Wrench size={18} />, label: 'Manajemen Layanan', path: '/admin/services', hasDropdown: true}, 
-    { id: 'transactions', icon: <ArrowLeftRight size={18} />, label: 'Daftar Transaksi', path: '/admin/transactions'}, 
+    { id: 'transactions', icon: <ArrowLeftRight size={18} />, label: 'Daftar Transaksi', path: '/admin/transaction-trends'}, 
     { id: 'transaction-trends', icon: <TrendingUp size={18} />, label: 'Tren Transaksi', path: '/admin/transaction-trends'}, 
     { id: 'reviews', icon: <Eye size={18} />, label: 'Review', path: '/admin/reviews'}, 
     { id: 'recommendations', icon: <Star size={18} />, label: 'Rekomendasi', path: '/admin/recommendations'}, 
