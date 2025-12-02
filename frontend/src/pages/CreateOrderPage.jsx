@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Navbar from '../components/organisms/Navbar'
 import Footer from '../components/organisms/Footer'
 import { orderService } from '../services/orderService'
+import { formatRupiah } from '../utils/format'
 
 const CreateOrderPage = () => {
   const location = useLocation()
@@ -18,6 +19,11 @@ const CreateOrderPage = () => {
   const [touched, setTouched] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Normalized price & totals
+  const basePrice = Number(service?.price) || 0
+  const platformFee = basePrice * 0.1
+  const totalPayment = basePrice + platformFee
 
   // Validation logic
   const isFormValid = useMemo(() => {
@@ -38,14 +44,6 @@ const CreateOrderPage = () => {
         </div>
       </div>
     )
-  }
-
-  const formatRupiah = (price) => {
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(price)
   }
 
   const handleChange = (e) => {
@@ -280,7 +278,7 @@ const CreateOrderPage = () => {
                     Harga layanan
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formatRupiah(service?.price || 0)}
+                    {formatRupiah(basePrice)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -289,7 +287,7 @@ const CreateOrderPage = () => {
                     Biaya platform (10%)
                   </span>
                   <span className="font-semibold text-neutral-900">
-                    {formatRupiah((service?.price || 0) * 0.1)}
+                    {formatRupiah(platformFee)}
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -316,7 +314,7 @@ const CreateOrderPage = () => {
                 <div className="flex justify-between mb-6">
                   <span className="font-bold text-neutral-900 text-lg">Total Pembayaran</span>
                   <span className="text-2xl font-bold bg-gradient-to-r from-[#4782BE] to-[#1D375B] bg-clip-text text-transparent">
-                    {formatRupiah((service?.price || 0) + (service?.price || 0) * 0.1)}
+                    {formatRupiah(totalPayment)}
                   </span>
                 </div>
 

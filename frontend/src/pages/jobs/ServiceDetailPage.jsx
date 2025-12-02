@@ -215,6 +215,8 @@ export default function ServiceDetailPage() {
                 batas_revisi={serviceData.batas_revisi}
                 onOrder={handleOrderNow}
                 onContact={handleContact}
+                serviceId={serviceData.id}
+                serviceTitle={serviceData.title}
               />
 
               <InteractionBar />

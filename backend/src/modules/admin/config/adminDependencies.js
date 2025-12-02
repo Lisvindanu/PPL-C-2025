@@ -22,6 +22,7 @@ const GetDashboardStats = require('../application/use-cases/GetDashboardStats');
 const GetUserAnalytics = require('../application/use-cases/GetUserAnalytics');
 const GetRevenueAnalytics = require('../application/use-cases/GetRevenueAnalytics');
 const GetOrderAnalytics = require('../application/use-cases/GetOrderAnalytics');
+const GetTransactionList = require('../application/use-cases/GetTransactionList');
 const BlockUser = require('../application/use-cases/BlockUser');
 const UnblockUser = require('../application/use-cases/UnblockUser');
 const BlockService = require('../application/use-cases/BlockService');
@@ -81,6 +82,7 @@ module.exports = function setupAdminDependencies(sequelize) {
   const getUserAnalytics = new GetUserAnalytics(analyticsService);
   const getRevenueAnalytics = new GetRevenueAnalytics(analyticsService);
   const getOrderAnalytics = new GetOrderAnalytics(analyticsRepository);
+  const getTransactionList = new GetTransactionList(paymentRepository);
 
   const blockUser = new BlockUser(sequelize, adminLogRepository);
   const unblockUser = new UnblockUser(sequelize, adminLogRepository);
@@ -100,6 +102,7 @@ module.exports = function setupAdminDependencies(sequelize) {
     getUserAnalytics,
     getRevenueAnalytics,
     getOrderAnalytics,
+    getTransactionList,
     blockUser,
     unblockUser,
     blockService,

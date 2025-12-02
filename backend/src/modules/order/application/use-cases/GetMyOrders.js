@@ -26,9 +26,48 @@ class GetMyOrders {
 
     const result = await this.orderRepository.findByUserId(clientId, filters);
 
+    // Normalisasi rows ke plain object agar mudah diolah
+    const rows = Array.isArray(result.rows)
+      ? result.rows.map((row) => (row && typeof row.get === 'function' ? row.get({ plain: true }) : row))
+      : [];
+
+    // Ambil status pembayaran dari tabel pembayaran untuk semua order sekaligus
+    const orderIds = rows.map((o) => o && o.id).filter(Boolean);
+    let successByOrderId = new Set();
+
+    if (orderIds.length > 0) {
+      try {
+        const PaymentModel = require('../../../payment/infrastructure/models/PaymentModel');
+        const { Op } = require('sequelize');
+
+        const successPayments = await PaymentModel.findAll({
+          where: {
+            pesanan_id: { [Op.in]: orderIds },
+            status: ['berhasil', 'success', 'paid', 'settlement']
+          },
+          attributes: ['pesanan_id'],
+          raw: true
+        });
+
+        successByOrderId = new Set(successPayments.map((p) => p.pesanan_id));
+      } catch (err) {
+        console.error('[GetMyOrders] Failed to fetch payment status for orders:', err);
+      }
+    }
+
+    const adjustedRows = rows.map((order) => {
+      if (!order) return order;
+
+      if (order.status === 'menunggu_pembayaran' && successByOrderId.has(order.id)) {
+        return { ...order, status: 'dibayar' };
+      }
+
+      return order;
+    });
+
     return {
       success: true,
-      data: result.rows,
+      data: adjustedRows,
       pagination: {
         total: result.count,
         page,
