@@ -90,7 +90,61 @@ class HybridResetPasswordService {
     }
   }
 
-  // Forgot Password - Hybrid approach
+  // Send OTP - New method with multi-channel support
+  async sendOTP(email, phoneNumber = null, channels = ['email']) {
+    if (this.useMock) {
+      return await this.mockForgotPassword(email)
+    } else {
+      return await this.realSendOTP(email, phoneNumber, channels)
+    }
+  }
+
+  // Real API - Send OTP with multi-channel
+  async realSendOTP(email, phoneNumber = null, channels = ['email']) {
+    try {
+      console.log('🔧 Hybrid Real API: Send OTP for:', email, 'via', channels)
+      
+      const response = await fetch(`${this.baseURL}/send-otp`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          email,
+          phoneNumber,
+          purpose: 'password_reset',
+          channels
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (response.ok && result.success) {
+        console.log('🔧 Hybrid Real API: OTP sent successfully')
+        // In development, show OTP if available
+        if (result.data.otp) {
+          console.log('🔧 Development OTP:', result.data.otp)
+        }
+        return {
+          success: true,
+          data: {
+            message: result.data.message || 'OTP has been sent',
+            channels: result.data.channels,
+            otpCode: result.data.otp, // For development
+            expiresIn: result.data.expiresIn
+          }
+        }
+      } else {
+        console.error('🔧 Hybrid Real API: Error:', result.message)
+        return result
+      }
+    } catch (error) {
+      console.error('🔧 Hybrid Real API: Network error:', error)
+      throw error
+    }
+  }
+
+  // Forgot Password - Hybrid approach (backward compatible)
   async forgotPassword(email) {
     if (this.useMock) {
       return await this.mockForgotPassword(email)
@@ -142,7 +196,7 @@ class HybridResetPasswordService {
     }
   }
 
-  // Real API implementation
+  // Real API implementation - Updated to use new OTP endpoint
   async realForgotPassword(email) {
     try {
       console.log('🔧 Hybrid Real API: Forgot Password Request for:', email)
@@ -152,14 +206,28 @@ class HybridResetPasswordService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ 
+          email,
+          channels: ['email'] 
+        }),
       })
 
       const result = await response.json()
       
       if (response.ok && result.success) {
-        console.log('🔧 Hybrid Real API: Token generated successfully')
-        return result
+        console.log('🔧 Hybrid Real API: OTP sent successfully')
+        // In development, show OTP if available
+        if (result.data.otp) {
+          console.log('🔧 Development OTP:', result.data.otp)
+        }
+        return {
+          success: true,
+          data: {
+            message: result.data.message || 'OTP has been sent',
+            token: result.data.token,
+            otpCode: result.data.otp // For development
+          }
+        }
       } else {
         console.error('🔧 Hybrid Real API: Error:', result.message)
         return result

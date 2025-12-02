@@ -1,7 +1,16 @@
+const { validateFileType, validateFileSize } = require('../../../../shared/utils/fileValidator');
+
 class UpdateProfile {
   constructor({ userRepository }) {
     this.userRepository = userRepository;
   }
+
+  /**
+   * Validate file size (for base64 or file path strings)
+   * @param {string} fileData - Base64 string or file path
+   * @param {string} fieldName - Field name for error message
+   */
+  // Using shared validators from src/shared/utils/fileValidator.js
 
   async execute(userId, payload) {
     const user = await this.userRepository.findById(userId);
@@ -69,6 +78,16 @@ class UpdateProfile {
       if (['nama_depan','nama_belakang','kota','provinsi'].includes(f)) return; // already handled
       if (data[f] === undefined && payload[f] !== undefined) data[f] = payload[f];
     });
+
+    // Validate file types and sizes using shared utility
+    if (data.avatar) {
+      validateFileType(data.avatar, 'Avatar');
+      validateFileSize(data.avatar, 'Avatar');
+    }
+    if (data.foto_latar) {
+      validateFileType(data.foto_latar, 'Background photo');
+      validateFileSize(data.foto_latar, 'Background photo');
+    }
 
     await user.update(data);
 

@@ -79,6 +79,14 @@ class LoginWithGoogle {
       }
 
       // Generate JWT token
+      // Check if account is active before issuing token
+      if (user.is_active === false || user.is_active === 0) {
+        const err = new Error('Account inactive');
+        err.statusCode = 403;
+        err.code = 'ACCOUNT_INACTIVE';
+        throw err;
+      }
+
       const token = this.jwtService.generate(user.id, user.role);
 
       return {

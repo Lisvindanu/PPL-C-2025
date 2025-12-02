@@ -11,6 +11,8 @@ import HybridModeController from '../components/organisms/HybridModeController'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
+  const [channels, setChannels] = useState(['email'])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -38,16 +40,30 @@ export default function ForgotPasswordPage() {
     setError("");
 
     try {
-      // Use hybrid service (mock + real API)
-      const result = await hybridResetPasswordService.forgotPassword(email);
+      // Use new sendOTP method with multi-channel support
+      const result = await hybridResetPasswordService.sendOTP(
+        email,
+        channels.includes('whatsapp') ? phoneNumber : null,
+        channels
+      );
 
       if (result.success) {
-        toast.show("Kode OTP telah dikirim ke email Anda", "success");
+        // Build success message based on channels
+        let message = "Kode OTP telah dikirim";
+        if (channels.includes('email') && channels.includes('whatsapp')) {
+          message += " ke email dan WhatsApp Anda";
+        } else if (channels.includes('email')) {
+          message += " ke email Anda";
+        } else if (channels.includes('whatsapp')) {
+          message += " ke WhatsApp Anda";
+        }
+        
+        toast.show(message, "success");
 
         // Show OTP in console for development
         if (result.data.otpCode) {
-          console.log("🔧 Mock OTP Code:", result.data.otpCode);
-          toast.show(`Mock OTP: ${result.data.otpCode}`, "info");
+          console.log("🔧 Development OTP Code:", result.data.otpCode);
+          toast.show(`Dev OTP: ${result.data.otpCode}`, "info");
         }
 
         navigate("/reset-password/otp", {
@@ -80,10 +96,69 @@ export default function ForgotPasswordPage() {
         <div className="w-full max-w-md">
           <ResetPasswordCard title="Atur Ulang Kata Sandi">
             <form onSubmit={handleSubmit}>
-              <ResetPasswordFormGroup label="Alamat Email" name="email" type="email" placeholder="" value={email} onChange={(e) => setEmail(e.target.value)} error={error} />
+              <ResetPasswordFormGroup 
+                label="Alamat Email" 
+                name="email" 
+                type="email" 
+                placeholder="email@example.com" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                error={error} 
+              />
 
-              <ResetPasswordButton type="submit" disabled={loading}>
-                {loading ? "Mengirim..." : "Kirim"}
+              {/* Channel Selection */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Kirim OTP via:
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={channels.includes('email')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setChannels([...channels, 'email'])
+                        } else {
+                          setChannels(channels.filter(c => c !== 'email'))
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    Email
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={channels.includes('whatsapp')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setChannels([...channels, 'whatsapp'])
+                        } else {
+                          setChannels(channels.filter(c => c !== 'whatsapp'))
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    WhatsApp
+                  </label>
+                </div>
+              </div>
+
+              {/* Phone Number (conditional) */}
+              {channels.includes('whatsapp') && (
+                <ResetPasswordFormGroup 
+                  label="Nomor WhatsApp" 
+                  name="phoneNumber" 
+                  type="tel" 
+                  placeholder="628123456789" 
+                  value={phoneNumber} 
+                  onChange={(e) => setPhoneNumber(e.target.value)} 
+                />
+              )}
+
+              <ResetPasswordButton type="submit" disabled={loading || channels.length === 0}>
+                {loading ? "Mengirim..." : "Kirim OTP"}
               </ResetPasswordButton>
             </form>
           </ResetPasswordCard>

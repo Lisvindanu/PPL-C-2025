@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import Button from "../atoms/Button";
 import Avatar from "../atoms/Avatar";
+import ConfirmModal from "../atoms/ConfirmModal";
 import useUserIdentity from "../../hooks/useUserIdentity";
 import { authService } from "../../services/authService";
 import { useToast } from "../organisms/ToastProvider";
@@ -225,6 +226,23 @@ export default function NavHeader() {
     navigate("/login", { replace: true });
   };
 
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+  const performLogout = async () => {
+    try {
+      await authService.logout();
+      setIsLoggedIn(false);
+      toast.show("Anda telah logout", "success");
+      navigate("/login", { replace: true });
+    } catch (error) {
+      // Walaupun request API gagal, authService.logout tetap menghapus data di local storage
+      toast.show("Logout gagal, tetapi sesi lokal dihapus", "warning");
+      navigate("/login", { replace: true });
+    } finally {
+      setShowLogoutModal(false);
+    }
+  };
+
   return (
     <>
       <div className="mx-auto flex h-16 max-w-7xl items-center gap-2 sm:gap-3 px-2 sm:px-4">
@@ -268,7 +286,7 @@ export default function NavHeader() {
                 onOrders={handleOrders}
                 onSwitchRole={handleSwitchRole}
                 onRegisterFreelancer={handleRegisterFreelancer}
-                onLogout={handleLogout}
+                onLogout={() => setShowLogoutModal(true)}
               />
             </div>
           ) : (
@@ -301,6 +319,16 @@ export default function NavHeader() {
           <SearchBar />
         </div>
       )}
+
+      <ConfirmModal
+        open={showLogoutModal}
+        title="Konfirmasi Logout"
+        message="Anda akan keluar dari akun. Apakah Anda yakin ingin melanjutkan?"
+        onConfirm={performLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        confirmText="Ya, keluar"
+        cancelText="Batal"
+      />
     </>
   );
 }
