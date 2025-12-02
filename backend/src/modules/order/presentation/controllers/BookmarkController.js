@@ -1,22 +1,23 @@
-const SequelizeFavoriteRepository = require('../../../favorite/infrastructure/repositories/SequelizeFavoriteRepository');
-const GetFavorites = require('../../../favorite/application/use-cases/GetFavorites');
-const AddFavorite = require('../../../favorite/application/use-cases/AddFavorite');
-const RemoveFavorite = require('../../../favorite/application/use-cases/RemoveFavorite');
-const CheckFavorite = require('../../../favorite/application/use-cases/CheckFavorite');
+const SequelizeSimpananRepository = require('../../../simpanan/infrastructure/repositories/SequelizeSimpananRepository');
+const GetSimpanan = require('../../../simpanan/application/use-cases/GetSimpanan');
+const AddSimpanan = require('../../../simpanan/application/use-cases/AddSimpanan');
+const RemoveSimpanan = require('../../../simpanan/application/use-cases/RemoveSimpanan');
+const CheckSimpanan = require('../../../simpanan/application/use-cases/CheckSimpanan');
 
 /**
  * Bookmark Controller
- * Catatan: Secara storage, bookmark menggunakan tabel/logic yang sama dengan favorites.
- * Perbedaannya hanya pada penamaan endpoint dan konteks penggunaan di FE.
+ * Menggunakan tabel 'simpanan' yang terpisah dari 'favorit'.
+ * - Favorit: untuk likes/popularity (mempengaruhi rekomendasi)
+ * - Simpanan/Bookmark: untuk menyimpan layanan sebagai referensi
  */
 class BookmarkController {
   constructor() {
-    const favoriteRepository = new SequelizeFavoriteRepository();
+    const simpananRepository = new SequelizeSimpananRepository();
 
-    this.getBookmarksUseCase = new GetFavorites(favoriteRepository);
-    this.addBookmarkUseCase = new AddFavorite(favoriteRepository);
-    this.removeBookmarkUseCase = new RemoveFavorite(favoriteRepository);
-    this.checkBookmarkUseCase = new CheckFavorite(favoriteRepository);
+    this.getBookmarksUseCase = new GetSimpanan(simpananRepository);
+    this.addBookmarkUseCase = new AddSimpanan(simpananRepository);
+    this.removeBookmarkUseCase = new RemoveSimpanan(simpananRepository);
+    this.checkBookmarkUseCase = new CheckSimpanan(simpananRepository);
   }
 
   /**

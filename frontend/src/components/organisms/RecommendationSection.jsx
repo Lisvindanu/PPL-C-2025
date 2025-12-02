@@ -15,32 +15,29 @@ const RecommendationCard = forwardRef(({ service, onClick, onHide, onFavoriteTog
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
-      className="relative w-64 flex-shrink-0"
+      className="relative"
     >
-      {/* Service Card with custom styling for category badge */}
-      <div className="relative">
-        {/* Hide Button - positioned at top-right corner INSIDE the card */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            onHide(service);
-          }}
-          className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-neutral-900/80 backdrop-blur-sm text-white flex items-center justify-center hover:bg-red-500 transition-all duration-200 shadow-lg"
-          aria-label="Sembunyikan dari rekomendasi"
-          title="Sembunyikan rekomendasi ini"
-        >
-          <i className="fas fa-times text-xs pointer-events-none" />
-        </button>
+      {/* Hide Button - positioned at top-right corner INSIDE the card */}
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onHide(service);
+        }}
+        className="absolute top-2 right-2 z-20 w-7 h-7 rounded-full bg-neutral-900/80 backdrop-blur-sm text-white flex items-center justify-center hover:bg-red-500 transition-all duration-200 shadow-lg"
+        aria-label="Sembunyikan dari rekomendasi"
+        title="Sembunyikan rekomendasi ini"
+      >
+        <i className="fas fa-times text-xs pointer-events-none" />
+      </button>
 
-        {/* Service Card - exactly same as popular services */}
-        <ServiceCardItem
-          service={service}
-          onClick={onClick}
-          onFavoriteToggle={onFavoriteToggle}
-          fullWidth={false}
-        />
-      </div>
+      {/* Service Card - exactly same as popular services */}
+      <ServiceCardItem
+        service={service}
+        onClick={onClick}
+        onFavoriteToggle={onFavoriteToggle}
+        fullWidth={false}
+      />
     </motion.div>
   );
 });
@@ -80,23 +77,38 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
         const hidden = getHiddenRecommendations();
         setHiddenCount(hidden.length);
 
-        // Try to get cached recommendations first (v9 - cleaned invalid IDs)
+        // Try to get cached recommendations first (v10 - force fresh data)
         // Note: versionChecker.js handles global cache cleanup
-        const cachedKey = 'cachedRecommendations_v9';
+        const cachedKey = 'cachedRecommendations_v10';
         const cached = sessionStorage.getItem(cachedKey);
+
+        // Known invalid service IDs that should trigger cache invalidation
+        const INVALID_IDS = ['2be326c4-d1b4-4493-902f-52e18a116d3a'];
 
         if (cached) {
           try {
             const parsedCache = JSON.parse(cached);
-            console.log('[RecommendationSection] Using cached recommendations:', parsedCache.length, 'cards');
 
-            // Store all recommendations
-            setAllRecommendations(parsedCache);
+            // Validate cache: check for known invalid IDs
+            const hasInvalidIds = parsedCache.some(service =>
+              INVALID_IDS.includes(service.id)
+            );
 
-            const visible = parsedCache.filter(s => !hidden.includes(s.id));
-            setRecommendations(visible);
-            setLoading(false);
-            return;
+            if (hasInvalidIds) {
+              console.warn('[RecommendationSection] Cache contains invalid IDs, clearing and fetching fresh data');
+              sessionStorage.removeItem(cachedKey);
+              // Continue to fetch below
+            } else {
+              console.log('[RecommendationSection] Using cached recommendations:', parsedCache.length, 'cards');
+
+              // Store all recommendations
+              setAllRecommendations(parsedCache);
+
+              const visible = parsedCache.filter(s => !hidden.includes(s.id));
+              setRecommendations(visible);
+              setLoading(false);
+              return;
+            }
           } catch {
             // Invalid cache, continue to fetch
             console.log('[RecommendationSection] Invalid cache, fetching fresh data');
@@ -231,7 +243,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
       setHiddenCount(hidden.length);
 
       // Also update visible recommendations with category filter
-      const cachedKey = 'cachedRecommendations_v9';
+      const cachedKey = 'cachedRecommendations_v10';
       const cached = sessionStorage.getItem(cachedKey);
       if (cached) {
         try {
@@ -257,6 +269,21 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
       window.removeEventListener('hiddenRecommendationsChanged', handleHiddenChanged);
     };
   }, [selectedCategory]);
+
+  // Listen to favorite toggle events to invalidate cache
+  useEffect(() => {
+    const handleFavoriteChanged = (event) => {
+      console.log('[RecommendationSection] Favorite changed, invalidating cache');
+      // Clear the cache so next mount will fetch fresh data with updated counts
+      const cachedKey = 'cachedRecommendations_v10';
+      sessionStorage.removeItem(cachedKey);
+    };
+
+    window.addEventListener('favoriteChanged', handleFavoriteChanged);
+    return () => {
+      window.removeEventListener('favoriteChanged', handleFavoriteChanged);
+    };
+  }, []);
 
   const handleHideClick = (service) => {
     setServiceToHide(service);
@@ -292,7 +319,7 @@ export default function RecommendationSection({ onServiceClick, onFavoriteToggle
 
     // Get cached recommendations
     try {
-      const cachedKey = 'cachedRecommendations_v9';
+      const cachedKey = 'cachedRecommendations_v10';
       const cached = sessionStorage.getItem(cachedKey);
 
       if (cached) {

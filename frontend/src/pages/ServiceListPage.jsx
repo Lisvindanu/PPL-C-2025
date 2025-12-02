@@ -107,6 +107,7 @@ const mapServiceToFrontend = (backendService) => {
     reviews,
     price,
     thumbnail: buildMediaUrl(thumbnailRaw),
+    favoriteCount: backendService.favorite_count || backendService.favoriteCount || 0,
   };
 };
 

@@ -40,6 +40,14 @@ export default function ServiceCardItem({
   const [favoriteCount, setFavoriteCount] = useState(service.favoriteCount || 0);
   const hasHydratedRef = useRef(false);
 
+  // Sync favoriteCount with service.favoriteCount when it changes
+  useEffect(() => {
+    if (service.favoriteCount !== undefined) {
+      console.log('[ServiceCardItem] Syncing favoriteCount from prop:', service.favoriteCount, 'current:', favoriteCount);
+      setFavoriteCount(service.favoriteCount);
+    }
+  }, [service.favoriteCount, service.id]); // Re-sync when service changes
+
   // Ensure initial bookmark state reflects server on refresh/navigation
   // Only hydrate ONCE on mount, don't re-run on every render
   useEffect(() => {
@@ -141,6 +149,8 @@ export default function ServiceCardItem({
             }
           } else {
             console.log('[ServiceCardItem] Backend favorite synced successfully');
+            // Emit event to invalidate caches
+            window.dispatchEvent(new CustomEvent('favoriteChanged', { detail: { serviceId: service.id, isFavorite: true } }));
           }
         });
       } catch (error) {
@@ -168,7 +178,13 @@ export default function ServiceCardItem({
         setShowToast(true);
 
         // Sync to backend in background (don't block UI)
-        favoriteService.toggleFavorite(service.id, false).catch((err) => {
+        favoriteService.toggleFavorite(service.id, false).then((result) => {
+          if (result.success) {
+            console.log('[ServiceCardItem] Backend unfavorite synced successfully');
+            // Emit event to invalidate caches
+            window.dispatchEvent(new CustomEvent('favoriteChanged', { detail: { serviceId: service.id, isFavorite: false } }));
+          }
+        }).catch((err) => {
           console.log("Backend sync failed:", err);
           // Keep localStorage state, don't revert
         });
@@ -278,10 +294,11 @@ export default function ServiceCardItem({
         whileHover={{ y: -8 }}
         transition={{ duration: 0.3 }}
         className={`group ${
-          fullWidth ? "w-full" : "flex-shrink-0 w-64"
+          fullWidth ? "w-full" : "flex-shrink-0 w-80"
         }`}
+        style={{ height: "430px" }}
       >
-        <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
           {/* Image */}
           <div
             className="relative h-40 overflow-hidden bg-gradient-to-br from-[#D8E3F3] to-[#9DBBDD] cursor-pointer"
@@ -301,7 +318,7 @@ export default function ServiceCardItem({
           </div>
 
           {/* Content */}
-          <div className="relative p-4">
+          <div className="relative p-4 flex-1 flex flex-col">
             <h3
               className="font-bold text-lg text-neutral-900 mb-2 line-clamp-2 group-hover:text-[#4782BE] transition-colors cursor-pointer"
               onClick={onClick}
@@ -329,7 +346,7 @@ export default function ServiceCardItem({
             </div>
 
             {/* Price */}
-            <div className="mb-3">
+            <div className="mb-3 flex-1 flex flex-col justify-end">
               <div className="text-xs text-neutral-500 mb-1">Mulai dari</div>
               <div className="text-lg font-bold text-[#4782BE]">
                 Rp {service.price.toLocaleString("id-ID")}
@@ -337,7 +354,7 @@ export default function ServiceCardItem({
             </div>
 
             {/* Bottom Row: Favorite Count & Bookmark Icon */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mt-auto">
               {/* Favorite Section - Bottom Left */}
               <div className="flex items-center gap-2">
                 {/* Favorite Button - Always show as red solid heart */}

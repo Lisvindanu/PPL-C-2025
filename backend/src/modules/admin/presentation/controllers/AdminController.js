@@ -611,6 +611,228 @@ async getAllLogs(req, res) {
   }
 }
 
+async getNotifications(req, res) {
+  try {
+    const adminId = req.user?.userId;
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      });
+    }
+
+    // Get admin user to get their user_id
+    const [admin] = await this.sequelize.query(
+      'SELECT id FROM users WHERE id = ? AND role = ?',
+      {
+        replacements: [adminId, 'admin'],
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      }
+    );
+
+    if (!admin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Forbidden'
+      });
+    }
+
+    // Since fraud alert types are not in the notification ENUM,
+    // we'll return fraud alerts directly as notifications
+    const suspicious = await this.fraudDetectionService.checkSuspiciousPatterns();
+    
+    const anomalies = Array.isArray(suspicious.anomalies) ? suspicious.anomalies : [];
+    const failedPayments = Array.isArray(suspicious.failedPayments) ? suspicious.failedPayments : [];
+    const multipleFailures = Array.isArray(suspicious.multipleFailures) ? suspicious.multipleFailures : [];
+
+    // Convert fraud alerts to notification format
+    const notifications = [];
+    
+    failedPayments.forEach(p => {
+      notifications.push({
+        id: p.id,
+        type: 'fraud_failedPayment',
+        title: `Pembayaran Gagal - Order: ${p.pesanan_id ?? p.order_id ?? p.id}`,
+        message: `User: ${p.user_id} · Amount: ${p.total_bayar ?? p.amount ?? '-'}`,
+        created_at: p.created_at ?? p.createdAt ?? p.date,
+        is_read: false,
+        raw: { ...p, alertType: 'failedPayment' }
+      });
+    });
+
+    multipleFailures.forEach(m => {
+      notifications.push({
+        id: m.user_id || m.id,
+        type: 'fraud_multipleFailures',
+        title: `Beberapa Pembayaran Gagal - User: ${m.user_id}`,
+        message: `Failed: ${m.failed_count}`,
+        created_at: m.last_failed,
+        is_read: false,
+        raw: { ...m, alertType: 'multipleFailures' }
+      });
+    });
+
+    anomalies.forEach(a => {
+      notifications.push({
+        id: a.id || a.user_id || a.email,
+        type: 'fraud_anomaly',
+        title: `Anomali Transaksi - ${a.email || a.user_email || 'Unknown user'}`,
+        message: `Transactions: ${a.transaction_count ?? '-'} · Failed: ${a.failed_count ?? '-'}`,
+        created_at: null,
+        is_read: false,
+        raw: { ...a, alertType: 'anomaly' }
+      });
+    });
+
+    // Sort by date desc
+    notifications.sort((x, y) => {
+      const dx = x.created_at ? new Date(x.created_at).getTime() : 0;
+      const dy = y.created_at ? new Date(y.created_at).getTime() : 0;
+      return (dy - dx);
+    });
+
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const paginated = notifications.slice(offset, offset + parseInt(limit));
+    const total = notifications.length;
+
+    res.json({
+      success: true,
+      message: 'Notifications retrieved successfully',
+      data: paginated,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    console.error('Error in getNotifications:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+async markNotificationRead(req, res) {
+  try {
+    const { id } = req.params;
+    const adminId = req.user?.userId;
+
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Unauthorized'
+      });
+    }
+
+    // Since fraud alerts are not stored as notifications in DB,
+    // we'll just return success (in a real system, you'd store read status)
+    // For now, we'll accept the request and return success
+    res.json({
+      success: true,
+      message: 'Notification marked as read'
+    });
+  } catch (error) {
+    console.error('Error in markNotificationRead:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
+async getFraudAlertDetail(req, res) {
+  try {
+    const { type, id } = req.params;
+
+    let detail = null;
+
+    if (type === 'failedPayment') {
+      const [result] = await this.sequelize.query(
+        `SELECT p.*, u.email, u.nama_depan, u.nama_belakang, u.id as user_id, 
+         pes.judul as order_title
+         FROM pembayaran p 
+         LEFT JOIN users u ON p.user_id = u.id
+         LEFT JOIN pesanan pes ON p.pesanan_id = pes.id
+         WHERE p.id = ? AND p.status = 'gagal'`,
+        {
+          replacements: [id],
+          raw: true,
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+      detail = result;
+    } else if (type === 'multipleFailures') {
+      const [result] = await this.sequelize.query(
+        `SELECT 
+          u.id as user_id,
+          u.email,
+          u.nama_depan,
+          u.nama_belakang,
+          COUNT(p.id) as failed_count,
+          MAX(p.created_at) as last_failed
+         FROM users u
+         LEFT JOIN pembayaran p ON u.id = p.user_id AND p.status = 'gagal'
+         WHERE u.id = ?
+         GROUP BY u.id`,
+        {
+          replacements: [id],
+          raw: true,
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+      detail = result;
+    } else if (type === 'anomaly') {
+      const [result] = await this.sequelize.query(
+        `SELECT 
+          u.id,
+          u.email,
+          u.nama_depan,
+          u.nama_belakang,
+          COUNT(p.id) as transaction_count,
+          SUM(p.total_bayar) as total_spent,
+          COUNT(CASE WHEN p.status = 'gagal' THEN 1 END) as failed_count
+         FROM users u
+         LEFT JOIN pembayaran p ON u.id = p.user_id
+         WHERE u.id = ?
+         GROUP BY u.id`,
+        {
+          replacements: [id],
+          raw: true,
+          type: this.sequelize.QueryTypes.SELECT
+        }
+      );
+      detail = result;
+    }
+
+    if (!detail) {
+      return res.status(404).json({
+        success: false,
+        message: 'Fraud alert detail not found'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Fraud alert detail retrieved',
+      data: {
+        type,
+        ...detail
+      }
+    });
+  } catch (error) {
+    console.error('Error in getFraudAlertDetail:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+}
+
 
 async getLogsByAdminId(req, res) {
   try {

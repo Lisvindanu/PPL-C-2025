@@ -17,6 +17,9 @@ import Logo from '../atoms/Logo';
 import { NavItem } from '../molecules/NavItem';
 import { Text } from '../atoms/Text';
 import { X } from 'lucide-react';
+import ConfirmModal from '../atoms/ConfirmModal';
+import { authService } from '../../services/authService';
+import { useToast } from './ToastProvider';
 
 export const Sidebar = ({ activeMenu = 'dashboard' }) => {
   const navigate = useNavigate();
@@ -47,11 +50,23 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
   }, []);
 
   const handleLogout = () => {
-    // Clear token and user from localStorage
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    // Redirect to login page
-    window.location.href = '/login';
+    authService.logout();
+    navigate('/login', { replace: true });
+  };
+
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const toast = useToast();
+
+  const performLogout = async () => {
+    try {
+      await authService.logout();
+      toast.show && toast.show("Anda telah logout", "success");
+    } catch (e) {
+      // ignore - authService.logout clears local session even on error
+    } finally {
+      setShowLogoutModal(false);
+      navigate('/login', { replace: true });
+    }
   };
 
   const menuItems = [
@@ -203,7 +218,7 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
           })}
         </nav>
         <button 
-          onClick={handleLogout}
+          onClick={() => setShowLogoutModal(true)}
           className="flex items-center gap-3 px-4 py-4 text-sm hover:bg-gray-100 transition-colors border-t border-gray-200">
            <LogOut size={18} className="text-gray-700 rotate-180" />
           <Text className="font-medium text-gray-700">Keluar</Text>
@@ -349,7 +364,7 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
             </nav>
             <div className="absolute bottom-0 w-full border-t border-gray-200">
               <button 
-                onClick={() => { handleLogout(); setMobileOpen(false); }}
+                onClick={() => { setShowLogoutModal(true); setMobileOpen(false); }}
                 className="w-full flex items-center gap-3 px-4 py-4 text-sm hover:bg-gray-100 transition-colors">
                  <LogOut size={18} className="text-gray-700 rotate-180" />
                 <Text className="font-medium text-gray-700">Keluar</Text>
@@ -358,6 +373,15 @@ export const Sidebar = ({ activeMenu = 'dashboard' }) => {
           </div>
         </div>
       )}
+      <ConfirmModal
+        open={showLogoutModal}
+        title="Konfirmasi Logout"
+        message="Anda akan keluar dari akun admin. Apakah Anda yakin ingin melanjutkan?"
+        onConfirm={performLogout}
+        onCancel={() => setShowLogoutModal(false)}
+        confirmText="Ya, keluar"
+        cancelText="Batal"
+      />
     </>
   );
 };

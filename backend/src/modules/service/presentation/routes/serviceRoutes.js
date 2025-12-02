@@ -73,11 +73,15 @@ module.exports = (serviceController) => {
    *       - in: query
    *         name: harga_min
    *         description: Filter minimum harga (DECIMAL(12,2))
-   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *         schema: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$' }
    *       - in: query
    *         name: harga_max
    *         description: Filter maksimum harga (DECIMAL(12,2))
-   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *         schema: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$' }
+   *       - in: query
+   *         name: rating_min
+   *         description: Filter minimum rating (0-5)
+   *         schema: { type: number, minimum: 0, maximum: 5 }
    *       - in: query
    *         name: page
    *         schema: { type: integer, minimum: 1 }
@@ -115,11 +119,15 @@ module.exports = (serviceController) => {
    *       - in: query
    *         name: harga_min
    *         description: Filter minimum harga (DECIMAL(12,2))
-   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *         schema: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$' }
    *       - in: query
    *         name: harga_max
    *         description: Filter maksimum harga (DECIMAL(12,2))
-   *         schema: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *         schema: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$' }
+   *       - in: query
+   *         name: rating_min
+   *         description: Filter minimum rating (0-5)
+   *         schema: { type: number, minimum: 0, maximum: 5 }
    *       - in: query
    *         name: page
    *         schema: { type: integer, minimum: 1 }
@@ -228,7 +236,7 @@ module.exports = (serviceController) => {
    *               judul: { type: string, minLength: 5, maxLength: 255 }
    *               deskripsi: { type: string, minLength: 30 }
    *               kategori_id: { type: string, format: uuid }
-   *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$', example: "149999.99" }
+   *               harga: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$', example: "149999.99" }
    *               waktu_pengerjaan: { type: integer, minimum: 1, description: 'dalam hari' }
    *               batas_revisi: { type: integer, minimum: 0, default: 1 }
    *               thumbnail: { type: string, format: binary }
@@ -269,7 +277,7 @@ module.exports = (serviceController) => {
    *               judul: { type: string, minLength: 5, maxLength: 255 }
    *               deskripsi: { type: string, minLength: 30 }
    *               kategori_id: { type: string, format: uuid }
-   *               harga: { type: string, pattern: '^\d{1,10}(\.\d{1,2})?$' }
+   *               harga: { type: string, pattern: '^\d{1,10}(\\.\d{1,2})?$' }
    *               waktu_pengerjaan: { type: integer, minimum: 1 }
    *               batas_revisi: { type: integer, minimum: 0 }
    *               thumbnail: { type: string, format: binary }

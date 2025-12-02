@@ -4,10 +4,15 @@ const JwtService = require('../../infrastructure/services/JwtService');
 const EmailService = require('../../infrastructure/services/EmailService');
 const RegisterUser = require('../../application/use-cases/RegisterUser');
 const LoginUser = require('../../application/use-cases/LoginUser');
+const RegisterWithGoogle = require('../../application/use-cases/RegisterWithGoogle');
+const LoginWithGoogle = require('../../application/use-cases/LoginWithGoogle');
 const UpdateProfile = require('../../application/use-cases/UpdateProfile');
 const ForgotPassword = require('../../application/use-cases/ForgotPassword');
 const ResetPassword = require('../../application/use-cases/ResetPassword');
 const VerifyOTP = require('../../application/use-cases/VerifyOTP');
+const SendOTP = require('../../application/use-cases/SendOTP');
+const VerifyEmail = require('../../application/use-cases/VerifyEmail');
+const ResendVerificationOTP = require('../../application/use-cases/ResendVerificationOTP');
 const ChangeUserRole = require('../../application/use-cases/ChangeUserRole');
 const CreateFreelancerProfile = require('../../application/use-cases/CreateFreelancerProfile');
 const UpdateFreelancerProfile = require('../../application/use-cases/UpdateFreelancerProfile');
@@ -21,10 +26,15 @@ class UserController {
 
     this.registerUser = new RegisterUser({ userRepository, hashService, emailService });
     this.loginUser = new LoginUser({ userRepository, hashService, jwtService });
+    this.registerWithGoogleUseCase = new RegisterWithGoogle({ userRepository, jwtService, emailService });
+    this.loginWithGoogleUseCase = new LoginWithGoogle({ userRepository, jwtService });
     this.updateProfileUseCase = new UpdateProfile({ userRepository });
     this.forgotPasswordUseCase = new ForgotPassword({ userRepository });
     this.resetPasswordUseCase = new ResetPassword({ userRepository, hashService });
-    this.verifyOTPUseCase = new VerifyOTP({ userRepository });
+    this.verifyOTPUseCase = new VerifyOTP({ userRepository, emailService });
+    this.sendOTPUseCase = new SendOTP({ userRepository });
+    this.verifyEmailUseCase = new VerifyEmail({ userRepository });
+    this.resendVerificationOTPUseCase = new ResendVerificationOTP({ userRepository });
     this.changeUserRoleUseCase = new ChangeUserRole({ userRepository });
     this.createFreelancerProfileUseCase = new CreateFreelancerProfile({ userRepository });
     this.updateFreelancerProfileUseCase = new UpdateFreelancerProfile({ userRepository });
@@ -55,6 +65,49 @@ class UserController {
     try {
       const result = await this.loginUser.execute(req.body);
       res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  loginWithGoogle = async (req, res, next) => {
+    try {
+      const { idToken, accessToken } = req.body;
+
+      if (!idToken && !accessToken) {
+        const err = new Error('Google ID token or access token is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.loginWithGoogleUseCase.execute({
+        idToken,
+        accessToken
+      });
+
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  registerWithGoogle = async (req, res, next) => {
+    try {
+      const { idToken, accessToken, role } = req.body;
+
+      if (!idToken && !accessToken) {
+        const err = new Error('Google ID token or access token is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.registerWithGoogleUseCase.execute({
+        idToken,
+        accessToken,
+        role: role || 'client'
+      });
+
+      res.status(201).json({ success: true, data: result });
     } catch (err) {
       next(err);
     }
@@ -147,9 +200,99 @@ class UserController {
     }
   };
 
+  // Public test endpoint to trigger email and/or SMS (protected by NOTIF_TEST_TOKEN)
+  testNotifications = async (req, res, next) => {
+    try {
+      const token = req.query.token || req.headers['x-notif-test-token'];
+      if (!process.env.NOTIF_TEST_TOKEN || token !== process.env.NOTIF_TEST_TOKEN) {
+        const err = new Error('Unauthorized - invalid test token');
+        err.statusCode = 401;
+        throw err;
+      }
+
+      const { email, type, message } = req.body || {};
+      const results = {};
+
+      if ((type || 'email') === 'email' || (type || 'both') === 'both') {
+        if (!email) {
+          results.email = { success: false, error: 'no email provided' };
+        } else {
+          // use a short token for testing
+          const testToken = `test-${Date.now()}`;
+          results.email = await this.registerUser && this.registerUser.emailService
+            ? await this.registerUser.emailService.sendPasswordResetEmail(email, testToken)
+            : await this.emailService.sendPasswordResetEmail(email, testToken);
+        }
+      }
+
+      // SMS/WhatsApp removed - only email supported
+
+      res.json({ success: true, data: results });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   verifyOTP = async (req, res, next) => {
     try {
       const result = await this.verifyOTPUseCase.execute(req.body);
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  sendOTP = async (req, res, next) => {
+    try {
+      const { email, phoneNumber, purpose, channels } = req.body;
+      
+      if (!email) {
+        const err = new Error('Email is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.sendOTPUseCase.execute({
+        email,
+        phoneNumber,
+        purpose: purpose || 'verification',
+        channels: channels || ['email']
+      });
+
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  verifyEmail = async (req, res, next) => {
+    try {
+      const { email, otp } = req.body;
+      
+      if (!email || !otp) {
+        const err = new Error('Email and OTP are required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.verifyEmailUseCase.execute({ email, otp });
+      res.json({ success: true, data: result });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  resendVerificationOTP = async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        const err = new Error('Email is required');
+        err.statusCode = 400;
+        throw err;
+      }
+
+      const result = await this.resendVerificationOTPUseCase.execute({ email });
       res.json({ success: true, data: result });
     } catch (err) {
       next(err);
@@ -175,10 +318,13 @@ class UserController {
         throw err;
       }
 
-      // Find user by email
-      const user = await this.loginUser.userRepository.findByEmail(email);
-      if (!user) {
+      // Validate password strength (8 chars, letters, numbers, symbols)
+      const Password = require('../../domain/value-objects/Password');
+      try {
+        new Password(newPassword);
+      } catch (error) {
         const err = new Error('User not found');
+        // SMS/WhatsApp removed; only email supported
         err.statusCode = 404;
         throw err;
       }

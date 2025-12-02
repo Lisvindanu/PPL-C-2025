@@ -34,27 +34,52 @@ import CreateOrderPage from "./pages/CreateOrderPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import OTPConfirmPage from "./pages/OTPConfirmPage";
 import NewPasswordPage from "./pages/NewPasswordPage";
+import EmailVerificationPage from "./pages/EmailVerificationPage";
 import OrderListPage from "./pages/OrderListPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import AdminRecommendationDashboardPage from "./pages/admin/AdminRecommendationDashboardPage";
+import AllNotificationsPage from "./pages/AllNotificationsPage";
+import FraudReportDetailPage from "./pages/FraudReportDetailPage";
+
+// ⬇️ import halaman pencarian baru
+import SearchPage from "./pages/SearchPage";
 
 export default function App() {
   return (
     <Routes>
+      {/* Public routes */}
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register/client" element={<RegisterClientPage />} />
-      <Route path="/register/freelancer" element={<RegisterFreelancerPage />} />
+      <Route
+        path="/register/freelancer"
+        element={
+          <ProtectedRoute>
+            <RegisterFreelancerPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/verify-email" element={<EmailVerificationPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password/otp" element={<OTPConfirmPage />} />
       <Route
         path="/reset-password/new-password"
         element={<NewPasswordPage />}
       />
+
+      {/* List layanan publik */}
       <Route path="/services" element={<ServiceListPage />} />
 
+      {/* Halaman detail layanan pakai slug */}
+      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
+      {/* 🔍 Halaman Pencarian (public) */}
+      {/* Contoh: /search?q=UIUX%20Desainer%20Website */}
+      <Route path="/search" element={<SearchPage />} />
+
+      {/* Dashboard client */}
       <Route
         path="/dashboard"
         element={
@@ -63,27 +88,13 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Admin routes */}
       <Route
         path="/admin/dashboard"
         element={
           <ProtectedRoute>
             <AdminDashboardPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders"
-        element={
-          <ProtectedRoute>
-            <OrderListPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/orders/:id"
-        element={
-          <ProtectedRoute>
-            <OrderDetailPage />
           </ProtectedRoute>
         }
       />
@@ -120,13 +131,13 @@ export default function App() {
         }
       />
       <Route
-        path="/admin/subkategori"
-        element={
-          <ProtectedRoute>
-            <AdminSubCategoryManagementPage />
-          </ProtectedRoute>
-        }
-      />
+        path="/admin/subkategori"
+        element={
+          <ProtectedRoute>
+            <AdminSubCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/admin/transaction-trends"
         element={
@@ -143,6 +154,24 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/notifications"
+        element={
+          <ProtectedRoute>
+            <AllNotificationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/fraud-report/:type/:id"
+        element={
+          <ProtectedRoute>
+            <FraudReportDetailPage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Client bookmarks & favorite */}
       <Route
         path="/bookmarks"
         element={
@@ -176,6 +205,7 @@ export default function App() {
         }
       />
 
+      {/* Freelancer service management */}
       <Route
         path="/freelance/service"
         element={
@@ -208,6 +238,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Profile */}
       <Route
         path="/profile"
         element={
@@ -224,11 +256,30 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Freelancer public profile */}
       <Route path="/freelancer/:id/detail" element={<FreelancerDetailPage />} />
       <Route path="/freelancer/:id" element={<FreelancerProfilePage />} />
 
-      <Route path="/services/:slug" element={<ServiceDetailPage />} />
+      {/* Orders (client) */}
+      <Route
+        path="/orders"
+        element={
+          <ProtectedRoute>
+            <OrderListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/orders/:id"
+        element={
+          <ProtectedRoute>
+            <OrderDetailPage />
+          </ProtectedRoute>
+        }
+      />
 
+      {/* Create order */}
       <Route
         path="/create-order/:id"
         element={
@@ -245,6 +296,8 @@ export default function App() {
           </ProtectedRoute>
         }
       />
+
+      {/* Payment */}
       <Route path="/payment/:orderId" element={<PaymentGatewayPage />} />
       <Route
         path="/payment/processing/:paymentId"
@@ -255,6 +308,7 @@ export default function App() {
       <Route path="/payment/error" element={<PaymentErrorPage />} />
       <Route path="/payment/expired" element={<PaymentExpiredPage />} />
 
+      {/* 404 */}
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );

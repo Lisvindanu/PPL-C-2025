@@ -5,7 +5,7 @@
 
 // IMPORTANT: Increment this version number whenever you make changes
 // that need to force a browser reload (like removing mock data)
-const CURRENT_VERSION = '2.5.5'; // Fix: Clear invalid service ID cache (2be326c4) from recommendations
+const CURRENT_VERSION = '2.5.6'; // Force clear ALL recommendation caches including v9
 
 export const checkVersion = () => {
   const storedVersion = sessionStorage.getItem('app_version');
@@ -36,6 +36,19 @@ export const checkVersion = () => {
     // Clear old favorites from localStorage (but preserve reload_attempt)
     // Note: This clears the old 'favorites' key - new system uses 'favorites_v2'
     localStorage.removeItem('favorites');
+
+    // Clear ALL recommendation caches (v8, v9, etc.)
+    const keysToRemove = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith('cachedRecommendations')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => {
+      console.log(`[VersionChecker] Removing cache: ${key}`);
+      sessionStorage.removeItem(key);
+    });
 
     // Clear all other sessionStorage except reload_attempt
     const reloadAttemptValue = sessionStorage.getItem('reload_attempt');

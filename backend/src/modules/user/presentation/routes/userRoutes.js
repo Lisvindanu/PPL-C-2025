@@ -74,6 +74,83 @@ router.post('/login', userController.login);
 
 /**
  * @swagger
+ * /api/users/login/google:
+ *   post:
+ *     tags: [Users]
+ *     summary: Login with Google OAuth
+ *     description: Authenticate user with Google OAuth ID token
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google OAuth ID token
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         description: Invalid Google token or user not found
+ *       404:
+ *         description: User not found. Please register first.
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/login/google', userController.loginWithGoogle);
+
+/**
+ * @swagger
+ * /api/users/register/google:
+ *   post:
+ *     tags: [Users]
+ *     summary: Register with Google OAuth
+ *     description: Create a new user account using Google OAuth
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - idToken
+ *             properties:
+ *               idToken:
+ *                 type: string
+ *                 description: Google OAuth ID token
+ *               role:
+ *                 type: string
+ *                 enum: [client, freelancer]
+ *                 default: client
+ *                 description: User role (optional, defaults to client)
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       409:
+ *         description: Email or Google account already exists
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/register/google', userController.registerWithGoogle);
+
+/**
+ * @swagger
  * /api/users/profile:
  *   get:
  *     tags: [Users]
@@ -173,6 +250,205 @@ router.put('/profile', authMiddleware, userController.updateProfile);
  *         $ref: '#/components/responses/ServerError'
  */
 router.post('/forgot-password', userController.forgotPassword);
+
+// Test endpoint to trigger email/SMS sending for development (requires NOTIF_TEST_TOKEN via query or header)
+router.post('/test-notifications', userController.testNotifications);
+
+/**
+ * @swagger
+ * /api/users/verify-email:
+ *   post:
+ *     tags: [Users]
+ *     summary: Verify email with OTP
+ *     description: Verify user's email address using OTP sent during registration
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Email verified successfully
+ *                     user:
+ *                       type: object
+ *                       properties:
+ *                         id:
+ *                           type: string
+ *                         email:
+ *                           type: string
+ *                         is_verified:
+ *                           type: boolean
+ *       400:
+ *         description: Invalid or expired OTP
+ *       404:
+ *         description: User not found
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/verify-email', userController.verifyEmail);
+
+/**
+ * @swagger
+ * /api/users/resend-verification-otp:
+ *   post:
+ *     tags: [Users]
+ *     summary: Resend verification OTP
+ *     description: Resend OTP for email verification
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP resent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: Verification OTP has been resent
+ *                     emailSent:
+ *                       type: boolean
+ *                     expiresIn:
+ *                       type: string
+ *                       example: "10 minutes"
+ *       400:
+ *         description: Email already verified
+ *       404:
+ *         description: User not found
+ *       429:
+ *         description: Rate limit exceeded
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/resend-verification-otp', userController.resendVerificationOTP);
+
+/**
+ * @swagger
+ * /api/users/send-otp:
+ *   post:
+ *     tags: [Users]
+ *     summary: Send OTP via Email/WhatsApp
+ *     description: Send OTP to user via email and/or WhatsApp for various purposes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "628123456789"
+ *                 description: Phone number with country code (optional, for WhatsApp)
+ *               purpose:
+ *                 type: string
+ *                 enum: [verification, password_reset, login, transaction]
+ *                 default: verification
+ *                 example: password_reset
+ *               channels:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   enum: [email, whatsapp]
+ *                 default: ["email"]
+ *                 example: ["email", "whatsapp"]
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     message:
+ *                       type: string
+ *                       example: OTP has been sent successfully
+ *                     channels:
+ *                       type: object
+ *                       properties:
+ *                         email:
+ *                           type: object
+ *                           properties:
+ *                             success:
+ *                               type: boolean
+ *                             messageId:
+ *                               type: string
+ *                         whatsapp:
+ *                           type: object
+ *                           properties:
+ *                             success:
+ *                               type: boolean
+ *                             messageId:
+ *                               type: string
+ *                     expiresIn:
+ *                       type: string
+ *                       example: "10 minutes"
+ *       400:
+ *         description: Validation error
+ *       404:
+ *         description: User not found
+ *       429:
+ *         description: Rate limit exceeded
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.post('/send-otp', userController.sendOTP);
 
 /**
  * @swagger

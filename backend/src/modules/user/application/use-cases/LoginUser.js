@@ -23,6 +23,15 @@ class LoginUser {
       throw error;
     }
 
+    // Check if account is active
+    // `is_active` is expected to be a boolean or numeric flag on the user model
+    if (user.is_active === false || user.is_active === 0) {
+      const err = new Error('Account inactive');
+      err.statusCode = 403;
+      err.code = 'ACCOUNT_INACTIVE';
+      throw err;
+    }
+
     const token = this.jwtService.generate(user.id, user.role);
 
     return {
