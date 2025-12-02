@@ -2,6 +2,8 @@ import Button from "../atoms/Button";
 import { Clock, RotateCcw, ShieldCheck, Headset, Star, Bookmark } from "lucide-react";
 import { useState } from "react";
 import SavedToast from "./SavedToast";
+import UnsaveConfirmModal from "./UnsaveConfirmModal";
+import { useBookmark } from "../../hooks/useBookmark";
 
 function Row({ icon: IconCmp, label, value }) {
   return (
@@ -58,9 +60,22 @@ export default function OrderCard({
   batas_revisi,
   onOrder,
   onContact,
+  serviceId,
+  serviceTitle
 }) {
-  const [isBookmarked, setIsBookmarked] = useState(false);
   const [showSavedToast, setShowSavedToast] = useState(false);
+  const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
+
+  const {
+    isBookmarked,
+    isLoading: isBookmarkLoading,
+    isClient,
+    addBookmark,
+    removeBookmark,
+  } = useBookmark({
+    serviceId,
+    initialIsBookmarked: false,
+  });
 
   const safeRating = Number.isFinite(Number(rating)) ? Number(rating) : 0;
   const safeReviews = Number.isFinite(Number(reviewCount))
@@ -70,12 +85,33 @@ export default function OrderCard({
     ? Number(completed)
     : 0;
 
-  const handleBookmarkClick = () => {
-    setIsBookmarked((prev) => {
-      const next = !prev;
+  const handleBookmarkClick = async () => {
+    if (!isClient || !serviceId) {
+      return;
+    }
+
+    if (isBookmarked) {
+      setShowUnbookmarkModal(true);
+      return;
+    }
+
+    const res = await addBookmark();
+    if (res?.success !== false) {
       setShowSavedToast(true);
-      return next;
-    });
+    }
+  };
+
+  const handleConfirmUnbookmark = async () => {
+    setShowUnbookmarkModal(false);
+
+    if (!isClient || !serviceId) {
+      return;
+    }
+
+    const res = await removeBookmark();
+    if (res?.success !== false) {
+      setShowSavedToast(true);
+    }
   };
 
   return (
@@ -92,18 +128,22 @@ export default function OrderCard({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleBookmarkClick}
-          className={`flex h-9 w-9 items-center justify-center rounded-xl border text-neutral-600 transition
-            ${isBookmarked ? "border-[#1D4ED8] bg-white" : "border-neutral-300 bg-white hover:bg-neutral-50"}
-          `}
-          aria-pressed={isBookmarked}
-        >
-          <Bookmark
-            className={`h-6 w-6 ${isBookmarked ? "fill-[#111827] text-[#111827]" : "text-neutral-600"}`}
-          />
-        </button>
+        {isClient && (
+          <button
+            type="button"
+            onClick={handleBookmarkClick}
+            disabled={isBookmarkLoading}
+            className={`flex h-9 w-9 items-center justify-center rounded-xl border text-neutral-600 transition
+              ${isBookmarked ? "border-[#1D4ED8] bg-white" : "border-neutral-300 bg-white hover:bg-neutral-50"}
+            `}
+            aria-pressed={isBookmarked}
+            aria-busy={isBookmarkLoading}
+          >
+            <Bookmark
+              className={`h-6 w-6 ${isBookmarked ? "fill-[#111827] text-[#111827]" : "text-neutral-600"}`}
+            />
+          </button>
+        )}
       </div>
 
       {/* Rating & statistik pesanan */}
@@ -158,6 +198,13 @@ export default function OrderCard({
         isOpen={showSavedToast}
         onClose={() => setShowSavedToast(false)}
         isSaved={isBookmarked}
+      />
+
+      <UnsaveConfirmModal
+        isOpen={showUnbookmarkModal}
+        onClose={() => setShowUnbookmarkModal(false)}
+        onConfirm={handleConfirmUnbookmark}
+        serviceName={serviceTitle}
       />
     </>
   );

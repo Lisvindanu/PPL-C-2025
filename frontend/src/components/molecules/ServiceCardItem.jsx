@@ -1,8 +1,8 @@
 import { motion } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { authService } from "../../services/authService";
 import { favoriteService } from "../../services/favoriteService";
-import { bookmarkService } from "../../services/bookmarkService";
+import { useBookmark } from "../../hooks/useBookmark";
 import FavoriteToast from "./FavoriteToast";
 import SavedToast from "./SavedToast";
 import UnfavoriteConfirmModal from "./UnfavoriteConfirmModal";
@@ -28,37 +28,24 @@ export default function ServiceCardItem({
   const initialBookmarked = Boolean(service?.isSaved || service?.isBookmarked);
 
   const [isFavorite, setIsFavorite] = useState(getFavoriteStatus());
-  const [isBookmarked, setIsBookmarked] = useState(initialBookmarked);
   const [isLoading, setIsLoading] = useState(false);
-  const [isBookmarkLoading, setIsBookmarkLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [showBookmarkToast, setShowBookmarkToast] = useState(false);
   const [showUnfavoriteModal, setShowUnfavoriteModal] = useState(false);
   const [showUnbookmarkModal, setShowUnbookmarkModal] = useState(false);
 
-  // Ensure initial bookmark state reflects server on refresh/navigation
-  useEffect(() => {
-    let cancelled = false;
-
-    const hydrateBookmarkState = async () => {
-      if (!user || !isClient || !service?.id) return;
-
-      try {
-        const res = await bookmarkService.isBookmarked(service.id);
-        if (cancelled) return;
-        if (res?.success && typeof res.data?.isBookmarked === "boolean") {
-          setIsBookmarked(res.data.isBookmarked);
-        }
-      } catch (_) {
-        // ignore - keep current optimistic state
-      }
-    };
-
-    hydrateBookmarkState();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, isClient, service?.id]);
+  const {
+    isBookmarked,
+    isLoading: isBookmarkLoading,
+    addBookmark,
+    removeBookmark,
+  } = useBookmark({
+    serviceId: service.id,
+    initialIsBookmarked: initialBookmarked,
+    onChange: (saved) => {
+      if (onBookmarkToggle) onBookmarkToggle(service.id, saved);
+    },
+  });
 
   const handleFavoriteClick = async (e) => {
     e.stopPropagation();
@@ -146,61 +133,21 @@ export default function ServiceCardItem({
       return; // Silent fail - better UX
     }
 
-    // If unsaving, show confirmation modal
+    // Jika sudah tersimpan, tampilkan modal konfirmasi hapus
     if (isBookmarked) {
       setShowUnbookmarkModal(true);
       return;
     }
 
-    // Bookmarking (no confirmation needed)
-    setIsBookmarkLoading(true);
-
-    try {
-      // Optimistic UI update
-      setIsBookmarked(true);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-      setShowBookmarkToast(true);
-
-      // Sync to backend bookmarks
-      const res = await bookmarkService.addBookmark(service.id);
-      if (!res?.success) {
-        // Revert if failed
-        setIsBookmarked(false);
-        if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-      }
-    } catch (error) {
-      console.error("[ServiceCardItem] addBookmark error:", error);
-      setIsBookmarked(false);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-    } finally {
-      setIsBookmarkLoading(false);
-    }
+    // Tambah bookmark (tanpa konfirmasi)
+    setShowBookmarkToast(true);
+    await addBookmark();
   };
 
   const handleConfirmUnbookmark = async () => {
     setShowUnbookmarkModal(false);
-    setIsBookmarkLoading(true);
-
-    try {
-      // Optimistic UI update
-      setIsBookmarked(false);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, false);
-      setShowBookmarkToast(true);
-
-      // Sync to backend bookmarks
-      const res = await bookmarkService.removeBookmark(service.id);
-      if (!res?.success) {
-        // Revert if failed
-        setIsBookmarked(true);
-        if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-      }
-    } catch (error) {
-      console.error("[ServiceCardItem] removeBookmark error:", error);
-      setIsBookmarked(true);
-      if (onBookmarkToggle) onBookmarkToggle(service.id, true);
-    } finally {
-      setIsBookmarkLoading(false);
-    }
+    setShowBookmarkToast(true);
+    await removeBookmark();
   };
 
   const thumbnailSrc = service.thumbnail || "/asset/layanan/Layanan.png";
