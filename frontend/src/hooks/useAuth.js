@@ -19,12 +19,20 @@ export function useAuth() {
       } else {
         setError(result.message || "Login failed");
         setLoading(false);
-        throw new Error(result.message || "Login failed");
+        // Create error object with code if available
+        const error = new Error(result.message || "Login failed");
+        error.code = result.code;
+        error.email = result.email;
+        throw error;
       }
     } catch (e) {
       setError(e.response?.data?.message || e.message || "Login failed");
       setLoading(false);
-      throw e;
+      // Preserve error code and email
+      const error = new Error(e.response?.data?.message || e.message || "Login failed");
+      error.code = e.response?.data?.code || e.code;
+      error.email = e.response?.data?.email || e.email;
+      throw error;
     }
   };
 

@@ -23,6 +23,15 @@ class LoginUser {
       throw error;
     }
 
+    // Check if email is verified
+    if (!user.is_verified) {
+      const err = new Error('Email not verified. Please verify your email first.');
+      err.statusCode = 403;
+      err.code = 'EMAIL_NOT_VERIFIED';
+      err.email = user.email; // Include email for frontend to redirect to verification
+      throw err;
+    }
+
     // Check if account is active
     // `is_active` is expected to be a boolean or numeric flag on the user model
     if (user.is_active === false || user.is_active === 0) {
