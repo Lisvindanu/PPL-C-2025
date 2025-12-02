@@ -83,7 +83,19 @@ class SequelizeOrderRepository {
     });
 
     if (!result) return null;
-    return result.get({ plain: true });
+
+    const plainResult = result.get({ plain: true });
+
+    // Add flat payment_id from the first successful payment
+    if (plainResult.pembayaran && plainResult.pembayaran.length > 0) {
+      const successfulPayment = plainResult.pembayaran.find(p => p.status === 'berhasil');
+      if (successfulPayment) {
+        plainResult.payment_id = successfulPayment.id;
+        plainResult.pembayaran_id = successfulPayment.id;
+      }
+    }
+
+    return plainResult;
   }
 
   async findByUserId(userId, filters = {}) {
@@ -114,10 +126,15 @@ class SequelizeOrderRepository {
     const sortBy = allowedSort.has(filters.sortBy) ? filters.sortBy : 'created_at';
     const sortOrder = (filters.sortOrder || 'DESC').toString().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
-    // Lazy-require freelancer User model
+    // Lazy-require freelancer User model and Payment model
     const FreelancerModel = this.sequelize.models.User || this.UserModel;
     if (!this.OrderModel.associations.freelancer) {
       this.OrderModel.belongsTo(FreelancerModel, { foreignKey: 'freelancer_id', as: 'freelancer' });
+    }
+
+    const PaymentModel = this.sequelize.models.pembayaran || require('../../../payment/infrastructure/models/PaymentModel');
+    if (!this.OrderModel.associations.pembayaran) {
+      this.OrderModel.hasMany(PaymentModel, { foreignKey: 'pesanan_id', as: 'pembayaran' });
     }
 
     const result = await this.OrderModel.findAndCountAll({
@@ -140,11 +157,32 @@ class SequelizeOrderRepository {
           model: this.LayananModel,
           as: 'layanan',
           attributes: ['id', 'judul', 'thumbnail', 'harga']
+        },
+        {
+          model: PaymentModel,
+          as: 'pembayaran',
+          attributes: ['id', 'status'],
+          required: false
         }
       ]
     });
 
-    return result; // { count, rows }
+    // Add flat payment_id to each order
+    const rows = result.rows.map(row => {
+      const plain = row.get({ plain: true });
+      if (plain.pembayaran && plain.pembayaran.length > 0) {
+        const successfulPayment = plain.pembayaran.find(p => p.status === 'berhasil');
+        if (successfulPayment) {
+          plain.payment_id = successfulPayment.id;
+          plain.pembayaran_id = successfulPayment.id;
+        }
+      }
+      // Remove pembayaran array from list view to reduce payload
+      delete plain.pembayaran;
+      return plain;
+    });
+
+    return { count: result.count, rows };
   }
 
   async findByPenyediaId(penyediaId, filters = {}) {
@@ -177,6 +215,12 @@ class SequelizeOrderRepository {
     const sortBy = allowedSort.has(filters.sortBy) ? filters.sortBy : 'created_at';
     const sortOrder = (filters.sortOrder || 'DESC').toString().toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
+    // Lazy-require Payment model
+    const PaymentModel = this.sequelize.models.pembayaran || require('../../../payment/infrastructure/models/PaymentModel');
+    if (!this.OrderModel.associations.pembayaran) {
+      this.OrderModel.hasMany(PaymentModel, { foreignKey: 'pesanan_id', as: 'pembayaran' });
+    }
+
     const result = await this.OrderModel.findAndCountAll({
       where,
       order: [[sortBy, sortOrder]],
@@ -197,11 +241,32 @@ class SequelizeOrderRepository {
           model: this.LayananModel,
           as: 'layanan',
           attributes: ['id', 'judul', 'thumbnail', 'harga']
+        },
+        {
+          model: PaymentModel,
+          as: 'pembayaran',
+          attributes: ['id', 'status'],
+          required: false
         }
       ]
     });
 
-    return result; // { count, rows }
+    // Add flat payment_id to each order
+    const rows = result.rows.map(row => {
+      const plain = row.get({ plain: true });
+      if (plain.pembayaran && plain.pembayaran.length > 0) {
+        const successfulPayment = plain.pembayaran.find(p => p.status === 'berhasil');
+        if (successfulPayment) {
+          plain.payment_id = successfulPayment.id;
+          plain.pembayaran_id = successfulPayment.id;
+        }
+      }
+      // Remove pembayaran array from list view to reduce payload
+      delete plain.pembayaran;
+      return plain;
+    });
+
+    return { count: result.count, rows };
   }
 
   async findByServiceId(serviceId, filters = {}) {

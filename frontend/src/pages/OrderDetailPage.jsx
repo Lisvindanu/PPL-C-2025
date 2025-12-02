@@ -8,6 +8,7 @@ import FreelancerOrderActions from '../components/organisms/FreelancerOrderActio
 import Footer from '../components/organisms/Footer'
 import { orderService } from '../services/orderService'
 import { authService } from '../services/authService'
+import paymentService from '../services/paymentService'
 
 const OrderDetailPage = () => {
   const { id } = useParams()
@@ -16,6 +17,10 @@ const OrderDetailPage = () => {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showRefundModal, setShowRefundModal] = useState(false)
+  const [refundReason, setRefundReason] = useState('')
+  const [refundAmount, setRefundAmount] = useState(0)
+  const [processingPayment, setProcessingPayment] = useState(false)
 
   const loadOrder = async () => {
     setLoading(true)
@@ -73,7 +78,9 @@ const OrderDetailPage = () => {
               : null),
           client_id: o.client_id ?? o.clientId ?? o.client?.id,
           freelancer_id: o.freelancer_id ?? o.freelancerId ?? o.freelancer?.id,
-          statusHistory: o.statusHistory || o.history || []
+          statusHistory: o.statusHistory || o.history || [],
+          payment_id: o.payment_id ?? o.paymentId ?? o.pembayaran_id ?? null,
+          escrow_id: o.escrow_id ?? o.escrowId ?? null
         }
       : null
 
@@ -164,6 +171,121 @@ const OrderDetailPage = () => {
       alert('❌ Terjadi kesalahan saat menyelesaikan pesanan')
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  // Release Escrow - Client approves completed work
+  const handleReleaseEscrow = async () => {
+    if (!window.confirm('Apakah Anda yakin ingin melepas dana escrow ke freelancer? Dana akan segera ditransfer.')) {
+      return
+    }
+
+    setProcessingPayment(true)
+    try {
+      // Get escrow ID from order (assuming order has escrow_id or payment_id)
+      const escrowId = order.escrow_id || order.payment_id
+      if (!escrowId) {
+        alert('Escrow ID tidak ditemukan untuk order ini')
+        return
+      }
+
+      const result = await paymentService.releaseEscrow(escrowId)
+      if (result.success) {
+        alert('✅ Dana escrow berhasil dirilis ke freelancer!')
+        await loadOrder()
+      } else {
+        alert(`❌ Gagal merilis escrow: ${result.message}`)
+      }
+    } catch (err) {
+      console.error('Error releasing escrow:', err)
+      alert('❌ Terjadi kesalahan saat merilis escrow')
+    } finally {
+      setProcessingPayment(false)
+    }
+  }
+
+  // Request Refund - Client requests refund
+  const handleRequestRefund = async () => {
+    if (!refundReason.trim()) {
+      alert('Harap masukkan alasan refund')
+      return
+    }
+
+    setProcessingPayment(true)
+    try {
+      const result = await paymentService.requestRefund({
+        payment_id: order.payment_id,
+        reason: refundReason,
+        amount: refundAmount || order.total_bayar
+      })
+
+      if (result.success) {
+        alert('✅ Permintaan refund berhasil diajukan! Tim kami akan segera memprosesnya.')
+        setShowRefundModal(false)
+        setRefundReason('')
+        setRefundAmount(0)
+        await loadOrder()
+      } else {
+        alert(`❌ Gagal mengajukan refund: ${result.message}`)
+      }
+    } catch (err) {
+      console.error('Error requesting refund:', err)
+      alert('❌ Terjadi kesalahan saat mengajukan refund')
+    } finally {
+      setProcessingPayment(false)
+    }
+  }
+
+  // Download Invoice
+  const handleDownloadInvoice = async () => {
+    setProcessingPayment(true)
+    try {
+      const paymentId = order.payment_id
+      if (!paymentId) {
+        alert('Payment ID tidak ditemukan')
+        return
+      }
+
+      const result = await paymentService.getInvoicePDF(paymentId)
+      if (result.success) {
+        // Create blob and download
+        const url = window.URL.createObjectURL(new Blob([result.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', `Invoice-${order.nomor_pesanan}.pdf`)
+        document.body.appendChild(link)
+        link.click()
+        link.remove()
+        window.URL.revokeObjectURL(url)
+      } else {
+        alert(result.message || 'Gagal mengunduh invoice')
+      }
+    } catch (err) {
+      console.error('Error downloading invoice:', err)
+      alert('Terjadi kesalahan saat mengunduh invoice')
+    } finally {
+      setProcessingPayment(false)
+    }
+  }
+
+  // Send Invoice via Email
+  const handleSendInvoiceEmail = async () => {
+    const email = prompt('Masukkan alamat email:')
+    if (!email) return
+
+    setProcessingPayment(true)
+    try {
+      const result = await paymentService.sendInvoiceEmail(order.payment_id, email)
+      if (result.success) {
+        alert('✅ Invoice berhasil dikirim ke email!')
+      } else {
+        alert(result.message || 'Gagal mengirim invoice')
+      }
+    } catch (err) {
+      console.error('Error sending invoice:', err)
+      alert('Terjadi kesalahan saat mengirim invoice')
+    } finally {
+      setProcessingPayment(false)
     }
   }
 
@@ -446,9 +568,135 @@ const OrderDetailPage = () => {
                 </button>
               </div>
             )}
+
+            {/* Release Escrow - Client */}
+            {isClient && (order.status === 'selesai' || order.status === 'menunggu_review') && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
+                <h3 className="font-semibold text-lg mb-2">Release Payment</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Pekerjaan telah selesai. Lepas dana escrow ke freelancer?
+                </p>
+                <button
+                  onClick={handleReleaseEscrow}
+                  disabled={processingPayment}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processingPayment ? 'Memproses...' : 'Release Payment'}
+                </button>
+              </div>
+            )}
+
+            {/* Request Refund - Client */}
+            {isClient && ['dibayar', 'dikerjakan', 'dispute'].includes(order.status) && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
+                <h3 className="font-semibold text-lg mb-2">Refund</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Ada masalah dengan pesanan ini?
+                </p>
+                <button
+                  onClick={() => {
+                    setRefundAmount(order.total_bayar)
+                    setShowRefundModal(true)
+                  }}
+                  className="w-full px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                >
+                  Request Refund
+                </button>
+              </div>
+            )}
+
+            {/* Invoice Download - Client & Freelancer */}
+            {(isClient || isFreelancer) && order.payment_id && ['dibayar', 'dikerjakan', 'menunggu_review', 'revisi', 'selesai'].includes(order.status) && (
+              <div className="bg-white rounded-lg border border-gray-200 shadow p-6">
+                <h3 className="font-semibold text-lg mb-2">Invoice</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Download bukti pembayaran Anda
+                </p>
+                <div className="space-y-2">
+                  <button
+                    onClick={handleDownloadInvoice}
+                    disabled={processingPayment}
+                    className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    {processingPayment ? 'Downloading...' : 'Download Invoice PDF'}
+                  </button>
+                  <button
+                    onClick={handleSendInvoiceEmail}
+                    disabled={processingPayment}
+                    className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Kirim ke Email
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Refund Modal */}
+      {showRefundModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Request Refund</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Jumlah Refund
+                </label>
+                <input
+                  type="number"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(Number(e.target.value))}
+                  max={order.total_bayar}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder={`Max: Rp ${order.total_bayar.toLocaleString('id-ID')}`}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Alasan Refund <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={refundReason}
+                  onChange={(e) => setRefundReason(e.target.value)}
+                  rows="4"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Jelaskan alasan Anda meminta refund..."
+                  required
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => {
+                    setShowRefundModal(false)
+                    setRefundReason('')
+                    setRefundAmount(0)
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                  disabled={processingPayment}
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={handleRequestRefund}
+                  disabled={processingPayment || !refundReason.trim()}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {processingPayment ? 'Memproses...' : 'Ajukan Refund'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </div>
   )

@@ -53,9 +53,11 @@ class SequelizeServiceRepository {
       return `l.${c}`;
     });
 
-    // expose nama kategori
+    // expose nama kategori & nama freelancer
     layananCols.push("k.nama AS nama_kategori");
-    layananCols.push("CONCAT(u.nama_depan, ' ', u.nama_belakang) AS freelancer_name");
+    layananCols.push(
+      "CONCAT(u.nama_depan, ' ', u.nama_belakang) AS freelancer_name"
+    );
     return layananCols.join(", ");
   }
 
@@ -122,6 +124,8 @@ class SequelizeServiceRepository {
       where.push(`l.${this.USER_COL} = ?`);
       params.push(filters.user_id);
     }
+
+    // --- Filter harga (min / max) ---
     if (Number.isFinite(filters.harga_min)) {
       where.push("l.harga >= ?");
       params.push(Number(filters.harga_min));
@@ -131,11 +135,18 @@ class SequelizeServiceRepository {
       params.push(Number(filters.harga_max));
     }
 
+    // --- Filter rating minimum (dipakai di /api/services & /search) ---
+    if (Number.isFinite(filters.rating_min)) {
+      where.push("l.rating_rata_rata >= ?");
+      params.push(Number(filters.rating_min));
+    }
+
     return {
       clause: where.length ? "WHERE " + where.join(" AND ") : "",
       params,
     };
   }
+
 
   _buildOrder(options = {}) {
     const sortBy =
@@ -305,7 +316,7 @@ class SequelizeServiceRepository {
         SELECT ${this._selectColumnsWithJoin()}
         FROM layanan l
         LEFT JOIN kategori k ON k.id = l.kategori_id
-      LEFT JOIN users u ON u.id = l.freelancer_id
+        LEFT JOIN users u ON u.id = l.freelancer_id
         WHERE l.id = ? LIMIT 1
         `,
         { replacements: [id] }
@@ -472,7 +483,45 @@ class SequelizeServiceRepository {
     };
   }
 
-  async search(q, filters = {}, options = {}) {
+  /**
+   * Search services
+   * - bisa dipanggil dengan:
+   *   search("keyword", filters, options)
+   *   ATAU
+   *   search({ q, kategori_id, status, harga_min, harga_max, rating_min, page, limit, sortBy, sortOrder })
+   */
+  async search(arg1 = "", arg2 = {}, arg3 = {}) {
+    let q = "";
+    let filters = {};
+    let options = {};
+
+    if (arg1 && typeof arg1 === "object" && !Array.isArray(arg1)) {
+      const payload = arg1;
+      q = (payload.q || "").toString();
+
+      filters = {
+        kategori_id: payload.kategori_id,
+        status: payload.status,
+        harga_min: payload.harga_min,
+        harga_max: payload.harga_max,
+        rating_min: payload.rating_min,
+        freelancer_id: payload.freelancer_id,
+        user_id: payload.user_id,
+      };
+
+      options = {
+        page: payload.page,
+        limit: payload.limit,
+        sortBy: payload.sortBy,
+        sortDir: payload.sortDir || payload.sortOrder,
+        sortOrder: payload.sortOrder,
+      };
+    } else {
+      q = (arg1 || "").toString();
+      filters = arg2 || {};
+      options = arg3 || {};
+    }
+
     const term = `%${q}%`;
     const base = this._buildWhere(filters);
 

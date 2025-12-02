@@ -152,6 +152,32 @@ export const authService = {
     }
   },
 
+  async verifyEmail(email, otp) {
+    try {
+      const res = await api.post("/users/verify-email", { email, otp });
+      return res.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to verify email",
+        errors: error.response?.data?.errors || [],
+      };
+    }
+  },
+
+  async resendVerificationOTP(email) {
+    try {
+      const res = await api.post("/users/resend-verification-otp", { email });
+      return res.data;
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Failed to resend OTP",
+        errors: error.response?.data?.errors || [],
+      };
+    }
+  },
+
   async forgotPassword(email) {
     try {
       const res = await api.post("/users/forgot-password", { email });
@@ -286,6 +312,12 @@ export const authService = {
         const updatedUser = { ...current, ...res.data.data, role: updatedRole };
         writeStoredUser(updatedUser);
         persistActiveRole(updatedRole, { syncUser: false });
+
+        // Update JWT token if backend returns a new one
+        // This is critical for role-based access control to work correctly
+        if (res.data.data.token) {
+          localStorage.setItem("token", res.data.data.token);
+        }
       }
       return res.data;
     } catch (error) {
