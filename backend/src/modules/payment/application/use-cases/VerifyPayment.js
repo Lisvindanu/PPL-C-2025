@@ -37,9 +37,14 @@ class VerifyPayment {
       where: { transaction_id }
     });
 
-    if (!payment) {
-      console.error(`[PAYMENT WEBHOOK] Payment not found: ${transaction_id}`);
-      throw new Error('Payment not found');
+    if (\!payment) {
+      console.warn(`[PAYMENT WEBHOOK] Payment not found: ${transaction_id} - ignoring webhook`);
+      // Return success to stop Midtrans from retrying
+      return {
+        success: true,
+        message: 'Payment not found - webhook ignored',
+        ignored: true
+      };
     }
 
     // 2. Verify signature based on gateway type
@@ -48,7 +53,7 @@ class VerifyPayment {
       : this.mockGateway;
 
     const isValidSignature = await paymentGateway.verifyWebhookSignature(webhookData);
-    if (!isValidSignature) {
+    if (\!isValidSignature) {
       console.error(`[PAYMENT WEBHOOK] Invalid signature for ${transaction_id}`);
       throw new Error('Invalid webhook signature');
     }
@@ -58,106 +63,78 @@ class VerifyPayment {
 
     // 4. Update payment status
     payment.status = mappedStatus;
-    payment.callback_data = webhookData;
-    payment.callback_signature = signature;
-
-    // 5. Handle payment success
+    payment.callback_data = JSON.stringify(webhookData);
+    
     if (mappedStatus === 'berhasil') {
       payment.dibayar_pada = new Date();
-      payment.nomor_invoice = this.generateInvoiceNumber(payment.id);
+    }
+    
+    await payment.save();
 
-      await payment.save();
+    console.log(`[PAYMENT WEBHOOK] Payment ${transaction_id} updated to status: ${mappedStatus}`);
 
-      // 6. Create escrow to hold the payment
-      await this.createEscrowFromPayment(payment);
-
-      console.log(`[PAYMENT WEBHOOK] Payment successful: ${transaction_id}`);
-      console.log(`[PAYMENT WEBHOOK] Invoice: ${payment.nomor_invoice}`);
-      console.log(`[PAYMENT WEBHOOK] Escrow created, funds held for 7 days`);
-
-      // Integration points for other modules:
-      // - Order module: Update order status to 'dibayar'
-      // - Notification module: Send notification to freelancer
-      // - Email module: Send invoice email to client
-
-    } else if (mappedStatus === 'gagal') {
-      await payment.save();
-      console.log(`[PAYMENT WEBHOOK] Payment failed: ${transaction_id}`);
-
-      // Integration points for other modules:
-      // - Order module: Update order status to 'dibatalkan'
-      // - Notification module: Send notification to client
-
-    } else if (mappedStatus === 'kadaluarsa') {
-      await payment.save();
-      console.log(`[PAYMENT WEBHOOK] Payment expired: ${transaction_id}`);
-
-      // Integration points for other modules:
-      // - Order module: Update order status to 'dibatalkan'
-      // - Notification module: Send notification to client
-    } else {
-      await payment.save();
-      console.log(`[PAYMENT WEBHOOK] Payment status updated to: ${mappedStatus}`);
+    // 5. Handle special actions based on status
+    if (mappedStatus === 'berhasil') {
+      await this.handleSuccessfulPayment(payment);
     }
 
     return {
       success: true,
-      transaction_id,
+      payment_id: payment.id,
       status: mappedStatus,
-      message: 'Webhook processed successfully'
+      message: 'Payment verified successfully'
     };
   }
 
   /**
-   * Create escrow dari payment yang berhasil
-   * @private
+   * Handle successful payment - create escrow, update order
    */
-  async createEscrowFromPayment(payment) {
-    // Get pesanan_id from payment
-    const { pesanan_id, jumlah, biaya_platform, id: pembayaran_id } = payment;
+  async handleSuccessfulPayment(payment) {
+    try {
+      // Create escrow entry
+      await this.escrowService.createEscrow({
+        payment_id: payment.id,
+        amount: payment.jumlah,
+        pesanan_id: payment.pesanan_id
+      });
 
-    // Create escrow
-    await this.escrowService.createEscrow({
-      pembayaran_id,
-      pesanan_id,
-      jumlah_ditahan: parseFloat(jumlah),
-      biaya_platform: parseFloat(biaya_platform)
-    });
+      console.log(`[PAYMENT WEBHOOK] Escrow created for payment ${payment.id}`);
+      
+      // Update order status
+      const OrderService = require('../../../order/application/services/OrderService');
+      const orderService = new OrderService();
+      await orderService.updateOrderStatus(payment.pesanan_id, 'dibayar');
+      
+      console.log(`[PAYMENT WEBHOOK] Order ${payment.pesanan_id} status updated to dibayar`);
+      
+    } catch (error) {
+      console.error('[PAYMENT WEBHOOK] Error handling successful payment:', error);
+      // Don't throw - payment was successful even if escrow/order update fails
+    }
   }
 
   /**
-   * Map payment gateway status to our status
-   * @private
+   * Map payment gateway status to internal status
    */
   mapPaymentStatus(gatewayStatus) {
     const statusMap = {
-      // Midtrans/Xendit statuses
+      // Midtrans statuses
       'capture': 'berhasil',
       'settlement': 'berhasil',
-      'success': 'berhasil',
-      'paid': 'berhasil',
       'pending': 'menunggu',
       'deny': 'gagal',
-      'cancel': 'gagal',
       'expire': 'kadaluarsa',
-      'expired': 'kadaluarsa',
-      'failure': 'gagal',
+      'cancel': 'dibatalkan',
+      'refund': 'dikembalikan',
+      'partial_refund': 'dikembalikan',
+      
+      // Mock gateway statuses
+      'paid': 'berhasil',
+      'unpaid': 'menunggu',
       'failed': 'gagal'
     };
 
-    return statusMap[gatewayStatus.toLowerCase()] || 'gagal';
-  }
-
-  /**
-   * Generate invoice number
-   * @private
-   */
-  generateInvoiceNumber(paymentId) {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const uniqueId = paymentId.substring(0, 8).toUpperCase();
-    return `INV/${year}/${month}/${uniqueId}`;
+    return statusMap[gatewayStatus?.toLowerCase()] || 'menunggu';
   }
 }
 
