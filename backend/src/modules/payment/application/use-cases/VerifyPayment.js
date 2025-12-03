@@ -37,7 +37,7 @@ class VerifyPayment {
       where: { transaction_id }
     });
 
-    if (\!payment) {
+    if (!payment) {
       console.warn(`[PAYMENT WEBHOOK] Payment not found: ${transaction_id} - ignoring webhook`);
       // Return success to stop Midtrans from retrying
       return {
@@ -53,7 +53,7 @@ class VerifyPayment {
       : this.mockGateway;
 
     const isValidSignature = await paymentGateway.verifyWebhookSignature(webhookData);
-    if (\!isValidSignature) {
+    if (!isValidSignature) {
       console.error(`[PAYMENT WEBHOOK] Invalid signature for ${transaction_id}`);
       throw new Error('Invalid webhook signature');
     }
