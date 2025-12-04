@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import ResetPasswordLayout from '../../components/organisms/ResetPasswordLayout'
-import ResetPasswordCard from '../../components/organisms/ResetPasswordCard'
-import ResetPasswordFormGroup from '../../components/molecules/ResetPasswordFormGroup'
-import ResetPasswordButton from '../../components/atoms/ResetPasswordButton'
+import ResetPasswordLayout from '../../components/Fragments/Auth/ResetPasswordLayout'
+import ResetPasswordCard from '../../components/Fragments/Auth/ResetPasswordCard'
+import ResetPasswordFormGroup from '../../components/Fragments/Auth/ResetPasswordFormGroup'
+import ResetPasswordButton from '../../components/Fragments/Auth/ResetPasswordButton'
 import { validateEmail } from '../../utils/validators'
-import { useToast } from '../../components/organisms/ToastProvider'
+import { useToast } from '../../components/Fragments/Common/ToastProvider'
 import hybridResetPasswordService from '../../services/hybridResetPasswordService'
-import HybridModeController from '../../components/organisms/HybridModeController'
+import HybridModeController from '../../components/Fragments/Auth/HybridModeController'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')

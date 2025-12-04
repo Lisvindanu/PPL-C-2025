@@ -1,9 +1,9 @@
 import React from 'react';
-import { Sidebar } from '@/components/organisms/Sidebar';
-import { Header } from '@/components/organisms/Header';
-import { StatsGrid } from '@/components/organisms/StatsGrid';
-import { UserChart } from '@/components/organisms/UserChart';
-import { OrderChart } from '@/components/organisms/OrderChart';
+import { Sidebar } from '../Fragments/Admin/Sidebar';
+import { Header } from '../Fragments/Admin/Header';
+import { StatsGrid } from '../Fragments/Profile/StatsGrid';
+import { UserChart } from '../Fragments/Admin/UserChart';
+import { OrderChart } from '../Fragments/Admin/OrderChart';
 
 export const DashboardLayout = ({ stats, userData, orderData, activeMenu = 'dashboard' }) => (
   <div className="flex h-screen bg-skill-primary">

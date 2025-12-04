@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserRound, ShoppingCart, CircleDollarSign, UserRoundCheck } from 'lucide-react';
-import { DashboardLayout } from '../../components/templates/DashboardLayout';
+import { DashboardLayout } from '../../components/Layouts/DashboardLayout';
 import { adminService } from '../../services/adminService';
 
 export default function AdminDashboardPage() {

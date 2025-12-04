@@ -1,9 +1,9 @@
-import Navbar from '../organisms/Navbar'
-import InfoCard from '../molecules/InfoCard'
-import ProfileInfo from '../organisms/ProfileInfo'
-import SkillsSection from '../organisms/SkillsSection'
-import PortfolioSection from '../organisms/PortfolioSection'
-import EditForm from '../organisms/EditForm'
+import Navbar from '../Fragments/Common/Navbar'
+import InfoCard from '../Fragments/Profile/InfoCard'
+import ProfileInfo from '../Fragments/Profile/ProfileInfo'
+import SkillsSection from '../Fragments/Profile/SkillsSection'
+import PortfolioSection from '../Fragments/Profile/PortfolioSection'
+import EditForm from '../Fragments/Profile/EditForm'
 
 export default function ProfileLayout({
   profile,

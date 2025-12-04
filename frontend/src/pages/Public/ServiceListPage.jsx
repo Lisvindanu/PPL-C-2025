@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import Navbar from "../../components/organisms/Navbar";
-import Footer from "../../components/organisms/Footer";
-import ServiceCardItem from "../../components/molecules/ServiceCardItem";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Footer from "../../components/Fragments/Common/Footer";
+import ServiceCardItem from "../../components/Fragments/Service/ServiceCardItem";
 import { serviceService } from "../../services/serviceService";
 
 // ========================

@@ -1,5 +1,5 @@
-import TextField from '../atoms/TextField'
-import Select from '../atoms/Select'
+import TextField from '../../Elements/Inputs/TextField'
+import Select from '../../Elements/Inputs/Select'
 
 export default function LanguageItem({ 
   language, 

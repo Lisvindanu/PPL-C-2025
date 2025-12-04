@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import FAIcon from "../atoms/FAIcon";
+import FAIcon from "../../Elements/Icons/FAIcon";
 
 export default function CategoryCard({ title, icon, gradient, onClick }) {
   return (

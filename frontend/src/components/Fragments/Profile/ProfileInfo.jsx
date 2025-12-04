@@ -1,8 +1,8 @@
-import TextField from '../atoms/TextField'
-import TextArea from '../atoms/TextArea'
-import Select from '../atoms/Select'
-import Icon from '../atoms/Icon'
-import VerificationBadge from '../molecules/VerificationBadge'
+import TextField from '../../Elements/Inputs/TextField'
+import TextArea from '../../Elements/Inputs/TextArea'
+import Select from '../../Elements/Inputs/Select'
+import Icon from '../../Elements/Icons/Icon'
+import VerificationBadge from './VerificationBadge'
 
 export default function ProfileInfo({ 
   profile, 

@@ -1,4 +1,4 @@
-import TextField from '../atoms/TextField'
+import TextField from '../../Elements/Inputs/TextField'
 
 export default function SkillTag({ 
   skill, 

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import Navbar from "../../components/organisms/Navbar";
-import Footer from "../../components/organisms/Footer";
-import SearchServiceCardItem from "../../components/molecules/SearchServiceCardItem";
-import Pagination from "../../components/atoms/Pagination";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Footer from "../../components/Fragments/Common/Footer";
+import SearchServiceCardItem from "../../components/Fragments/Search/SearchServiceCardItem";
+import Pagination from "../../components/Elements/Common/Pagination";
 import { useServiceSearch } from "../../hooks/useServiceSearch";
-import SearchFilterSidebar from "../../components/molecules/SearchFilterSidebar";
-import SearchSortBar from "../../components/molecules/SearchSortBar";
+import SearchFilterSidebar from "../../components/Fragments/Search/SearchFilterSidebar";
+import SearchSortBar from "../../components/Fragments/Search/SearchSortBar";
 
 // ====== CONFIG & CONSTANTS ======
 

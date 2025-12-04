@@ -1,4 +1,4 @@
-import Icon from "./Icon";
+import Icon from "../Icons/Icon";
 
 export default function KebabButton({ onClick }) {
   return (

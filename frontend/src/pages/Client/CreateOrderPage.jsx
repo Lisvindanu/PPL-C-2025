@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import Navbar from '../../components/organisms/Navbar'
-import Footer from '../../components/organisms/Footer'
+import Navbar from '../../components/Fragments/Common/Navbar'
+import Footer from '../../components/Fragments/Common/Footer'
 import { orderService } from '../../services/orderService'
 
 const CreateOrderPage = () => {

@@ -53,8 +53,8 @@ import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import PaymentGatewayPage from "./pages/payment/PaymentGatewayPage";
 import PaymentProcessingPage from "./pages/payment/PaymentProcessingPage";
 
-// Components
-import ProtectedRoute from "./components/templates/ProtectedRoute";
+// Guards
+import ProtectedRoute from "./components/Guards/ProtectedRoute";
 
 export default function App() {
   return (

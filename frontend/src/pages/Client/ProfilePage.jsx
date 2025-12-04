@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
-import Footer from '../../components/organisms/Footer'
-import ConfirmModal from '../../components/atoms/ConfirmModal'
+import Navbar from '../../components/Fragments/Common/Navbar'
+import Footer from '../../components/Fragments/Common/Footer'
+import ConfirmModal from '../../components/Elements/Common/ConfirmModal'
 import { authService } from '../../services/authService'
-import { useToast } from '../../components/organisms/ToastProvider'
+import { useToast } from '../../components/Fragments/Common/ToastProvider'
 import api from '../../utils/axiosConfig'
 
 export default function ProfilePage() {

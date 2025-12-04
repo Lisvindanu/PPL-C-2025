@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import Avatar from "../atoms/Avatar";
+import Avatar from "../../Elements/Common/Avatar";
 
 export default function UserMenu({
   name,

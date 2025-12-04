@@ -1,12 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import Navbar from "../../components/organisms/Navbar";
-import ServiceHeaderCard from "../../components/molecules/ServiceHeaderCard";
-import OrderCard from "../../components/molecules/OrderCard";
-import InteractionBar from "../../components/molecules/InteractionBar";
-import ReviewsSection from "../../components/organisms/ReviewsSection";
-import PortfolioGrid from "../../components/molecules/PortfolioGrid";
-import AboutFreelancerCard from "../../components/molecules/AboutFreelancerCard";
-import Footer from "../../components/organisms/Footer";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import ServiceHeaderCard from "../../components/Fragments/Service/ServiceHeaderCard";
+import OrderCard from "../../components/Fragments/Service/OrderCard";
+import InteractionBar from "../../components/Fragments/Service/InteractionBar";
+import ReviewsSection from "../../components/Fragments/Service/ReviewsSection";
+import PortfolioGrid from "../../components/Fragments/Profile/PortfolioGrid";
+import AboutFreelancerCard from "../../components/Fragments/Profile/AboutFreelancerCard";
+import Footer from "../../components/Fragments/Common/Footer";
 import { useServiceDetail } from "../../hooks/useServiceDetail";
 import NotFoundPage from "./NotFoundPage";
 

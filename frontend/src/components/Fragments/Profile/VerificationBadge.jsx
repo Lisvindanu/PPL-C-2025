@@ -1,4 +1,4 @@
-import Icon from '../atoms/Icon'
+import Icon from '../../Elements/Icons/Icon'
 
 export default function VerificationBadge({ 
   type, 

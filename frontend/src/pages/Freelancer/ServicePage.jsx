@@ -1,8 +1,8 @@
-import Navbar from "../../components/organisms/Navbar";
-import DashboardHeaderBar from "../../components/molecules/DashboardHeaderBar";
-import AddServiceCallout from "../../components/molecules/AddServiceCallout";
-import BlockListSection from "../../components/molecules/BlockListSection";
-import Footer from "../../components/organisms/Footer";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import DashboardHeaderBar from "../../components/Fragments/Dashboard/DashboardHeaderBar";
+import AddServiceCallout from "../../components/Fragments/Service/AddServiceCallout";
+import BlockListSection from "../../components/Fragments/Admin/BlockListSection";
+import Footer from "../../components/Fragments/Common/Footer";
 
 export default function ServicePage() {
   return (

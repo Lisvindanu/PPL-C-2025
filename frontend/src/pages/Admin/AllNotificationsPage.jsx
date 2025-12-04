@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminService } from '../../services/adminService';
-import { useToast } from '../../components/organisms/ToastProvider';
-import Badge from '../../components/atoms/Badge';
-import Pagination from '../../components/atoms/Pagination';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import Badge from '../../components/Elements/Common/Badge';
+import Pagination from '../../components/Elements/Common/Pagination';
 import { ArrowLeft, Bell, Eye } from 'lucide-react';
 
 const smallDate = (iso) => {

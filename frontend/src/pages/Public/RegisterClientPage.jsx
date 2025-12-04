@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { useGoogleLogin } from "@react-oauth/google";
 import { Link, useNavigate } from "react-router-dom";
-import AuthLayout from "../../components/templates/AuthLayout";
-import AuthCard from "../../components/organisms/AuthCard";
-import FormGroup from "../../components/molecules/FormGroup";
-import Button from "../../components/atoms/Button";
+import AuthLayout from "../../components/Layouts/AuthLayout";
+import AuthCard from "../../components/Fragments/Auth/AuthCard";
+import FormGroup from "../../components/Fragments/Auth/FormGroup";
+import Button from "../../components/Elements/Buttons/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { validateEmail, validatePassword, validateName } from "../../utils/validators";
-import LoadingOverlay from "../../components/organisms/LoadingOverlay";
-import { useToast } from "../../components/organisms/ToastProvider";
-import Icon from "../../components/atoms/Icon";
+import LoadingOverlay from "../../components/Fragments/Common/LoadingOverlay";
+import { useToast } from "../../components/Fragments/Common/ToastProvider";
+import Icon from "../../components/Elements/Icons/Icon";
 import { authService } from "../../services/authService";
 
 export default function RegisterClientPage() {

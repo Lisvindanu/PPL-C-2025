@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
+import Navbar from '../../components/Fragments/Common/Navbar'
 
 export default function DashboardPage() {
   const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || 'null') : null

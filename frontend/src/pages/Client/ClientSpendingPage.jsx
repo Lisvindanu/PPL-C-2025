@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
+import Navbar from '../../components/Fragments/Common/Navbar'
 import paymentService from '../../services/paymentService'
 import { authService } from '../../services/authService'
 

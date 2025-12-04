@@ -1,7 +1,7 @@
-import TextField from '../atoms/TextField'
-import Icon from '../atoms/Icon'
-import SkillTag from '../molecules/SkillTag'
-import LanguageItem from '../molecules/LanguageItem'
+import TextField from '../../Elements/Inputs/TextField'
+import Icon from '../../Elements/Icons/Icon'
+import SkillTag from './SkillTag'
+import LanguageItem from './LanguageItem'
 
 export default function SkillsSection({ 
   profile, 

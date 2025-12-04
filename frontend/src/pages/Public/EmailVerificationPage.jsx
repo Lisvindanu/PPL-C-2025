@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import AuthLayout from "../../components/templates/AuthLayout";
-import AuthCard from "../../components/organisms/AuthCard";
-import Button from "../../components/atoms/Button";
-import OTPInput from "../../components/molecules/OTPInput";
-import { useToast } from "../../components/organisms/ToastProvider";
+import AuthLayout from "../../components/Layouts/AuthLayout";
+import AuthCard from "../../components/Fragments/Auth/AuthCard";
+import Button from "../../components/Elements/Buttons/Button";
+import OTPInput from "../../components/Fragments/Auth/OTPInput";
+import { useToast } from "../../components/Fragments/Common/ToastProvider";
 import { authService } from "../../services/authService";
 
 export default function EmailVerificationPage() {

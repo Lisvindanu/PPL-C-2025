@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ServiceCard from "./ServiceCard";
-import Pagination from "../atoms/Pagination";
+import ServiceCard from "../Service/ServiceCard";
+import Pagination from "../../Elements/Common/Pagination";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
-import ResultModal from "./ResultModal";
-import { useMyServices, useDeleteService } from "../../hooks/useMyServices";
+import ResultModal from "../Auth/ResultModal";
+import { useMyServices, useDeleteService } from "../../../hooks/useMyServices";
 
 export default function BlockListSection() {
   const [page, setPage] = useState(1);

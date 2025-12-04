@@ -1,4 +1,4 @@
-import Avatar from "../atoms/Avatar";
+import Avatar from "../../Elements/Common/Avatar";
 
 export default function AboutFreelancerCard({
   avatar,

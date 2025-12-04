@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import Navbar from "../../components/organisms/Navbar";
-import Footer from "../../components/organisms/Footer";
-import OrderCard from "../../components/molecules/OrderCard";
-import RatingModal from "../../components/organisms/RatingModal";
-import SuccessModal from "../../components/molecules/SuccessModal";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Footer from "../../components/Fragments/Common/Footer";
+import OrderCard from "../../components/Fragments/Order/OrderCard";
+import RatingModal from "../../components/Fragments/Common/RatingModal";
+import SuccessModal from "../../components/Fragments/Common/SuccessModal";
 
 export default function RiwayatPesananPage() {
   const [orders, setOrders] = useState([]);

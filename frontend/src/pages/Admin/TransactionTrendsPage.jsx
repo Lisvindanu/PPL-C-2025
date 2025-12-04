@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminService } from '../../services/adminService';
-import TransactionTrendsContent from '../../components/organisms/TransactionTrendsContent';
+import TransactionTrendsContent from '../../components/Fragments/Admin/TransactionTrendsContent';
 
 export default function TransactionTrendsPage() {
   const [orderData, setOrderData] = useState([]);

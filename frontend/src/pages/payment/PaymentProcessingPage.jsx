@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation, useNavigate } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
+import Navbar from '../../components/Fragments/Common/Navbar'
 import api from '../../utils/axiosConfig'
 
 export default function PaymentProcessingPage() {

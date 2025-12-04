@@ -1,4 +1,4 @@
-import Badge from '../atoms/Badge';
+import Badge from '../../Elements/Common/Badge';
 
 export default function BlockReasonCard({ blockLog, className = "" }) {
   if (!blockLog) return null;

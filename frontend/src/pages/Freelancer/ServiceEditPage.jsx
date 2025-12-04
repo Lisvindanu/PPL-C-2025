@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Navbar from "../../components/organisms/Navbar";
-import DashboardHeaderBar from "../../components/molecules/DashboardHeaderBar";
-import MediaEditFormCard from "../../components/molecules/MediaEditFormCard";
-import PricingEditFormCard from "../../components/molecules/PricingEditFormCard";
-import Footer from "../../components/organisms/Footer";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import DashboardHeaderBar from "../../components/Fragments/Dashboard/DashboardHeaderBar";
+import MediaEditFormCard from "../../components/Fragments/Service/MediaEditFormCard";
+import PricingEditFormCard from "../../components/Fragments/Service/PricingEditFormCard";
+import Footer from "../../components/Fragments/Common/Footer";
 
 import useCategories from "../../hooks/useCategories";
 import useServiceDetailForEdit from "../../hooks/useServiceDetailForEdit";

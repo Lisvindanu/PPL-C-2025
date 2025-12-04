@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminService } from '../../services/adminService';
-import { useToast } from '../../components/organisms/ToastProvider';
-import Badge from '../../components/atoms/Badge';
-import Button from '../../components/atoms/Button';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import Badge from '../../components/Elements/Common/Badge';
+import Button from '../../components/Elements/Buttons/Button';
 import { ArrowLeft, User, CreditCard, AlertTriangle, Shield, Ban } from 'lucide-react';
 
 export default function FraudReportDetailPage() {

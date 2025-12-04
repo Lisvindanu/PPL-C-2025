@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import Icon from "../atoms/Icon";
+import Icon from "../../Elements/Icons/Icon";
 
 export default function AddServiceCallout() {
   const navigate = useNavigate();

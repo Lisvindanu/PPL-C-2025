@@ -1,7 +1,7 @@
-import Avatar from '../atoms/Avatar'
-import Button from '../atoms/Button'
-import Icon from '../atoms/Icon'
-import TextField from '../atoms/TextField'
+import Avatar from '../../Elements/Common/Avatar'
+import Button from '../../Elements/Buttons/Button'
+import Icon from '../../Elements/Icons/Icon'
+import TextField from '../../Elements/Inputs/TextField'
 
 export default function InfoCard({ 
   profile, 

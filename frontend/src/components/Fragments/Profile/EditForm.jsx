@@ -1,4 +1,4 @@
-import Button from '../atoms/Button'
+import Button from '../../Elements/Buttons/Button'
 
 export default function EditForm({ 
   isEditing, 

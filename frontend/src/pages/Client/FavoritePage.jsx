@@ -2,9 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 import { getServiceById } from "../../utils/servicesData";
-import Navbar from "../../components/organisms/Navbar";
-import Footer from "../../components/organisms/Footer";
-import ServiceCardItem from "../../components/molecules/ServiceCardItem";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Footer from "../../components/Fragments/Common/Footer";
+import ServiceCardItem from "../../components/Fragments/Service/ServiceCardItem";
 
 export default function FavoritePage() {
   const navigate = useNavigate();

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import NavLink from "../atoms/NavLink";
+import NavLink from "../../Elements/Navigation/NavLink";
 
 const DEFAULT_ITEMS = [
   { label: "Narapandang", href: "#" },

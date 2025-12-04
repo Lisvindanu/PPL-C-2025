@@ -1,5 +1,5 @@
-import TextRotator from "../molecules/TextRotator";
-import SearchBarLanding from "../molecules/SearchBarLanding";
+import TextRotator from "./TextRotator";
+import SearchBarLanding from "./SearchBarLanding";
 import { motion } from "framer-motion";
 
 export default function HeroSection({ onSearch }) {

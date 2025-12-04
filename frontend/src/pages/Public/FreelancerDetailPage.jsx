@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import ProfileLayout from '../../components/templates/ProfileLayout'
-import ProfileLoadingOverlay from '../../components/organisms/ProfileLoadingOverlay'
+import ProfileLayout from '../../components/Layouts/ProfileLayout'
+import ProfileLoadingOverlay from '../../components/Fragments/Profile/ProfileLoadingOverlay'
 import api from '../../utils/axiosConfig'
 
 export default function FreelancerDetailPage() {

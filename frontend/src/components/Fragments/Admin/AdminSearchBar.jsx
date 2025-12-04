@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react';
-import Input from '../atoms/Input';
+import Input from '../../Elements/Inputs/Input';
 
 export default function AdminSearchBar({ 
   placeholder = "Cari...",

@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useToast } from '../../components/organisms/ToastProvider';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminService } from '../../services/adminService';
 import api from '../../utils/axiosConfig';
-import { ServiceManagementToolbar } from '../../components/organisms/ServiceManagementToolbar';
-import ServiceTable from '../../components/organisms/ServiceTable';
-import Button from '../../components/atoms/Button';
-import Badge from '../../components/atoms/Badge';
-import BlockReasonCard from '../../components/molecules/BlockReasonCard';
+import { ServiceManagementToolbar } from '../../components/Fragments/Admin/ServiceManagementToolbar';
+import ServiceTable from '../../components/Fragments/Admin/ServiceTable';
+import Button from '../../components/Elements/Buttons/Button';
+import Badge from '../../components/Elements/Common/Badge';
+import BlockReasonCard from '../../components/Fragments/Admin/BlockReasonCard';
 
 // Pagination Component
 function Pagination({ 

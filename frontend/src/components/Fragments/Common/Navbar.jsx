@@ -1,6 +1,6 @@
-import NavHeader from "../molecules/NavHeader";
-import NavService from "../molecules/NavService";
-import NavKategori from "../molecules/NavKategori";
+import NavHeader from "../Dashboard/NavHeader";
+import NavService from "../Dashboard/NavService";
+import NavKategori from "../Dashboard/NavKategori";
 
 export default function Navbar() {
   return (

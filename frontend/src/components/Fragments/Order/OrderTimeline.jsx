@@ -1,4 +1,4 @@
-import StatusBadge from '../atoms/StatusBadge'
+import StatusBadge from '../../Elements/Common/StatusBadge'
 
 const OrderTimeline = ({ statusHistory = [] }) => {
   if (!statusHistory || statusHistory.length === 0) {

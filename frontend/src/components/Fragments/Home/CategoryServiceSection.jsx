@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { motion } from "framer-motion";
-import ServiceCardItem from "../molecules/ServiceCardItem";
+import ServiceCardItem from "../Service/ServiceCardItem";
 
 export default function CategoryServiceSection({ category, services, onServiceClick, onCategoryClick }) {
   const scrollContainerRef = useRef(null);

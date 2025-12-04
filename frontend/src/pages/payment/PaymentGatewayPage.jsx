@@ -3,8 +3,8 @@ import { useNavigate, useSearchParams, useParams } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faQrcode, faUniversity, faWallet, faMobileAlt } from '@fortawesome/free-solid-svg-icons'
 import { faCcVisa } from '@fortawesome/free-brands-svg-icons'
-import Navbar from '../../components/organisms/Navbar'
-import Button from '../../components/atoms/Button'
+import Navbar from '../../components/Fragments/Common/Navbar'
+import Button from '../../components/Elements/Buttons/Button'
 import api from '../../utils/axiosConfig'
 
 export default function PaymentGatewayPage() {

@@ -1,4 +1,4 @@
-import Spinner from '../atoms/Spinner'
+import Spinner from '../../Elements/Common/Spinner'
 
 export default function LoadingOverlay({ show, text = 'Loading...' }) {
   if (!show) return null

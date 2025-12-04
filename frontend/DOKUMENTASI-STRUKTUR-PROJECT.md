@@ -1,23 +1,23 @@
-# PROJECT STRUCTURE DOCUMENTATION - REACT + ATOMIC DESIGN
+# PROJECT STRUCTURE DOCUMENTATION - SKILLCONNECT FRONTEND
 
-> **Project:** Codingin - Company Profile & Project Management System
-> **Tech Stack:** React 19 + TypeScript + Vite + Tailwind CSS + Zustand + Atomic Design
-> **State Management:** Zustand + Custom Hooks
+> **Project:** SkillConnect - Platform Freelancer Marketplace
+> **Tech Stack:** React 18 + JavaScript + Vite + Tailwind CSS + React Query
+> **State Management:** React Query + Custom Hooks + Context
 
 ---
 
 ## PROJECT OVERVIEW
 
-This project is a company profile with project management system for a software development company, built with:
-- **React 19** with hooks-based architecture
-- **TypeScript** for type safety
-- **Vite** for fast development & build
-- **Tailwind CSS** for styling
-- **Zustand** for global state management
-- **Axios** for HTTP client
-- **Atomic Design** for component organization
-- **Service + Hook Pattern** for business logic
-- **JWT-based authentication** with Session Storage
+SkillConnect adalah platform marketplace yang menghubungkan freelancer dengan client. Dibangun dengan:
+- **React 18** dengan hooks-based architecture
+- **JavaScript** (JSX)
+- **Vite** untuk fast development & build
+- **Tailwind CSS** untuk styling
+- **React Query (@tanstack/react-query)** untuk server state management
+- **Axios** untuk HTTP client
+- **Elements & Fragments Pattern** untuk component organization
+- **Service + Hook Pattern** untuk business logic
+- **JWT-based authentication** dengan localStorage
 
 ---
 
@@ -30,539 +30,557 @@ frontend/
 ├── eslint.config.js              # ESLint config
 ├── index.html                    # HTML entry point
 ├── package.json                  # Dependencies & scripts
-├── tsconfig.json                 # TypeScript configuration
-├── vite.config.ts                # Vite configuration
-│
-├── node_modules/                 # Dependencies (auto-generated)
+├── vite.config.js                # Vite configuration dengan path alias @/
 │
 ├── public/                       # Static assets
-│   ├── images/                   # Image files
-│   │   ├── portfolio/            # Portfolio project images
-│   │   ├── testimonials/         # Testimonial avatars
-│   │   └── blog/                 # Blog featured images
-│   ├── icon.png                  # Favicon
-│   └── logo.png                  # Company logo
+│   └── images/                   # Image files
 │
 └── src/                          # Source code
-    ├── assets/                   # React-specific assets
-    │   └── react.svg
-    │
     ├── config/                   # Configuration files
-    │   └── env.ts                # Environment variables config
-    │
-    ├── types/                    # TypeScript type definitions
-    │   ├── api/index.ts          # API response types
-    │   ├── common/index.ts       # Common types
-    │   └── entities/index.ts     # Entity types
     │
     ├── lib/                      # Library & utility layer
     │   └── api/
-    │       └── client.ts         # Axios instance & interceptors
+    │       └── client.js         # Axios instance & interceptors
     │
-    ├── Components/               # Component hierarchy (Atomic Design)
-    │   ├── Elements/             # ATOMS - Base components
-    │   │   ├── Buttons/
-    │   │   │   ├── Button.tsx          # ✅ Main button with variants
-    │   │   │   └── HamburgerButton.tsx # ✅ Animated hamburger menu
-    │   │   ├── Inputs/
-    │   │   │   ├── Input.tsx           # ✅ Text input
-    │   │   │   ├── TextArea.tsx        # ✅ Multi-line text input
-    │   │   │   └── Select.tsx          # ✅ Dropdown select
-    │   │   ├── Common/
-    │   │   │   ├── Badge.tsx           # ✅ Tag/label badge
-    │   │   │   ├── Loading.tsx         # ✅ Loading spinner
-    │   │   │   ├── Avatar.tsx          # ✅ User avatar with initials
-    │   │   │   ├── Switch.tsx          # ✅ Toggle switch
-    │   │   │   ├── Modal.tsx           # ✅ Modal dialog
-    │   │   │   ├── Dropdown.tsx        # ✅ Dropdown menu
-    │   │   │   └── Pagination.tsx      # ✅ Pagination component
-    │   │   ├── Table/
-    │   │   │   └── Table.tsx           # ✅ Table components
-    │   │   ├── Layout/
-    │   │   │   ├── Container.tsx       # ✅ Container wrapper
-    │   │   │   ├── Section.tsx         # ✅ Section wrapper
-    │   │   │   └── Card.tsx            # ✅ Card wrapper
-    │   │   └── Text/
-    │   │       ├── Heading.tsx         # ✅ h1-h6 headings
-    │   │       ├── Paragraph.tsx       # ✅ Paragraphs
-    │   │       ├── Label.tsx           # ✅ Section labels
-    │   │       └── Link.tsx            # ✅ Link component
+    ├── components/               # Component hierarchy
+    │   ├── Elements/             # Base UI components (Atoms)
+    │   │   ├── Buttons/          # Button, IconButton, KebabButton, etc.
+    │   │   ├── Inputs/           # Input, TextArea, Select, PasswordInput, etc.
+    │   │   ├── Common/           # Avatar, Badge, Modal, Spinner, Pagination, etc.
+    │   │   ├── Layout/           # Card, Breadcrumb
+    │   │   ├── Text/             # Label, Text, GradientText, PriceText
+    │   │   ├── Navigation/       # NavLink, Logo, NotificationBell
+    │   │   └── Icons/            # Icon, FAIcon
     │   │
-    │   ├── Fragments/            # MOLECULES/ORGANISMS - Composite components
-    │   │   ├── Common/
-    │   │   │   ├── Navbar.tsx          # ✅ Main navigation with hamburger menu
-    │   │   │   └── Footer.tsx          # ✅ Footer with navigation & contact
-    │   │   │
-    │   │   ├── Home/
-    │   │   │   ├── HeroSection.tsx     # ✅ Hero with tagline & CTA
-    │   │   │   ├── ServiceSection.tsx  # ✅ Services showcase (3 cards)
-    │   │   │   ├── FeaturedPortfolio.tsx # ✅ Portfolio highlight
-    │   │   │   ├── Testimonials.tsx    # ✅ Client testimonials carousel
-    │   │   │   └── CTASection.tsx      # ✅ Call to action
-    │   │   │
-    │   │   └── Admin/
-    │   │       ├── Sidebar.tsx         # ✅ Admin sidebar navigation
-    │   │       ├── Header.tsx          # ✅ Admin header with search
-    │   │       ├── StatsCard.tsx       # ✅ Dashboard statistics card
-    │   │       ├── DataTable.tsx       # ✅ Reusable data table
-    │   │       ├── PageHeader.tsx      # ✅ Page header with actions
-    │   │       └── FormCard.tsx        # ✅ Form section wrapper
+    │   ├── Fragments/            # Composite components (Molecules/Organisms)
+    │   │   ├── Common/           # Navbar, Footer, ToastProvider, LoadingOverlay
+    │   │   ├── Home/             # HeroSection, CategoryGrid, ServicesGrid
+    │   │   ├── Profile/          # ProfileInfo, PortfolioSection, SkillsSection
+    │   │   ├── Service/          # ServiceCard, MediaFormCard, PricingFormCard
+    │   │   ├── Order/            # OrderCard, OrderList, OrderTimeline
+    │   │   ├── Dashboard/        # DashboardHeaderBar, NavHeader, UserMenu
+    │   │   ├── Auth/             # AuthCard, FormGroup, OTPInput, ResetPassword*
+    │   │   ├── Admin/            # Sidebar, Header, Charts, Tables, Toolbars
+    │   │   └── Search/           # SearchBar, SearchFilterSidebar
     │   │
-    │   ├── Guards/               # Route guards
-    │   │   └── AuthGuard.tsx           # ✅ Authentication guard
+    │   ├── Layouts/              # Page layouts (Templates)
+    │   │   ├── DashboardLayout.jsx
+    │   │   ├── LandingPageTemplate.jsx
+    │   │   ├── ProfileLayout.jsx
+    │   │   └── AuthLayout.jsx
     │   │
-    │   └── Layouts/              # TEMPLATES - Page layouts
-    │       ├── PublicLayout.tsx        # ✅ Layout for public pages
-    │       └── AdminLayout.tsx         # ✅ Layout for admin pages
+    │   └── Guards/               # Route guards
+    │       └── ProtectedRoute.jsx
     │
-    ├── Pages/                    # Page components
-    │   ├── Public/
-    │   │   ├── HomePage.tsx            # ✅ Home page
-    │   │   ├── ServicesPage.tsx        # ✅ Services page
-    │   │   ├── PortfolioPage.tsx       # ✅ Portfolio page
-    │   │   ├── PortfolioDetailPage.tsx # ✅ Portfolio detail page
-    │   │   ├── BlogPage.tsx            # ✅ Blog page
-    │   │   ├── AboutPage.tsx           # ✅ About us page
-    │   │   ├── ContactPage.tsx         # ✅ Contact page
-    │   │   ├── PricingPage.tsx         # ✅ Pricing & packages page
-    │   │   └── QuoteBuilderPage.tsx    # ✅ Multi-step quote form
+    ├── pages/                    # Page components
+    │   ├── Public/               # Public pages
+    │   │   ├── LandingPage.jsx
+    │   │   ├── LoginPage.jsx
+    │   │   ├── RegisterClientPage.jsx
+    │   │   ├── RegisterFreelancerPage.jsx
+    │   │   ├── ForgotPasswordPage.jsx
+    │   │   ├── OTPConfirmPage.jsx
+    │   │   ├── NewPasswordPage.jsx
+    │   │   ├── EmailVerificationPage.jsx
+    │   │   ├── ServiceListPage.jsx
+    │   │   ├── SearchPage.jsx
+    │   │   ├── NotFoundPage.jsx
+    │   │   ├── FreelancerProfilePage.jsx
+    │   │   ├── FreelancerDetailPage.jsx
+    │   │   └── ServiceDetailPage.jsx
     │   │
-    │   └── Admin/
-    │       ├── LoginPage.tsx           # ✅ Admin login
-    │       ├── DashboardPage.tsx       # ✅ Admin dashboard
-    │       ├── Portfolio/
-    │       │   ├── PortfolioListPage.tsx   # ✅ Portfolio management
-    │       │   └── PortfolioFormPage.tsx   # ✅ Create/Edit portfolio
-    │       ├── Blog/
-    │       │   ├── BlogListPage.tsx        # ✅ Blog management
-    │       │   └── BlogFormPage.tsx        # ✅ Create/Edit blog
-    │       ├── Services/
-    │       │   └── ServicesListPage.tsx    # ✅ Services management
-    │       ├── Inquiries/
-    │       │   └── InquiriesListPage.tsx   # ✅ Inquiries management
-    │       └── Settings/
-    │           └── SettingsPage.tsx        # ✅ Admin settings
+    │   ├── Client/               # Client dashboard pages
+    │   │   ├── DashboardPage.jsx
+    │   │   ├── ProfilePage.jsx
+    │   │   ├── ProfileEditPage.jsx
+    │   │   ├── BookmarkPage.jsx
+    │   │   ├── FavoritePage.jsx
+    │   │   ├── RiwayatPesananPage.jsx
+    │   │   ├── OrderListPage.jsx
+    │   │   ├── OrderDetailPage.jsx
+    │   │   ├── CreateOrderPage.jsx
+    │   │   └── ClientSpendingPage.jsx
+    │   │
+    │   ├── Freelancer/           # Freelancer management pages
+    │   │   ├── ServicePage.jsx
+    │   │   ├── ServiceCreatePage.jsx
+    │   │   ├── ServiceEditPage.jsx
+    │   │   ├── OrdersIncomingPage.jsx
+    │   │   └── FreelancerEarningsPage.jsx
+    │   │
+    │   ├── Admin/                # Admin dashboard pages
+    │   │   ├── DashboardPage.jsx
+    │   │   ├── UserManagementPage.jsx
+    │   │   ├── ServiceManagementPage.jsx
+    │   │   ├── CategoryManagementPage.jsx
+    │   │   ├── SubCategoryManagementPage.jsx
+    │   │   ├── TransactionTrendsPage.jsx
+    │   │   ├── AllNotificationsPage.jsx
+    │   │   └── FraudReportDetailPage.jsx
+    │   │
+    │   ├── payment/              # Payment flow pages
+    │   │   ├── PaymentSuccessPage.jsx
+    │   │   ├── PaymentPendingPage.jsx
+    │   │   ├── PaymentErrorPage.jsx
+    │   │   ├── PaymentExpiredPage.jsx
+    │   │   ├── PaymentGatewayPage.jsx
+    │   │   └── PaymentProcessingPage.jsx
+    │   │
+    │   └── jobs/                 # Job detail pages
+    │       └── ServiceDetailPage.jsx
     │
-    ├── Routes/                   # Routing configuration
-    │   └── index.tsx                   # ✅ Main router with auth guard
+    ├── hooks/                    # Custom React hooks
+    │   ├── useAuth.js
+    │   ├── useOrder.js
+    │   ├── useServiceDetail.js
+    │   ├── useServiceSearch.js
+    │   └── useMyServices.js
     │
-    ├── Hooks/                    # Custom React hooks
-    │   ├── Auth/
-    │   ├── Services/
-    │   └── ...
+    ├── services/                 # API service layer
+    │   ├── authService.js
+    │   ├── serviceService.js
+    │   ├── orderService.js
+    │   ├── paymentService.js
+    │   ├── bookmarkService.js
+    │   ├── favoriteService.js
+    │   ├── adminService.js
+    │   └── adminKategoriService.js
     │
-    ├── Services/                 # API service layer
-    │   ├── Common/
-    │   └── ...
+    ├── utils/                    # Utility functions
+    │   ├── axiosConfig.js        # Axios configuration with interceptors
+    │   ├── format.js             # Formatting utilities
+    │   ├── validators.js         # Form validators
+    │   └── mediaUrl.js           # Media URL helpers
     │
-    ├── Store/                    # Zustand stores
-    │   └── ...
+    ├── styles/                   # CSS files
+    │   ├── auth.css
+    │   └── fonts.css
     │
-    ├── Utils/                    # Utility functions
-    │   └── ...
+    ├── mocks/                    # Mock data for development
     │
-    ├── App.tsx                   # ✅ App entry component
-    ├── main.tsx                  # ✅ React entry point
-    └── index.css                 # ✅ Global CSS + Tailwind
+    ├── App.jsx                   # App entry component with routes
+    └── main.jsx                  # React entry point
 ```
 
 ---
 
-## ATOMIC DESIGN IMPLEMENTATION
+## COMPONENT ARCHITECTURE
 
-### 1️⃣ ELEMENTS (Atoms) - Base Components
+### 1. ELEMENTS (Base Components)
 
-**Location:** `src/Components/Elements/`
+**Location:** `src/components/Elements/`
 
-The most basic components that cannot be broken down further. They are **reusable** and **stateless**.
+Komponen dasar yang tidak bisa dipecah lagi. Bersifat **reusable** dan umumnya **stateless**.
 
-#### **Buttons/** - Button components
-```tsx
-// Button.tsx - Button with various variants
-<Button
-  variant="primary|secondary|outline|ghost|danger"
-  size="sm|md|lg"
-  loading={boolean}
->
-  Click Me
-</Button>
+#### **Buttons/** - Komponen tombol
+| Component | Description |
+|-----------|-------------|
+| Button.jsx | Tombol utama dengan variants |
+| IconButton.jsx | Tombol dengan ikon |
+| KebabButton.jsx | Tombol menu kebab (3 dots) |
+| SearchButton.jsx | Tombol pencarian |
+| ResetPasswordButton.jsx | Tombol untuk reset password |
 
-// HamburgerButton.tsx - Hamburger button with animation
-<HamburgerButton isOpen={boolean} onClick={handler} />
+#### **Inputs/** - Komponen input
+| Component | Description |
+|-----------|-------------|
+| Input.jsx | Text input standar |
+| TextField.jsx | Text field dengan label |
+| TextArea.jsx | Multi-line text input |
+| Select.jsx | Dropdown select |
+| SelectBox.jsx | Styled select box |
+| PasswordInput.jsx | Input password dengan toggle show/hide |
+| SearchInput.jsx | Input untuk pencarian |
+| UploadDropzone.jsx | Dropzone untuk upload file |
+
+#### **Common/** - Komponen umum
+| Component | Description |
+|-----------|-------------|
+| Avatar.jsx | User avatar dengan initials |
+| Badge.jsx | Tag/label badge |
+| StatusBadge.jsx | Badge untuk status |
+| Spinner.jsx | Loading spinner |
+| Modal.jsx | Modal dialog |
+| ConfirmModal.jsx | Modal konfirmasi |
+| Pagination.jsx | Komponen pagination |
+| StarRating.jsx | Rating bintang |
+| Chip.jsx | Chip/tag component |
+| TagPill.jsx | Tag pill untuk labels |
+
+#### **Layout/** - Komponen layout
+| Component | Description |
+|-----------|-------------|
+| Card.jsx | Card wrapper |
+| Breadcrumb.jsx | Breadcrumb navigation |
+
+#### **Text/** - Komponen teks
+| Component | Description |
+|-----------|-------------|
+| Label.jsx | Form labels |
+| Text.jsx | Text component |
+| GradientText.jsx | Text dengan gradient |
+| PriceText.jsx | Format harga |
+| ResetPasswordLabel.jsx | Label untuk reset password |
+
+#### **Navigation/** - Komponen navigasi
+| Component | Description |
+|-----------|-------------|
+| NavLink.jsx | Navigation link |
+| Logo.jsx | Logo component |
+| NotificationBell.jsx | Notification bell icon |
+
+#### **Icons/** - Komponen ikon
+| Component | Description |
+|-----------|-------------|
+| Icon.jsx | Icon wrapper |
+| FAIcon.jsx | FontAwesome icon |
+
+---
+
+### 2. FRAGMENTS (Composite Components)
+
+**Location:** `src/components/Fragments/`
+
+Kombinasi dari **Elements** yang membentuk komponen lebih kompleks. Mengandung **logic** dan **state**.
+
+#### **Common/** - Fragment umum
+| Component | Description |
+|-----------|-------------|
+| Navbar.jsx | Main navigation bar |
+| Footer.jsx | Footer component |
+| ToastProvider.jsx | Toast notification provider |
+| LoadingOverlay.jsx | Loading overlay |
+| NotificationPanel.jsx | Panel notifikasi |
+| RatingModal.jsx | Modal untuk rating |
+| FavoriteToast.jsx | Toast untuk favorite |
+| SavedToast.jsx | Toast untuk saved |
+| SuccessModal.jsx | Modal sukses |
+
+#### **Home/** - Fragment homepage
+| Component | Description |
+|-----------|-------------|
+| HeroSection.jsx | Hero section dengan search |
+| CategoryGrid.jsx | Grid kategori |
+| CategoryServiceSection.jsx | Section layanan per kategori |
+| ServicesGrid.jsx | Grid layanan |
+| RecommendationSection.jsx | Section rekomendasi |
+| CategoryCard.jsx | Card kategori |
+| CategoryMenu.jsx | Menu kategori |
+| TextRotator.jsx | Text dengan animasi rotasi |
+| SearchBarLanding.jsx | Search bar untuk landing |
+
+#### **Profile/** - Fragment profil
+| Component | Description |
+|-----------|-------------|
+| ProfileInfo.jsx | Info profil user |
+| ProfileHeader.jsx | Header profil |
+| PortfolioSection.jsx | Section portfolio |
+| PortfolioGrid.jsx | Grid portfolio |
+| SkillsSection.jsx | Section skills |
+| SkillTag.jsx | Tag skill |
+| StatsGrid.jsx | Grid statistik |
+| EditForm.jsx | Form edit profil |
+| InfoCard.jsx | Card informasi |
+| LanguageItem.jsx | Item bahasa |
+| VerificationBadge.jsx | Badge verifikasi |
+| AboutFreelancerCard.jsx | Card about freelancer |
+| ProfileLoadingOverlay.jsx | Loading overlay profil |
+
+#### **Service/** - Fragment layanan
+| Component | Description |
+|-----------|-------------|
+| ServiceCard.jsx | Card layanan |
+| ServiceCardItem.jsx | Item card layanan |
+| ServiceHeaderCard.jsx | Header card layanan |
+| ServiceTabs.jsx | Tabs layanan |
+| MyServiceCard.jsx | Card layanan saya |
+| MyServicesGrid.jsx | Grid layanan saya |
+| AddServiceCallout.jsx | Callout tambah layanan |
+| MediaFormCard.jsx | Form media layanan |
+| MediaEditFormCard.jsx | Form edit media |
+| PricingFormCard.jsx | Form pricing |
+| PricingEditFormCard.jsx | Form edit pricing |
+| ReviewsSection.jsx | Section review |
+| FilterKategori.jsx | Filter kategori |
+
+#### **Order/** - Fragment pesanan
+| Component | Description |
+|-----------|-------------|
+| OrderCard.jsx | Card pesanan |
+| OrderList.jsx | List pesanan |
+| OrderTimeline.jsx | Timeline pesanan |
+| OrderStatus.jsx | Status pesanan |
+| OrderForm.jsx | Form pesanan |
+| OrderConfirmModal.jsx | Modal konfirmasi pesanan |
+| FreelancerOrderActions.jsx | Actions untuk freelancer |
+| InteractionBar.jsx | Bar interaksi |
+| SummaryCard.jsx | Card summary |
+
+#### **Dashboard/** - Fragment dashboard
+| Component | Description |
+|-----------|-------------|
+| DashboardHeaderBar.jsx | Header bar dashboard |
+| DashboardSubnav.jsx | Sub navigation dashboard |
+| NavHeader.jsx | Header navigasi |
+| NavItem.jsx | Item navigasi |
+| NavKategori.jsx | Navigasi kategori |
+| NavService.jsx | Navigasi service |
+| StatCard.jsx | Card statistik |
+| UserMenu.jsx | Menu user |
+
+#### **Auth/** - Fragment autentikasi
+| Component | Description |
+|-----------|-------------|
+| AuthCard.jsx | Card autentikasi |
+| FormGroup.jsx | Group form |
+| OTPInput.jsx | Input OTP |
+| ResetPasswordCard.jsx | Card reset password |
+| ResetPasswordLayout.jsx | Layout reset password |
+| ResetPasswordFormGroup.jsx | Form group reset password |
+| RoleCard.jsx | Card role selection |
+| HybridModeController.jsx | Controller hybrid mode |
+| MockInfoCard.jsx | Info card mock mode |
+| ResultModal.jsx | Modal hasil |
+
+#### **Admin/** - Fragment admin
+| Component | Description |
+|-----------|-------------|
+| Sidebar.jsx | Sidebar admin |
+| Header.jsx | Header admin |
+| UserChart.jsx | Chart user |
+| OrderChart.jsx | Chart order |
+| TransactionChart.jsx | Chart transaksi |
+| TransactionTrendsContent.jsx | Content trends transaksi |
+| UserManagementToolbar.jsx | Toolbar user management |
+| UserTable.jsx | Table user |
+| ServiceManagementToolbar.jsx | Toolbar service management |
+| ServiceTable.jsx | Table service |
+| CategoryManagementToolbar.jsx | Toolbar kategori |
+| CategoryTable.jsx | Table kategori |
+| CategoryTrendsTable.jsx | Table trends kategori |
+| SubCategoryManagementToolbar.jsx | Toolbar sub kategori |
+| SubCategoryTable.jsx | Table sub kategori |
+| AdminSearchBar.jsx | Search bar admin |
+| BlockListSection.jsx | Section block list |
+| BlockReasonCard.jsx | Card alasan block |
+| ConfirmDeleteModal.jsx | Modal konfirmasi delete |
+| FilterForm.jsx | Form filter |
+
+#### **Search/** - Fragment pencarian
+| Component | Description |
+|-----------|-------------|
+| SearchBar.jsx | Search bar |
+| SearchFilterSidebar.jsx | Sidebar filter pencarian |
+| SearchServiceCardItem.jsx | Card item hasil pencarian |
+| SearchSortBar.jsx | Bar sorting pencarian |
+
+---
+
+### 3. LAYOUTS (Page Templates)
+
+**Location:** `src/components/Layouts/`
+
+| Layout | Description |
+|--------|-------------|
+| DashboardLayout.jsx | Layout untuk admin dashboard |
+| LandingPageTemplate.jsx | Template untuk landing page |
+| ProfileLayout.jsx | Layout untuk halaman profil |
+| AuthLayout.jsx | Layout untuk halaman autentikasi |
+
+---
+
+### 4. GUARDS (Route Protection)
+
+**Location:** `src/components/Guards/`
+
+| Guard | Description |
+|-------|-------------|
+| ProtectedRoute.jsx | Guard untuk route yang memerlukan autentikasi |
+
+---
+
+## PAGES STRUCTURE
+
+### Public Pages (Tanpa login)
+
+| Page | Route | Description |
+|------|-------|-------------|
+| LandingPage | `/` | Homepage dengan hero, kategori, services |
+| LoginPage | `/login` | Halaman login |
+| RegisterClientPage | `/register/client` | Registrasi sebagai client |
+| RegisterFreelancerPage | `/register/freelancer` | Registrasi sebagai freelancer (protected) |
+| ServiceListPage | `/services` | Daftar semua layanan |
+| ServiceDetailPage | `/services/:slug` | Detail layanan |
+| SearchPage | `/search` | Halaman pencarian |
+| FreelancerProfilePage | `/freelancer/:id` | Profil freelancer |
+| FreelancerDetailPage | `/freelancer/:id/detail` | Detail freelancer |
+| ForgotPasswordPage | `/forgot-password` | Lupa password |
+| OTPConfirmPage | `/reset-password/otp` | Konfirmasi OTP |
+| NewPasswordPage | `/reset-password/new-password` | Set password baru |
+| EmailVerificationPage | `/verify-email` | Verifikasi email |
+| NotFoundPage | `*` | Halaman 404 |
+
+### Client Pages (Login required)
+
+| Page | Route | Description |
+|------|-------|-------------|
+| DashboardPage | `/dashboard` | Dashboard client |
+| ProfilePage | `/profile` | Profil user |
+| ProfileEditPage | `/profile/edit` | Edit profil |
+| BookmarkPage | `/bookmarks` | Daftar bookmark |
+| FavoritePage | `/favorit` | Daftar favorit |
+| RiwayatPesananPage | `/riwayat-pesanan` | Riwayat pesanan |
+| OrderListPage | `/orders` | Daftar pesanan |
+| OrderDetailPage | `/orders/:id` | Detail pesanan |
+| CreateOrderPage | `/create-order/:id` | Buat pesanan |
+| ClientSpendingPage | `/analytics/spending` | Analitik pengeluaran |
+
+### Freelancer Pages (Login required)
+
+| Page | Route | Description |
+|------|-------|-------------|
+| ServicePage | `/freelance/service` | Kelola layanan |
+| ServiceCreatePage | `/freelance/service/new` | Buat layanan baru |
+| ServiceEditPage | `/freelance/service/:id/edit` | Edit layanan |
+| OrdersIncomingPage | `/freelance/orders` | Pesanan masuk |
+| FreelancerEarningsPage | `/analytics/earnings` | Analitik pendapatan |
+
+### Admin Pages (Login required)
+
+| Page | Route | Description |
+|------|-------|-------------|
+| DashboardPage | `/admin/dashboard` | Dashboard admin |
+| UserManagementPage | `/admin/users` | Kelola user |
+| ServiceManagementPage | `/admin/services` | Kelola layanan |
+| CategoryManagementPage | `/admin/kategori` | Kelola kategori |
+| SubCategoryManagementPage | `/admin/subkategori` | Kelola sub kategori |
+| TransactionTrendsPage | `/admin/transaction-trends` | Trends transaksi |
+| AllNotificationsPage | `/admin/notifications` | Semua notifikasi |
+| FraudReportDetailPage | `/admin/fraud-report/:type/:id` | Detail laporan fraud |
+
+### Payment Pages
+
+| Page | Route | Description |
+|------|-------|-------------|
+| PaymentGatewayPage | `/payment/:orderId` | Gateway pembayaran |
+| PaymentProcessingPage | `/payment/processing/:paymentId` | Proses pembayaran |
+| PaymentSuccessPage | `/payment/success` | Pembayaran berhasil |
+| PaymentPendingPage | `/payment/pending` | Pembayaran pending |
+| PaymentErrorPage | `/payment/error` | Pembayaran gagal |
+| PaymentExpiredPage | `/payment/expired` | Pembayaran expired |
+
+---
+
+## HOOKS (Custom React Hooks)
+
+| Hook | Description |
+|------|-------------|
+| useAuth.js | Authentication & user state |
+| useOrder.js | Order management |
+| useServiceDetail.js | Service detail fetching |
+| useServiceSearch.js | Service search functionality |
+| useMyServices.js | Freelancer's own services |
+
+---
+
+## SERVICES (API Layer)
+
+| Service | Description |
+|---------|-------------|
+| authService.js | Authentication API calls |
+| serviceService.js | Service/layanan API calls |
+| orderService.js | Order API calls |
+| paymentService.js | Payment API calls |
+| bookmarkService.js | Bookmark API calls |
+| favoriteService.js | Favorite API calls |
+| adminService.js | Admin API calls |
+| adminKategoriService.js | Admin kategori API calls |
+| adminSubKategoriService.js | Admin sub kategori API calls |
+| hybridResetPasswordService.js | Reset password API calls |
+
+---
+
+## IMPORT PATH CONVENTIONS
+
+Dengan Vite path alias `@/`, import menggunakan format:
+
+```javascript
+// Import dari components
+import Button from "@/components/Elements/Buttons/Button";
+import Navbar from "@/components/Fragments/Common/Navbar";
+import DashboardLayout from "@/components/Layouts/DashboardLayout";
+import ProtectedRoute from "@/components/Guards/ProtectedRoute";
+
+// Import dari services
+import { authService } from "@/services/authService";
+
+// Import dari hooks
+import { useAuth } from "@/hooks/useAuth";
+
+// Import dari utils
+import api from "@/utils/axiosConfig";
 ```
 
-#### **Inputs/** - Input fields
-```tsx
-// Input.tsx
-<Input
-  label="Name"
-  placeholder="Enter name"
-  error="Error message"
-/>
+Atau dengan relative path:
+```javascript
+// Dari pages ke components
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Button from "../../components/Elements/Buttons/Button";
 
-// TextArea.tsx
-<TextArea
-  label="Message"
-  rows={5}
-  placeholder="Your message"
-/>
+// Dari Fragments ke Elements
+import Button from "../../Elements/Buttons/Button";
+import Avatar from "../../Elements/Common/Avatar";
 
-// Select.tsx
-<Select
-  label="Category"
-  options={[{ value: 'web', label: 'Web Development' }]}
-  placeholder="Select category"
-/>
-```
-
-#### **Common/** - Common components
-```tsx
-// Badge.tsx
-<Badge variant="default|yellow|outline" size="sm|md">
-  Featured
-</Badge>
-
-// Loading.tsx
-<Loading size="sm|md|lg" color="white|yellow" />
-
-// Avatar.tsx
-<Avatar src="url" name="John Doe" size="sm|md|lg|xl" />
-
-// Switch.tsx
-<Switch checked={boolean} onChange={handler} label="Active" />
-
-// Modal.tsx
-<Modal isOpen={boolean} onClose={handler} title="Title">
-  Content
-</Modal>
-
-// Dropdown.tsx
-<Dropdown trigger={<button>Menu</button>} options={[...]} />
-
-// Pagination.tsx
-<Pagination currentPage={1} totalPages={10} onPageChange={handler} />
-```
-
-#### **Table/** - Table components
-```tsx
-<Table>
-  <TableHeader>
-    <TableRow>
-      <TableHeadCell>Column</TableHeadCell>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell>Data</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
-```
-
-#### **Layout/** - Layout wrappers
-```tsx
-// Container.tsx
-<Container maxWidth="sm|md|lg|xl|full">
-  {children}
-</Container>
-
-// Section.tsx
-<Section padding="sm|md|lg|xl" background="transparent|dark|gradient">
-  {children}
-</Section>
-
-// Card.tsx
-<Card variant="default|bordered|gradient" padding="sm|md|lg" hover>
-  {children}
-</Card>
-```
-
-#### **Text/** - Text components
-```tsx
-// Heading.tsx
-<Heading level={1|2|3|4|5|6}>Title</Heading>
-
-// Paragraph.tsx
-<Paragraph size="sm|md|lg" color="default|muted|light">
-  Content text
-</Paragraph>
-
-// Label.tsx
-<Label color="yellow|white|muted">Section Label</Label>
-
-// Link.tsx
-<Link to="/path">Link Text</Link>
+// Dari Fragments ke services
+import { authService } from "../../../services/authService";
 ```
 
 ---
 
-### 2️⃣ FRAGMENTS (Molecules/Organisms) - Composite Components
+## STYLING
 
-**Location:** `src/Components/Fragments/`
+### Tailwind CSS Classes
 
-Combinations of **Elements** that form more complex components. They contain **logic** and **state**.
-
-#### **Common/** - Common components
-```tsx
-// Navbar.tsx - Navigation bar with hamburger menu
-<Navbar />
-
-// Footer.tsx - Footer component
-<Footer />
-```
-
-#### **Home/** - Homepage fragments
-```tsx
-<HeroSection />
-<ServiceSection />
-<FeaturedPortfolio />
-<Testimonials />
-<CTASection />
-```
-
-#### **Admin/** - Admin fragments
-```tsx
-// Sidebar.tsx - Admin navigation sidebar
-<Sidebar />
-
-// Header.tsx - Admin header with search & user menu
-<Header title="Page Title" />
-
-// StatsCard.tsx - Statistics card
-<StatsCard
-  title="Total Projects"
-  value={24}
-  icon={<Icon />}
-  change={{ value: 12, isPositive: true }}
-/>
-
-// DataTable.tsx - Reusable data table
-<DataTable
-  columns={columns}
-  data={data}
-  keyField="id"
-  searchable
-  pagination={{ ... }}
-  actions={(item) => <Actions />}
-/>
-
-// PageHeader.tsx - Page header with actions
-<PageHeader
-  title="Portfolio"
-  description="Manage projects"
-  backLink="/admin"
-  actions={<Button>Add</Button>}
-/>
-
-// FormCard.tsx - Form section
-<FormCard title="Project Info">
-  <Input ... />
-</FormCard>
-```
-
----
-
-### 3️⃣ LAYOUTS (Templates) - Page Layouts
-
-**Location:** `src/Components/Layouts/`
-
-```tsx
-// PublicLayout.tsx - Layout for public pages
-const PublicLayout = ({ children }) => (
-  <div className="min-h-screen flex flex-col">
-    <Navbar />
-    <main className="flex-1">{children}</main>
-    <Footer />
-  </div>
-);
-
-// AdminLayout.tsx - Layout for admin pages
-const AdminLayout = ({ children, title }) => (
-  <div className="min-h-screen bg-slate-950">
-    <Sidebar />
-    <div className="lg:ml-64">
-      <Header title={title} />
-      <main className="p-4 lg:p-6">{children}</main>
-    </div>
-  </div>
-);
-```
-
----
-
-## PAGES - Page Components
-
-**Location:** `src/Pages/`
-
-### Public Pages
-
-| Page | Route | Features |
-|------|-------|----------|
-| HomePage | `/` | Hero, Services, Portfolio, Testimonials, CTA |
-| ServicesPage | `/services` | Expand/collapse categories, pricing |
-| PortfolioPage | `/portfolio` | Filter by category, project cards |
-| PortfolioDetailPage | `/portfolio/:slug` | Project details, gallery, related projects |
-| BlogPage | `/blog` | Search, filter, featured post |
-| AboutPage | `/about` | Stats, story, values, vision & mission |
-| ContactPage | `/contact` | Contact form, info, business hours |
-| PricingPage | `/pricing` | 3 packages, bonus section |
-| QuoteBuilderPage | `/quote` | Multi-step form (4 steps) |
-
-### Admin Pages
-
-| Page | Route | Features |
-|------|-------|----------|
-| LoginPage | `/admin/login` | Admin authentication |
-| DashboardPage | `/admin` | Stats, recent activity, quick links |
-| PortfolioListPage | `/admin/portfolio` | Project list, search, CRUD |
-| PortfolioFormPage | `/admin/portfolio/create` | Create/Edit project form |
-| BlogListPage | `/admin/blog` | Post list, search, CRUD |
-| BlogFormPage | `/admin/blog/create` | Create/Edit post form |
-| ServicesListPage | `/admin/services` | Service categories management |
-| InquiriesListPage | `/admin/inquiries` | Contact form submissions |
-| SettingsPage | `/admin/settings` | Company info, social, SEO, payment |
-
----
-
-## ROUTES - Routing Configuration
-
-**Location:** `src/Routes/`
-
-```tsx
-// Routes/index.tsx
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import AuthGuard from '@/Components/Guards/AuthGuard';
-
-const router = createBrowserRouter([
-  // Public Routes
-  { path: '/', element: <PublicLayout><HomePage /></PublicLayout> },
-  { path: '/services', element: <PublicLayout><ServicesPage /></PublicLayout> },
-  { path: '/portfolio', element: <PublicLayout><PortfolioPage /></PublicLayout> },
-  { path: '/portfolio/:slug', element: <PublicLayout><PortfolioDetailPage /></PublicLayout> },
-  // ... more public routes
-
-  // Admin Routes (Protected)
-  { path: '/admin/login', element: <AdminLoginPage /> },
-  { path: '/admin', element: <AuthGuard><AdminDashboardPage /></AuthGuard> },
-  { path: '/admin/portfolio', element: <AuthGuard><AdminPortfolioListPage /></AuthGuard> },
-  // ... more admin routes
-
-  // 404
-  { path: '*', element: <NotFoundPage /> },
-]);
-```
-
----
-
-## STYLING APPROACH
-
-### Design System
+Project menggunakan Tailwind CSS dengan custom configuration:
 
 ```css
-/* Colors */
---primary: yellow-400 (accent)
---background: slate-900, slate-800, slate-950 (dark)
---text: white, gray-300, gray-400
+/* Primary Colors */
+--primary: blue-500, blue-600 (accent)
+--background: gray-50, white
+--text: gray-900, gray-600, gray-400
 
-/* Gradients */
-bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900
-bg-gradient-to-br from-teal-900 to-slate-800
-
-/* Animations */
-- Hover: Yellow text + dash underline from left
-- Button: White background fill from left
-- Transition duration: 300ms - 500ms
-```
-
-### Tailwind CSS Classes Pattern
-
-```tsx
-// Button with hover animation
-<button className="relative overflow-hidden group">
-  <span className="relative z-10 group-hover:text-slate-900 transition-colors duration-500">
-    Button Text
-  </span>
-  <span className="absolute inset-0 bg-white transform origin-left scale-x-0
-                   transition-transform duration-500 ease-out group-hover:scale-x-100" />
-</button>
-
-// Link with dash underline
-<a className="relative text-white hover:text-yellow-400 group">
-  Link Text
-  <span className="absolute -bottom-1 left-0 h-px bg-yellow-400
-                   w-0 transition-all duration-300 ease-out group-hover:w-full" />
-</a>
+/* Admin Colors */
+--admin-bg: #DBE2EF
+--admin-accent: #4782BE, #1D375B
 ```
 
 ---
 
-## ADMIN AUTHENTICATION
+## AUTHENTICATION FLOW
 
-### Login Credentials (Demo)
-- **Email:** admin@codingin.id
-- **Password:** admin123
-
-### Auth Flow
-1. User enters credentials on `/admin/login`
-2. Token stored in localStorage
-3. AuthGuard checks token for protected routes
-4. Redirect to login if not authenticated
+1. User login via `/login`
+2. Token disimpan di `localStorage`
+3. `ProtectedRoute` cek token untuk protected routes
+4. Axios interceptor menambahkan token ke setiap request
+5. Jika 401, redirect ke `/login`
 
 ---
 
-## IMPLEMENTED FEATURES
+## BUILD & DEVELOPMENT
 
-### Public Features
-- ✅ **Homepage** - Hero, Services, Portfolio, Testimonials, CTA
-- ✅ **Services** - Expand/collapse categories with pricing
-- ✅ **Portfolio** - Filter by category, project cards, detail view
-- ✅ **Blog** - Search, filter, featured post
-- ✅ **About** - Stats, story, values, vision & mission
-- ✅ **Contact** - Complete form, contact info
-- ✅ **Pricing** - 3 packages, bonus highlights
-- ✅ **Quote Builder** - Multi-step form (4 steps)
-- ✅ **Navbar** - Transparent/solid, hamburger menu
-- ✅ **Footer** - CTA, navigation, social links
+```bash
+# Install dependencies
+npm install
 
-### Admin Features
-- ✅ **Login** - JWT authentication
-- ✅ **Dashboard** - Stats, activity, tasks
-- ✅ **Portfolio Management** - CRUD with image upload
-- ✅ **Blog Management** - CRUD with rich editor
-- ✅ **Services Management** - Categories & sub-categories
-- ✅ **Inquiries** - View & manage contact submissions
-- ✅ **Settings** - Company info, social, SEO, payment
+# Development server
+npm run dev
 
-### Future Features
-- Client Dashboard
-- Order Management
-- Payment Processing
-- API Integration
+# Production build
+npm run build
 
----
-
-## BEST PRACTICES
-
-### 1. Component Organization
-- One component per file
-- Group related components in folders
-- Use Atomic Design principles
-- Keep components focused and reusable
-
-### 2. Naming Conventions
-- PascalCase for components (Button.tsx)
-- camelCase for hooks (useAuth.ts)
-- kebab-case for CSS classes
-
-### 3. TypeScript
-- Define interfaces for props
-- Use type imports with `import type`
-- Avoid `any` type
-
-### 4. Styling
-- Use Tailwind CSS utility classes
-- Group related classes logically
-- Use clsx for conditional classes
+# Preview production build
+npm run preview
+```
 
 ---
 
@@ -570,5 +588,5 @@ bg-gradient-to-br from-teal-900 to-slate-800
 
 ---
 
-*Documentation for Codingin - Company Profile & Project Management System*
-*Last updated: 2024*
+*Documentation for SkillConnect - Freelancer Marketplace Platform*
+*Last updated: December 2025*

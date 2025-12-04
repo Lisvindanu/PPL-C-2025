@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App";
-import { ToastProvider } from "./components/organisms/ToastProvider";
+import { ToastProvider } from "./components/Fragments/Common/ToastProvider";
 import "./styles/auth.css";
 import "./styles/fonts.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";

@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom'
-import Avatar from '../atoms/Avatar'
-import Button from '../atoms/Button'
-import Icon from '../atoms/Icon'
+import Avatar from '../../Elements/Common/Avatar'
+import Button from '../../Elements/Buttons/Button'
+import Icon from '../../Elements/Icons/Icon'
 
 export default function ProfileHeader({ 
   profile, 

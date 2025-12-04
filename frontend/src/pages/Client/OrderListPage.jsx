@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
-import Footer from '../../components/organisms/Footer'
-import OrderList from '../../components/organisms/OrderList'
+import Navbar from '../../components/Fragments/Common/Navbar'
+import Footer from '../../components/Fragments/Common/Footer'
+import OrderList from '../../components/Fragments/Order/OrderList'
 import { useOrders } from '../../hooks/useOrder'
 
 /**

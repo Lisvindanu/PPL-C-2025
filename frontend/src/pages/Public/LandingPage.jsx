@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import LandingPageTemplate from "../../components/templates/LandingPageTemplate";
+import LandingPageTemplate from "../../components/Layouts/LandingPageTemplate";
 
 export default function Landing() {
   const navigate = useNavigate();

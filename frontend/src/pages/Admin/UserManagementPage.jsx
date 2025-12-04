@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useToast } from '../../components/organisms/ToastProvider';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminService } from '../../services/adminService';
-import { UserManagementToolbar } from '../../components/organisms/UserManagementToolbar';
-import UserTable from '../../components/organisms/UserTable';
-import Button from '../../components/atoms/Button';
-import Badge from '../../components/atoms/Badge';
-import BlockReasonCard from '../../components/molecules/BlockReasonCard';
+import { UserManagementToolbar } from '../../components/Fragments/Admin/UserManagementToolbar';
+import UserTable from '../../components/Fragments/Admin/UserTable';
+import Button from '../../components/Elements/Buttons/Button';
+import Badge from '../../components/Elements/Common/Badge';
+import BlockReasonCard from '../../components/Fragments/Admin/BlockReasonCard';
 
 // Pagination Component
 function Pagination({ 

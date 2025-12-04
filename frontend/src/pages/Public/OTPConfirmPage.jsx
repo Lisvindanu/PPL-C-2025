@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import ResetPasswordLayout from "../../components/organisms/ResetPasswordLayout";
-import ResetPasswordCard from "../../components/organisms/ResetPasswordCard";
-import ResetPasswordButton from "../../components/atoms/ResetPasswordButton";
-import OTPInput from "../../components/molecules/OTPInput";
-import MockInfoCard from "../../components/organisms/MockInfoCard";
-import { useToast } from "../../components/organisms/ToastProvider";
+import ResetPasswordLayout from "../../components/Fragments/Auth/ResetPasswordLayout";
+import ResetPasswordCard from "../../components/Fragments/Auth/ResetPasswordCard";
+import ResetPasswordButton from "../../components/Fragments/Auth/ResetPasswordButton";
+import OTPInput from "../../components/Fragments/Auth/OTPInput";
+import MockInfoCard from "../../components/Fragments/Auth/MockInfoCard";
+import { useToast } from "../../components/Fragments/Common/ToastProvider";
 import hybridResetPasswordService from "../../services/hybridResetPasswordService";
 
 export default function OTPConfirmPage() {

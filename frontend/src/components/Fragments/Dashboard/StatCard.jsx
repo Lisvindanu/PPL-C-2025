@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text } from '../atoms/Text';
+import { Text } from '../../Elements/Text/Text';
 
 export const StatCard = ({ title, value, icon, bgColor = "bg-white" }) => (
   <div className={`${bgColor} rounded-3xl p-5 flex items-center justify-between hover:shadow-md transition-shadow border border-[#D8E3F3]`}>

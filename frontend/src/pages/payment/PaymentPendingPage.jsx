@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import Navbar from '../../components/organisms/Navbar'
-import Button from '../../components/atoms/Button'
+import Navbar from '../../components/Fragments/Common/Navbar'
+import Button from '../../components/Elements/Buttons/Button'
 
 export default function PaymentPendingPage() {
   const [searchParams] = useSearchParams()

@@ -1,17 +1,17 @@
 // frontend/src/pages/AdminCategoryManagementPage.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useToast } from '../../components/organisms/ToastProvider';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminKategoriService } from '../../services/adminKategoriService';
-import Button from '../../components/atoms/Button';
-import Badge from '../../components/atoms/Badge';
+import Button from '../../components/Elements/Buttons/Button';
+import Badge from '../../components/Elements/Common/Badge';
 import { Plus, Search, Edit2, Trash2, Eye, ToggleLeft, ToggleRight } from 'lucide-react';
 
 // Import komponen Organism yang dipisahkan
-import { CategoryManagementToolbar } from '../../components/organisms/CategoryManagementToolbar';
-import { CategoryTable } from '../../components/organisms/CategoryTable'; 
+import { CategoryManagementToolbar } from '../../components/Fragments/Admin/CategoryManagementToolbar';
+import { CategoryTable } from '../../components/Fragments/Admin/CategoryTable'; 
 
 // =================================================================
 // UTILITY FUNCTION 

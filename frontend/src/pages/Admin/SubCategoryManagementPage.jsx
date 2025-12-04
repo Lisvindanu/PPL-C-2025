@@ -1,16 +1,16 @@
 // frontend/src/pages/AdminSubCategoryManagementPage.jsx
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useToast } from '../../components/organisms/ToastProvider';
-import { Sidebar } from '../../components/organisms/Sidebar';
-import { Header } from '../../components/organisms/Header';
+import { useToast } from '../../components/Fragments/Common/ToastProvider';
+import { Sidebar } from '../../components/Fragments/Admin/Sidebar';
+import { Header } from '../../components/Fragments/Admin/Header';
 import { adminSubKategoriService } from '../../services/adminSubKategoriService';
-import Button from '../../components/atoms/Button';
-import Badge from '../../components/atoms/Badge';
+import Button from '../../components/Elements/Buttons/Button';
+import Badge from '../../components/Elements/Common/Badge';
 
 // Import komponen Organism
-import { SubCategoryManagementToolbar } from '../../components/organisms/SubCategoryManagementToolbar';
-import { SubCategoryTable } from '../../components/organisms/SubCategoryTable';
+import { SubCategoryManagementToolbar } from '../../components/Fragments/Admin/SubCategoryManagementToolbar';
+import { SubCategoryTable } from '../../components/Fragments/Admin/SubCategoryTable';
 
 // =================================================================
 // UTILITY FUNCTION 

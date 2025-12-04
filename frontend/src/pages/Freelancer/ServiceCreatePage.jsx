@@ -1,9 +1,9 @@
 import { useState } from "react";
-import Navbar from "../../components/organisms/Navbar";
-import DashboardHeaderBar from "../../components/molecules/DashboardHeaderBar";
-import MediaFormCard from "../../components/molecules/MediaFormCard";
-import PricingFormCard from "../../components/molecules/PricingFormCard";
-import Footer from "../../components/organisms/Footer";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import DashboardHeaderBar from "../../components/Fragments/Dashboard/DashboardHeaderBar";
+import MediaFormCard from "../../components/Fragments/Service/MediaFormCard";
+import PricingFormCard from "../../components/Fragments/Service/PricingFormCard";
+import Footer from "../../components/Fragments/Common/Footer";
 
 import useCategories from "../../hooks/useCategories";
 import useCreateService from "../../hooks/useCreateService";

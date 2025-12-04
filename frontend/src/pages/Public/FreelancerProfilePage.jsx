@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import Navbar from "../../components/organisms/Navbar"
-import Footer from "../../components/organisms/Footer"
+import Navbar from "../../components/Fragments/Common/Navbar"
+import Footer from "../../components/Fragments/Common/Footer"
 import api from "../../utils/axiosConfig"
 
 export default function FreelancerProfilePage() {

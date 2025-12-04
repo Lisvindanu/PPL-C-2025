@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import CategoryCard from "../molecules/CategoryCard";
+import CategoryCard from "./CategoryCard";
 
 const categories = [
   {

@@ -1,4 +1,4 @@
-import Breadcrumb from "../atoms/Breadcrumb";
+import Breadcrumb from "../../Elements/Layout/Breadcrumb";
 import DashboardSubnav from "./DashboardSubnav";
 
 export default function DashboardHeaderBar({

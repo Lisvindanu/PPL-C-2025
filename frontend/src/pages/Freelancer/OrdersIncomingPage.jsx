@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import Navbar from "../../components/organisms/Navbar";
-import Footer from "../../components/organisms/Footer";
-import DashboardHeaderBar from "../../components/molecules/DashboardHeaderBar";
+import Navbar from "../../components/Fragments/Common/Navbar";
+import Footer from "../../components/Fragments/Common/Footer";
+import DashboardHeaderBar from "../../components/Fragments/Dashboard/DashboardHeaderBar";
 import { useNavigate } from "react-router-dom";
 import { orderService } from "../../services/orderService";
 
