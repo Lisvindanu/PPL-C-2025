@@ -1,50 +1,60 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Landing from "./pages/Landing";
-import LoginPage from "./pages/LoginPage";
-import RegisterClientPage from "./pages/RegisterClientPage";
-import RegisterFreelancerPage from "./pages/RegisterFreelancerPage";
-import DashboardPage from "./pages/DashboardPage";
-import AdminDashboardPage from "./pages/AdminDashboardPage";
-import AdminUserManagementPage from "./pages/AdminUserManagementPage";
-import AdminServiceManagementPage from "./pages/AdminServiceManagementPage";
-import AdminCategoryManagementPage from "./pages/AdminCategoryManagementPage";
-import AdminSubCategoryManagementPage from "./pages/AdminSubCategoryManagementPage";
-import TransactionTrendsPage from "./pages/TransactionTrendsPage";
-import ProfilePage from "./pages/ProfilePage";
-import ProfileEditPage from "./pages/ProfileEditPage";
-import FreelancerProfilePage from "./pages/FreelancerProfilePage";
-import FreelancerDetailPage from "./pages/FreelancerDetailPage";
-import ProtectedRoute from "./components/templates/ProtectedRoute";
-import ServicePage from "./pages/freelance/ServicePage";
-import ServiceCreatePage from "./pages/freelance/ServiceCreatePage";
-import ServiceEditPage from "./pages/freelance/ServiceEditPage";
+
+// Public pages
+import Landing from "./pages/Public/LandingPage";
+import LoginPage from "./pages/Public/LoginPage";
+import RegisterClientPage from "./pages/Public/RegisterClientPage";
+import RegisterFreelancerPage from "./pages/Public/RegisterFreelancerPage";
+import ForgotPasswordPage from "./pages/Public/ForgotPasswordPage";
+import OTPConfirmPage from "./pages/Public/OTPConfirmPage";
+import NewPasswordPage from "./pages/Public/NewPasswordPage";
+import EmailVerificationPage from "./pages/Public/EmailVerificationPage";
+import ServiceListPage from "./pages/Public/ServiceListPage";
+import SearchPage from "./pages/Public/SearchPage";
+import NotFoundPage from "./pages/Public/NotFoundPage";
+import FreelancerProfilePage from "./pages/Public/FreelancerProfilePage";
+import FreelancerDetailPage from "./pages/Public/FreelancerDetailPage";
 import ServiceDetailPage from "./pages/jobs/ServiceDetailPage";
+
+// Client pages
+import DashboardPage from "./pages/Client/DashboardPage";
+import ProfilePage from "./pages/Client/ProfilePage";
+import ProfileEditPage from "./pages/Client/ProfileEditPage";
+import BookmarkPage from "./pages/Client/BookmarkPage";
+import FavoritePage from "./pages/Client/FavoritePage";
+import RiwayatPesananPage from "./pages/Client/RiwayatPesananPage";
+import OrderListPage from "./pages/Client/OrderListPage";
+import OrderDetailPage from "./pages/Client/OrderDetailPage";
+import CreateOrderPage from "./pages/Client/CreateOrderPage";
+import ClientSpendingPage from "./pages/Client/ClientSpendingPage";
+
+// Freelancer pages
+import ServicePage from "./pages/Freelancer/ServicePage";
+import ServiceCreatePage from "./pages/Freelancer/ServiceCreatePage";
+import ServiceEditPage from "./pages/Freelancer/ServiceEditPage";
+import OrdersIncomingPage from "./pages/Freelancer/OrdersIncomingPage";
+import FreelancerEarningsPage from "./pages/Freelancer/FreelancerEarningsPage";
+
+// Admin pages
+import AdminDashboardPage from "./pages/Admin/DashboardPage";
+import AdminUserManagementPage from "./pages/Admin/UserManagementPage";
+import AdminServiceManagementPage from "./pages/Admin/ServiceManagementPage";
+import AdminCategoryManagementPage from "./pages/Admin/CategoryManagementPage";
+import AdminSubCategoryManagementPage from "./pages/Admin/SubCategoryManagementPage";
+import TransactionTrendsPage from "./pages/Admin/TransactionTrendsPage";
+import AllNotificationsPage from "./pages/Admin/AllNotificationsPage";
+import FraudReportDetailPage from "./pages/Admin/FraudReportDetailPage";
+
+// Payment pages
 import PaymentSuccessPage from "./pages/payment/PaymentSuccessPage";
 import PaymentPendingPage from "./pages/payment/PaymentPendingPage";
 import PaymentErrorPage from "./pages/payment/PaymentErrorPage";
 import PaymentExpiredPage from "./pages/payment/PaymentExpiredPage";
 import PaymentGatewayPage from "./pages/payment/PaymentGatewayPage";
 import PaymentProcessingPage from "./pages/payment/PaymentProcessingPage";
-import FreelancerEarningsPage from "./pages/FreelancerEarningsPage";
-import ClientSpendingPage from "./pages/ClientSpendingPage";
-import BookmarkPage from "./pages/BookmarkPage";
-import ServiceListPage from "./pages/ServiceListPage";
-import CreateOrderPage from "./pages/CreateOrderPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
-import OTPConfirmPage from "./pages/OTPConfirmPage";
-import NewPasswordPage from "./pages/NewPasswordPage";
-import EmailVerificationPage from "./pages/EmailVerificationPage";
-import OrderListPage from "./pages/OrderListPage";
-import OrderDetailPage from "./pages/OrderDetailPage";
-import OrdersIncomingPage from "./pages/freelance/OrdersIncomingPage";
-import NotFoundPage from "./pages/NotFoundPage";
-import FavoritePage from "./pages/FavoritePage";
-import RiwayatPesananPage from "./pages/RiwayatPesananPage";
-import AllNotificationsPage from "./pages/AllNotificationsPage";
-import FraudReportDetailPage from "./pages/FraudReportDetailPage";
 
-// ⬇️ import halaman pencarian baru
-import SearchPage from "./pages/SearchPage";
+// Components
+import ProtectedRoute from "./components/templates/ProtectedRoute";
 
 export default function App() {
   return (
@@ -75,8 +85,7 @@ export default function App() {
       {/* Halaman detail layanan pakai slug */}
       <Route path="/services/:slug" element={<ServiceDetailPage />} />
 
-      {/* 🔍 Halaman Pencarian (public) */}
-      {/* Contoh: /search?q=UIUX%20Desainer%20Website */}
+      {/* Halaman Pencarian (public) */}
       <Route path="/search" element={<SearchPage />} />
 
       {/* Dashboard client */}

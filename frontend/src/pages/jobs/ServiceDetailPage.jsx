@@ -8,7 +8,7 @@ import PortfolioGrid from "../../components/molecules/PortfolioGrid";
 import AboutFreelancerCard from "../../components/molecules/AboutFreelancerCard";
 import Footer from "../../components/organisms/Footer";
 import { useServiceDetail } from "../../hooks/useServiceDetail";
-import NotFoundPage from "../NotFoundPage";
+import NotFoundPage from "../Public/NotFoundPage";
 
 export default function ServiceDetailPage() {
   const { slug } = useParams(); // route: /services/:slug
