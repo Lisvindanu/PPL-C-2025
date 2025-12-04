@@ -219,6 +219,22 @@ export const adminService = {
     }
   },
 
+  // Get all transactions
+  async getTransactions(filters = {}) {
+    try {
+      const response = await api.get('/admin/transactions', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch transactions',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
   // Get services list
   async getServices(filters = {}) {
     try {

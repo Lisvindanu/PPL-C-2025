@@ -1154,6 +1154,126 @@ async getLogsByAdminId(req, res) {
     }
   }
 
+  async getTransactions(req, res) {
+    try {
+      const { page = 1, limit = 10, status, search } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
+
+      let query = `
+        SELECT
+          p.id,
+          p.pesanan_id,
+          p.status,
+          p.total_bayar,
+          p.metode_pembayaran,
+          p.created_at,
+          p.updated_at,
+          pes.judul as order_title,
+          pes.nomor_pesanan as order_number,
+          pes.status as order_status,
+          client.id as client_id,
+          client.email as client_email,
+          client.nama_depan as client_nama_depan,
+          client.nama_belakang as client_nama_belakang,
+          freelancer.id as freelancer_id,
+          freelancer.email as freelancer_email,
+          freelancer.nama_depan as freelancer_nama_depan,
+          freelancer.nama_belakang as freelancer_nama_belakang,
+          l.judul as layanan_judul
+        FROM pesanan pes
+        LEFT JOIN pembayaran p ON pes.id = p.pesanan_id
+        LEFT JOIN users client ON pes.client_id = client.id
+        LEFT JOIN layanan l ON pes.layanan_id = l.id
+        LEFT JOIN users freelancer ON l.freelancer_id = freelancer.id
+        WHERE 1=1
+      `;
+
+      const replacements = [];
+
+      if (status && status !== 'all') {
+        query += ' AND pes.status = ?';
+        replacements.push(status);
+      }
+
+      if (search) {
+        query += ` AND (
+          pes.judul LIKE ? OR
+          pes.nomor_pesanan LIKE ? OR
+          client.nama_depan LIKE ? OR
+          client.nama_belakang LIKE ? OR
+          freelancer.nama_depan LIKE ? OR
+          freelancer.nama_belakang LIKE ?
+        )`;
+        const searchPattern = `%${search}%`;
+        replacements.push(searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern);
+      }
+
+      // Get total count
+      const countQuery = query.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(DISTINCT pes.id) as total FROM');
+      const [countResult] = await this.sequelize.query(countQuery, {
+        replacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // Add pagination
+      query += ' ORDER BY pes.created_at DESC LIMIT ? OFFSET ?';
+      replacements.push(parseInt(limit), offset);
+
+      const transactions = await this.sequelize.query(query, {
+        replacements,
+        raw: true,
+        type: this.sequelize.QueryTypes.SELECT
+      });
+
+      // Format response
+      const formattedTransactions = transactions.map(t => ({
+        id: t.id || t.pesanan_id,
+        pesanan_id: t.pesanan_id,
+        order_number: t.order_number,
+        order_title: t.order_title || t.layanan_judul || 'Tanpa Judul',
+        status: t.order_status,
+        payment_status: t.status,
+        total: t.total_bayar || 0,
+        metode_pembayaran: t.metode_pembayaran,
+        created_at: t.created_at,
+        updated_at: t.updated_at,
+        client: t.client_id ? {
+          id: t.client_id,
+          email: t.client_email,
+          nama_depan: t.client_nama_depan,
+          nama_belakang: t.client_nama_belakang,
+          full_name: `${t.client_nama_depan || ''} ${t.client_nama_belakang || ''}`.trim() || t.client_email
+        } : null,
+        freelancer: t.freelancer_id ? {
+          id: t.freelancer_id,
+          email: t.freelancer_email,
+          nama_depan: t.freelancer_nama_depan,
+          nama_belakang: t.freelancer_nama_belakang,
+          full_name: `${t.freelancer_nama_depan || ''} ${t.freelancer_nama_belakang || ''}`.trim() || t.freelancer_email
+        } : null
+      }));
+
+      res.json({
+        success: true,
+        message: 'Transactions retrieved',
+        data: formattedTransactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: countResult.total,
+          totalPages: Math.ceil(countResult.total / parseInt(limit))
+        }
+      });
+    } catch (error) {
+      console.error('Error in getTransactions:', error);
+      res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
   async getServices(req, res) {
     try {
       const { page = 1, limit = 10, status, kategori } = req.query;

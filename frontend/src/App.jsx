@@ -42,6 +42,7 @@ import AdminServiceManagementPage from "./pages/Admin/ServiceManagementPage";
 import AdminCategoryManagementPage from "./pages/Admin/CategoryManagementPage";
 import AdminSubCategoryManagementPage from "./pages/Admin/SubCategoryManagementPage";
 import TransactionTrendsPage from "./pages/Admin/TransactionTrendsPage";
+import AdminTransactionsPage from "./pages/Admin/TransactionsPage";
 import AllNotificationsPage from "./pages/Admin/AllNotificationsPage";
 import FraudReportDetailPage from "./pages/Admin/FraudReportDetailPage";
 
@@ -144,6 +145,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <AdminSubCategoryManagementPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/transactions"
+        element={
+          <ProtectedRoute>
+            <AdminTransactionsPage />
           </ProtectedRoute>
         }
       />

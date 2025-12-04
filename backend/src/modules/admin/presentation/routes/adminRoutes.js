@@ -380,6 +380,47 @@ module.exports = (adminController) => {
 
   /**
    * @swagger
+   * /api/admin/transactions:
+   *   get:
+   *     tags: [Admin]
+   *     summary: Get all transactions
+   *     description: Retrieve list of all transactions/orders with client and freelancer info
+   *     security:
+   *       - bearerAuth: []
+   *     parameters:
+   *       - in: query
+   *         name: page
+   *         schema:
+   *           type: integer
+   *           default: 1
+   *       - in: query
+   *         name: limit
+   *         schema:
+   *           type: integer
+   *           default: 10
+   *       - in: query
+   *         name: status
+   *         schema:
+   *           type: string
+   *           enum: [menunggu_pembayaran, dibayar, dikerjakan, selesai, dibatalkan]
+   *       - in: query
+   *         name: search
+   *         schema:
+   *           type: string
+   *     responses:
+   *       200:
+   *         description: Transactions list retrieved successfully
+   *       401:
+   *         $ref: '#/components/responses/UnauthorizedError'
+   *       403:
+   *         $ref: '#/components/responses/ForbiddenError'
+   *       500:
+   *         $ref: '#/components/responses/ServerError'
+   */
+  router.get('/transactions', (req, res) => adminController.getTransactions(req, res));
+
+  /**
+   * @swagger
    * /api/admin/services:
    *   get:
    *     tags: [Admin]
