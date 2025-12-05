@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../../components/Fragments/Common/Navbar'
+import Footer from '../../components/Fragments/Common/Footer'
+import DashboardHeaderBar from '../../components/Fragments/Dashboard/DashboardHeaderBar'
 import paymentService from '../../services/paymentService'
 import { authService } from '../../services/authService'
 
@@ -72,28 +74,35 @@ export default function FreelancerEarningsPage() {
 
   if (loading && !earningsData) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[#E8EEF7]">
         <Navbar />
+        <DashboardHeaderBar
+          title="Freelancer"
+          subPage="Earnings Analytics"
+          active="analisis"
+        />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Memuat data...</p>
           </div>
         </div>
+        <Footer />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#E8EEF7]">
       <Navbar />
 
+      <DashboardHeaderBar
+        title="Freelancer"
+        subPage="Earnings Analytics"
+        active="analisis"
+      />
+
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Earnings Analytics</h1>
-          <p className="mt-2 text-gray-600">Track your income and balance</p>
-        </div>
 
         {/* Balance Cards */}
         {balanceData && (
@@ -267,6 +276,8 @@ export default function FreelancerEarningsPage() {
           </>
         )}
       </div>
+
+      <Footer />
     </div>
   )
 }

@@ -1,29 +1,45 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+
+// Components - Fragments
 import Navbar from "../../components/Fragments/Common/Navbar";
 import Footer from "../../components/Fragments/Common/Footer";
 import DashboardHeaderBar from "../../components/Fragments/Dashboard/DashboardHeaderBar";
-import { useNavigate } from "react-router-dom";
+import SaldoSummaryCard, { SaldoIcon, TransferIcon } from "../../components/Fragments/Order/SaldoSummaryCard";
+import TransactionList from "../../components/Fragments/Order/TransactionList";
+import { SaldoTersediaCard, DanaDitahanCard, InfoPembayaranCard } from "../../components/Fragments/Order/SaldoInfoCard";
+
+// Services
 import { orderService } from "../../services/orderService";
 
 export default function OrdersIncomingPage() {
-  const navigate = useNavigate();
   const [incomingOrders, setIncomingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // Summary data state
+  const [summary, setSummary] = useState({
+    akumulasiSaldo: 0,
+    siapTransfer: 0,
+    saldoTersedia: 0,
+    danaInProgress: 0,
+    danaPendingReview: 0,
+  });
+
   useEffect(() => {
-    let isMounted = true;
-    (async () => {
-      setLoading(true);
-      setError("");
+    fetchOrders();
+  }, []);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
       const res = await orderService.getIncomingOrders({
         sortBy: "created_at",
         sortOrder: "DESC",
         page: 1,
-        limit: 10,
+        limit: 100,
       });
-
-      if (!isMounted) return;
 
       if (res?.success === false) {
         setError(res?.message || "Gagal memuat order masuk");
@@ -32,7 +48,7 @@ export default function OrdersIncomingPage() {
         return;
       }
 
-      // Normalisasi payload (dukung beberapa kemungkinan bentuk response)
+      // Normalize payload
       const raw =
         res?.data?.items ||
         res?.data?.rows ||
@@ -45,127 +61,116 @@ export default function OrdersIncomingPage() {
         id: o.id ?? o.order_id ?? o.uuid,
         nomor: o.nomor_pesanan ?? o.order_number ?? o.nomor,
         judul: o.judul ?? o.title ?? "Tanpa Judul",
-        clientName: `${o.client?.nama_depan || o.client_first_name || ""} ${o.client?.nama_belakang || o.client_last_name || ""}`.trim(),
+        clientName: `${o.client?.nama_depan || o.client_first_name || ""} ${o.client?.nama_belakang || o.client_last_name || ""}`.trim() || o.client?.full_name || "Client",
+        companyName: o.client?.company_name || o.company_name || "",
         waktuPengerjaanHari: o.waktu_pengerjaan ?? o.duration_days ?? o.waktu ?? 0,
-        deadline: o.tenggat_waktu || o.deadline || o.due_date ? new Date(o.tenggat_waktu || o.deadline || o.due_date).toLocaleDateString("id-ID") : "-",
+        deadline: o.tenggat_waktu || o.deadline || o.due_date,
         total: o.total_bayar ?? o.total ?? o.harga ?? 0,
-        statusBadge: o.status === "dibayar" ? "Menunggu Konfirmasi" : "Menunggu Pembayaran",
+        status: o.status || "menunggu_pembayaran",
+        createdAt: o.created_at || o.createdAt,
       }));
 
       setIncomingOrders(mapped);
-      setLoading(false);
-    })();
 
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+      // Calculate summary from orders
+      let akumulasi = 0;
+      let siapTransfer = 0;
+      let inProgress = 0;
+      let pendingReview = 0;
+
+      mapped.forEach((order) => {
+        const amount = Number(order.total || 0);
+        if (order.status === "selesai") {
+          akumulasi += amount;
+          siapTransfer += amount;
+        } else if (order.status === "dikerjakan" || order.status === "dibayar") {
+          akumulasi += amount;
+          inProgress += amount;
+        } else if (order.status === "in_review" || order.status === "pending") {
+          akumulasi += amount;
+          pendingReview += amount;
+        }
+      });
+
+      setSummary({
+        akumulasiSaldo: akumulasi,
+        siapTransfer: siapTransfer,
+        saldoTersedia: siapTransfer,
+        danaInProgress: inProgress,
+        danaPendingReview: pendingReview,
+      });
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setError("Terjadi kesalahan saat memuat data");
+      setLoading(false);
+    }
+  };
+
+  const handleTarikSaldo = () => {
+    // TODO: Implement tarik saldo functionality
+    console.log("Tarik saldo clicked");
+  };
 
   return (
     <div className="min-h-screen bg-[#E8EEF7]">
-      {/* Navbar global */}
       <Navbar />
 
-      {/* Header bar dashboard (breadcrumb + subnav) */}
       <DashboardHeaderBar
         title="Freelancer"
         subPage="Order Masuk"
         active="dashboard"
       />
 
-      {/* Daftar Order Masuk */}
       <div className="mx-auto max-w-7xl px-4 py-6">
-        <h2 className="sr-only">Order Masuk</h2>
+        {/* Summary Cards - Top Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          <SaldoSummaryCard
+            title="Akumulasi Saldo (Rupiah)"
+            value={summary.akumulasiSaldo}
+            icon={<SaldoIcon />}
+            variant="primary"
+          />
+          <SaldoSummaryCard
+            title="Jumlah siap transfer (Rupiah)"
+            value={summary.siapTransfer}
+            icon={<TransferIcon />}
+            variant="secondary"
+          />
+        </div>
 
-        {loading && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600">
-            Memuat data...
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Transaction History (2/3 width) */}
+          <div className="lg:col-span-2">
+            <TransactionList
+              title="Riwayat Transaksi"
+              orders={incomingOrders}
+              loading={loading}
+              error={error}
+            />
           </div>
-        )}
 
-        {!loading && error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-            {error}
+          {/* Right Column - Saldo Info (1/3 width) */}
+          <div className="space-y-4">
+            <SaldoTersediaCard
+              saldo={summary.saldoTersedia}
+              onTarikSaldo={handleTarikSaldo}
+            />
+
+            <DanaDitahanCard
+              totalDitahan={summary.danaInProgress + summary.danaPendingReview}
+              inProgress={summary.danaInProgress}
+              pendingReview={summary.danaPendingReview}
+            />
+
+            <InfoPembayaranCard />
           </div>
-        )}
-
-        {!loading && !error && incomingOrders.length === 0 && (
-          <div className="rounded-xl border border-neutral-200 bg-white p-5 text-sm text-neutral-600">
-            Belum ada pesanan masuk.
-          </div>
-        )}
-
-        <div className="space-y-5">
-          {incomingOrders.map((order) => (
-            <article
-              key={order.id}
-              className="rounded-xl border border-neutral-200 bg-white shadow-sm"
-            >
-              <div className="p-5 md:p-6">
-                {/* Header Card */}
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-[15px] font-semibold text-neutral-900">
-                      {order.judul}
-                    </h3>
-                    <p className="text-[13px] text-neutral-600 mt-1">
-                      Order <span className="font-medium">#{order.nomor}</span>
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800">
-                    {order.statusBadge}
-                  </span>
-                </div>
-
-                {/* Meta rows */}
-                <div className="mt-3 space-y-1.5 text-sm text-neutral-800">
-                  <div className="flex items-center gap-2">
-                    <i className="fas fa-user text-neutral-500"></i>
-                    <span>
-                      Klien: <span className="font-medium">{order.clientName}</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <i className="far fa-clock text-neutral-500"></i>
-                    <span>
-                      Waktu pengerjaan:{" "}
-                      <span className="font-medium">{order.waktuPengerjaanHari} hari</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <i className="far fa-calendar text-neutral-500"></i>
-                    <span>
-                      Deadline: <span className="font-medium">{order.deadline}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer Card */}
-              <div className="flex items-center justify-between border-t border-neutral-200 px-5 py-3 md:px-6">
-                <div className="text-sm">
-                  <p className="text-neutral-600">Total Pembayaran</p>
-                  <p className="font-semibold text-neutral-900">
-                    Rp {Number(order.total || 0).toLocaleString("id-ID")}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50"
-                  onClick={() => navigate(`/orders/${order.id}`)}
-                >
-                  Detail
-                </button>
-              </div>
-            </article>
-          ))}
         </div>
       </div>
 
-      {/* Footer global */}
       <Footer />
     </div>
   );
 }
-
-
