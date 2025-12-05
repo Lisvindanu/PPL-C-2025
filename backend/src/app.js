@@ -151,7 +151,6 @@ httpServer.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════╗
 ║     SkillConnect Server Started    ║
-║    (HTTP + Sockets Real-time)      ║
 ╠════════════════════════════════════╣
 ║  Port: ${PORT}                        ║
 ║  Environment: ${process.env.NODE_ENV}          ║

@@ -90,6 +90,38 @@ export const adminService = {
     }
   },
 
+  // Get order category trends
+  async getOrderCategoryTrends(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/orders/categories/trends', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch order category trends',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get order category trends by time
+  async getOrderCategoryTrendsByTime(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/orders/categories/trends/by-time', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch order category trends by time',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
   // Get order analytics
   async getOrderAnalytics(filters = {}) {
     try {
@@ -100,6 +132,22 @@ export const adminService = {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to fetch order analytics',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get revenue analytics
+  async getRevenueAnalytics(filters = {}) {
+    try {
+      const response = await api.get('/admin/analytics/revenue', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch revenue analytics',
         errors: error.response?.data?.errors || [],
         status
       }
@@ -139,15 +187,80 @@ export const adminService = {
   },
 
   // Unblock user
-  async unblockUser(id) {
+  async unblockUser(id, reason = 'Unblocked by admin') {
     try {
-      const response = await api.put(`/admin/users/${id}/unblock`)
+      const payload = { reason };
+      const response = await api.put(`/admin/users/${id}/unblock`, payload)
       return response.data
     } catch (error) {
       const status = error.response?.status;
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to unblock user',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get user details
+  async getUserDetails(id) {
+    try {
+      const response = await api.get(`/admin/users/${id}`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch user details',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get all transactions
+  async getTransactions(filters = {}) {
+    try {
+      const response = await api.get('/admin/transactions', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch transactions',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get services list
+  async getServices(filters = {}) {
+    try {
+      const response = await api.get('/admin/services', { params: filters })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch services',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get service details
+  async getServiceDetails(id) {
+    try {
+      const response = await api.get(`/admin/services/${id}`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch service details',
         errors: error.response?.data?.errors || [],
         status
       }
@@ -164,6 +277,22 @@ export const adminService = {
       return {
         success: false,
         message: error.response?.data?.message || 'Failed to block service',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Unblock service
+  async unblockService(id, reason) {
+    try {
+      const response = await api.put(`/admin/services/${id}/unblock`, { reason })
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to unblock service',
         errors: error.response?.data?.errors || [],
         status
       }
@@ -189,26 +318,115 @@ export const adminService = {
   // Export report
   async exportReport(reportData) {
     try {
+      const { format = 'csv', reportType = 'users' } = reportData;
+      
+      // For all formats (CSV, Excel, PDF), use blob response
       const response = await api.post('/admin/reports/export', reportData, {
         responseType: 'blob'
-      })
+      });
       
       // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `admin_report_${Date.now()}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
       
-      return { success: true, message: 'Report exported successfully' }
+      // Determine file extension and name
+      let extension;
+      let reportName;
+      if (format === 'csv') {
+        extension = 'csv';
+        reportName = reportType === 'users' ? 'laporan_pengguna' : 'laporan_layanan';
+      } else if (format === 'excel') {
+        extension = 'xlsx';
+        reportName = reportType === 'users' ? 'laporan_pengguna' : 'laporan_layanan';
+      } else if (format === 'pdf') {
+        extension = 'pdf';
+        reportName = reportType === 'users' ? 'laporan_pengguna' : 'laporan_layanan';
+      } else {
+        extension = 'csv';
+        reportName = 'laporan';
+      }
+      
+      link.setAttribute('download', `${reportName}_${Date.now()}.${extension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      return { success: true, message: 'Laporan berhasil diekspor' };
+    } catch (error) {
+      const status = error.response?.status;
+      // Handle blob error response
+      if (error.response?.data instanceof Blob) {
+        const text = await error.response.data.text();
+        try {
+          const errorData = JSON.parse(text);
+          return {
+            success: false,
+            message: errorData.error || errorData.message || 'Failed to export report',
+            errors: errorData.errors || [],
+            status
+          };
+        } catch {
+          return {
+            success: false,
+            message: 'Failed to export report',
+            status
+          };
+        }
+      }
+      
+      return {
+        success: false,
+        message: error.response?.data?.message || error.response?.data?.error || 'Failed to export report',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get all notifications
+  async getNotifications(filters = {}) {
+    try {
+      const response = await api.get('/admin/notifications', { params: filters })
+      return response.data
     } catch (error) {
       const status = error.response?.status;
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to export report',
+        message: error.response?.data?.message || 'Failed to fetch notifications',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Mark notification as read
+  async markNotificationRead(id) {
+    try {
+      const response = await api.put(`/admin/notifications/${id}/read`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to mark notification as read',
+        errors: error.response?.data?.errors || [],
+        status
+      }
+    }
+  },
+
+  // Get fraud alert detail
+  async getFraudAlertDetail(type, id) {
+    try {
+      const response = await api.get(`/admin/fraud-alerts/${type}/${id}`)
+      return response.data
+    } catch (error) {
+      const status = error.response?.status;
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch fraud alert detail',
         errors: error.response?.data?.errors || [],
         status
       }

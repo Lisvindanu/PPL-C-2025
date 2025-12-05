@@ -1,56 +1,63 @@
+"use strict";
+
 /**
- * Delete Service Use Case
- *
- * PENTING: Gunakan soft delete, bukan hard delete.
- * Jangan hapus langsung dari database karena akan merusak referensi order history.
- *
- * Steps yang perlu kamu lakukan:
- * 1. Validasi service exist
- * 2. Cek ownership - pastikan service milik user yang request
- * 3. Cek active orders - jangan izinkan delete jika masih ada order berjalan
- * 4. Set is_active = false (soft delete)
- * 5. Return success message
- *
- * Kenapa soft delete?
- * - Menjaga integritas data order history
- * - User bisa restore jika berubah pikiran
- * - Analytics tetap akurat
+ * Delete (soft delete) Service Use Case
+ * - hanya freelancer pemilik yang boleh menghapus
+ * - admin juga boleh (override)
+ * - mengubah status => 'nonaktif'
  */
+function boom(msg, status = 400) {
+  const e = new Error(msg);
+  e.status = status;
+  return e;
+}
 
 class DeleteService {
-  constructor(serviceRepository, orderRepository = null) {
+  /**
+   * @param {import('../../infrastructure/repositories/SequelizeServiceRepository')} serviceRepository
+   */
+  constructor(serviceRepository) {
     this.serviceRepository = serviceRepository;
-    this.orderRepository = orderRepository; // Nanti kalo order module udah jadi
   }
 
-  async execute(serviceId, userId) {
-    // TODO: Validasi service exist
-    // const service = await this.serviceRepository.findById(serviceId);
-    // if (!service) {
-    //   throw new Error('Service tidak ditemukan');
-    // }
+  /**
+   * @param {string} serviceId
+   * @param {object} authUser
+   */
+  async execute(serviceId, authUser = {}) {
+    if (!authUser || !authUser.id) {
+      throw boom("Unauthorized", 401);
+    }
 
-    // TODO: Cek ownership
-    // if (service.user_id !== userId) {
-    //   throw new Error('Tidak dapat menghapus service milik user lain');
-    // }
+    // Toleransi variasi field role dari token
+    const role =
+      authUser.role ||
+      authUser.userRole ||
+      (Array.isArray(authUser.roles) ? authUser.roles[0] : undefined);
 
-    // TODO: Cek active orders (jika order module sudah diimplementasi)
-    // if (this.orderRepository) {
-    //   const activeOrders = await this.orderRepository.findByServiceId(serviceId, {
-    //     status: ['pending', 'accepted', 'in_progress']
-    //   });
-    //   if (activeOrders.length > 0) {
-    //     throw new Error('Tidak dapat menghapus service yang masih memiliki order aktif');
-    //   }
-    // }
+    // Ambil service
+    const service = await this.serviceRepository.findById(serviceId);
+    if (!service) {
+      throw boom("Service not found", 404);
+    }
 
-    // TODO: Soft delete - set is_active menjadi false
-    // await this.serviceRepository.update(serviceId, { is_active: false });
+    // Owner check (freelancer) — kecuali admin
+    const isOwner = String(service.freelancer_id) === String(authUser.id);
+    const isAdmin = String(role).toLowerCase() === "admin";
 
-    // return { message: 'Service berhasil dihapus' };
+    if (!isOwner && !isAdmin) {
+      throw boom("Forbidden", 403);
+    }
 
-    throw new Error('Not implemented yet - Silakan implementasikan logic di sini');
+    // Kalau sudah nonaktif, kembalikan info yang konsisten
+    if (service.status === "nonaktif") {
+      return { id: service.id, deleted: true, status: "nonaktif" };
+    }
+
+    // Soft delete -> set status nonaktif
+    await this.serviceRepository.softDelete(serviceId);
+
+    return { id: service.id, deleted: true, status: "nonaktif" };
   }
 }
 

@@ -14,7 +14,12 @@ const UserModel = sequelize.define('users', {
   },
   password: {
     type: DataTypes.STRING(255),
-    allowNull: false
+    allowNull: true // Allow null for OAuth users
+  },
+  google_id: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+    unique: true
   },
   role: {
     type: DataTypes.ENUM('client', 'freelancer', 'admin'),
@@ -24,9 +29,12 @@ const UserModel = sequelize.define('users', {
   nama_belakang: DataTypes.STRING(100),
   no_telepon: DataTypes.STRING(20),
   avatar: DataTypes.STRING(255),
+  foto_latar: DataTypes.STRING(255),
   bio: DataTypes.TEXT,
   kota: DataTypes.STRING(100),
   provinsi: DataTypes.STRING(100),
+  anggaran: DataTypes.STRING(100),
+  tipe_proyek: DataTypes.STRING(100),
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true

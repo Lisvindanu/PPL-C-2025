@@ -6,11 +6,22 @@
 const Payment = require('../../domain/entities/Payment');
 const PaymentModel = require('../../infrastructure/models/PaymentModel');
 const MockPaymentGatewayService = require('../../infrastructure/services/MockPaymentGatewayService');
+const MidtransService = require('../../infrastructure/services/MidtransService');
 const { v4: uuidv4 } = require('uuid');
 
 class CreatePayment {
   constructor() {
-    this.paymentGateway = new MockPaymentGatewayService();
+    // Switch antara Mock dan Midtrans berdasarkan environment
+    const useRealGateway = process.env.PAYMENT_GATEWAY === 'midtrans' ||
+                          process.env.NODE_ENV === 'production';
+
+    this.paymentGateway = useRealGateway
+      ? new MidtransService()
+      : new MockPaymentGatewayService();
+
+    this.gatewayType = useRealGateway ? 'midtrans' : 'mock';
+
+    console.log(`[PAYMENT] Using ${this.gatewayType} payment gateway`);
   }
 
   /**
@@ -50,7 +61,7 @@ class CreatePayment {
       total_bayar,
       metode_pembayaran,
       channel: channel || metode_pembayaran,
-      payment_gateway: 'mock',
+      payment_gateway: this.gatewayType,
       status: 'menunggu'
     });
 
@@ -60,15 +71,24 @@ class CreatePayment {
     // Validate payment
     payment.validate();
 
-    // 5. Create transaction via Mock Payment Gateway
+    // 5. Create transaction via Payment Gateway (Mock or Midtrans)
     const gatewayResponse = await this.paymentGateway.createTransaction({
       transaction_id,
       gross_amount: total_bayar,
       customer_details: {
-        user_id
+        user_id,
+        email: dto.customer_email || 'customer@example.com',
+        first_name: dto.customer_name || 'Customer',
+        phone: dto.customer_phone || ''
       },
       payment_method: metode_pembayaran,
-      channel: channel || metode_pembayaran
+      channel: channel || metode_pembayaran,
+      item_details: dto.item_details || [{
+        id: pesanan_id,
+        price: total_bayar,
+        quantity: 1,
+        name: dto.order_title || 'SkillConnect Service'
+      }]
     });
 
     payment.payment_url = gatewayResponse.payment_url;
@@ -105,7 +125,7 @@ class CreatePayment {
       total_bayar: parseFloat(paymentRecord.total_bayar),
       status: paymentRecord.status,
       expires_at: paymentRecord.kadaluarsa_pada,
-      payment_instructions: gatewayResponse.instructions
+      payment_instructions: gatewayResponse.payment_instructions || gatewayResponse.instructions
     };
   }
 

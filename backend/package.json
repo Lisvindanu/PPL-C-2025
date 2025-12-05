@@ -12,9 +12,16 @@
     "test:integration": "jest --testPathPattern=integration",
     "lint": "eslint src/**/*.js",
     "lint:fix": "eslint src/**/*.js --fix",
-    "migrate": "node src/shared/database/migrations.js",
-    "seed": "node src/shared/database/seeders.js"
+
+    "migrate": "sequelize db:migrate --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:undo": "sequelize db:migrate:undo --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:undo:all": "sequelize db:migrate:undo:all --config config/config.js --migrations-path src/shared/database/migrations",
+    "migrate:fresh": "sequelize db:drop --config config/config.js && sequelize db:create --config config/config.js && sequelize db:migrate --config config/config.js --migrations-path src/shared/database/migrations",
+    "seed": "node src/shared/database/seeders/seed.js",
+    "seed:fresh": "npm run migrate:fresh && npm run seed"
+
   },
+
   "keywords": [
     "marketplace",
     "freelance",
@@ -27,6 +34,7 @@
   "author": "SkillConnect Team",
   "license": "MIT",
   "dependencies": {
+    "@scalar/express-api-reference": "^0.8.25",
     "@sendgrid/mail": "^8.1.0",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
@@ -37,6 +45,8 @@
     "dotenv": "^16.3.1",
     "exceljs": "^4.4.0",
     "express": "^4.18.2",
+    "express-validator": "^7.3.0",
+    "google-auth-library": "^9.4.1",
     "helmet": "^7.1.0",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
@@ -48,6 +58,7 @@
     "nodemailer": "^6.10.1",
     "pdfkit": "^0.14.0",
     "sequelize": "^6.35.2",
+    "slugify": "^1.6.6",
     "socket.io": "^4.6.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",

@@ -24,6 +24,11 @@ async function seedDatabase() {
     const paketId2 = uuidv4();
     const pesananId1 = uuidv4();
     const pesananId2 = uuidv4();
+    const pesananId3 = uuidv4();
+    const pesananId4 = uuidv4();
+    const pesananId5 = uuidv4();
+    const layananId3 = uuidv4();
+    const paketId3 = uuidv4();
 
     // Check if users already exist
     const [existingUsers] = await sequelize.query('SELECT COUNT(*) as count FROM users');
@@ -40,7 +45,7 @@ async function seedDatabase() {
       {
         id: adminId,
         email: 'admin@skillconnect.com',
-        password: await bcrypt.hash('Admin123!', 10),
+        password: await bcrypt.hash('Password123!', 10),
         role: 'admin',
         nama_depan: 'Admin',
         nama_belakang: 'SkillConnect',
@@ -54,7 +59,7 @@ async function seedDatabase() {
       {
         id: clientId1,
         email: 'client1@example.com',
-        password: await bcrypt.hash('Client123!', 10),
+        password: await bcrypt.hash('Password123!', 10),
         role: 'client',
         nama_depan: 'Budi',
         nama_belakang: 'Santoso',
@@ -70,7 +75,7 @@ async function seedDatabase() {
       {
         id: clientId2,
         email: 'client2@example.com',
-        password: await bcrypt.hash('Client123!', 10),
+        password: await bcrypt.hash('Password123!', 10),
         role: 'client',
         nama_depan: 'Siti',
         nama_belakang: 'Nurhaliza',
@@ -86,7 +91,7 @@ async function seedDatabase() {
       {
         id: freelancerId1,
         email: 'freelancer1@example.com',
-        password: await bcrypt.hash('Freelancer123!', 10),
+        password: await bcrypt.hash('Password123!', 10),
         role: 'freelancer',
         nama_depan: 'Ahmad',
         nama_belakang: 'Designer',
@@ -103,7 +108,7 @@ async function seedDatabase() {
       {
         id: freelancerId2,
         email: 'freelancer2@example.com',
-        password: await bcrypt.hash('Freelancer123!', 10),
+        password: await bcrypt.hash('Password123!', 10),
         role: 'freelancer',
         nama_depan: 'Rina',
         nama_belakang: 'Developer',
@@ -356,6 +361,23 @@ async function seedDatabase() {
         status: 'aktif',
         created_at: new Date(),
         updated_at: new Date()
+      },
+      {
+        id: layananId3,
+        freelancer_id: freelancerId2,
+        kategori_id: kategoriId2,
+        judul: 'Aplikasi Mobile React Native',
+        slug: 'aplikasi-mobile-react-native',
+        deskripsi: 'Pembuatan aplikasi mobile cross-platform dengan React Native untuk Android dan iOS',
+        harga: 8000000,
+        waktu_pengerjaan: 30,
+        batas_revisi: 4,
+        rating_rata_rata: 4.85,
+        jumlah_rating: 35,
+        total_pesanan: 40,
+        status: 'aktif',
+        created_at: new Date(),
+        updated_at: new Date()
       }
     ]);
     console.log('✓ Layanan seeded');
@@ -388,6 +410,19 @@ async function seedDatabase() {
         waktu_pengerjaan: 20,
         batas_revisi: 5,
         fitur: JSON.stringify(['React Frontend', 'Node.js API', 'Responsive Design', '5x Revisi']),
+        created_at: new Date(),
+        updated_at: new Date()
+      },
+      {
+        id: paketId3,
+        layanan_id: layananId3,
+        tipe: 'standard',
+        nama: 'Standard Mobile App',
+        deskripsi: 'Aplikasi mobile dengan fitur standar',
+        harga: 8000000,
+        waktu_pengerjaan: 30,
+        batas_revisi: 4,
+        fitur: JSON.stringify(['React Native App', 'Android & iOS', 'Push Notification', '4x Revisi']),
         created_at: new Date(),
         updated_at: new Date()
       }
@@ -436,6 +471,68 @@ async function seedDatabase() {
         status: 'dibayar',
         created_at: new Date(),
         updated_at: new Date()
+      },
+      // Order dari Client1 ke Freelancer2
+      {
+        id: pesananId3,
+        nomor_pesanan: 'PES-2025-00003',
+        client_id: clientId1,
+        freelancer_id: freelancerId2,
+        layanan_id: layananId2,
+        paket_id: paketId2,
+        judul: 'Website Toko Online Furniture',
+        deskripsi: 'Membuat website e-commerce untuk toko furniture dengan fitur keranjang dan checkout.',
+        catatan_client: 'Desain clean dan modern, warna earth tone.',
+        harga: 5000000,
+        biaya_platform: 500000,
+        total_bayar: 5500000,
+        waktu_pengerjaan: 20,
+        tenggat_waktu: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        status: 'dikerjakan',
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updated_at: new Date()
+      },
+      // Order dari Client1 ke Freelancer2 (selesai)
+      {
+        id: pesananId4,
+        nomor_pesanan: 'PES-2025-00004',
+        client_id: clientId1,
+        freelancer_id: freelancerId2,
+        layanan_id: layananId3,
+        paket_id: paketId3,
+        judul: 'Aplikasi Mobile Delivery Makanan',
+        deskripsi: 'Aplikasi mobile untuk layanan pesan antar makanan dengan tracking real-time.',
+        catatan_client: 'Seperti GoFood tapi lebih simpel.',
+        harga: 8000000,
+        biaya_platform: 800000,
+        total_bayar: 8800000,
+        waktu_pengerjaan: 30,
+        tenggat_waktu: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        dikirim_pada: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        selesai_pada: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        status: 'selesai',
+        created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      },
+      // Order dari Client2 ke Freelancer2 (dalam proses)
+      {
+        id: pesananId5,
+        nomor_pesanan: 'PES-2025-00005',
+        client_id: clientId2,
+        freelancer_id: freelancerId2,
+        layanan_id: layananId3,
+        paket_id: paketId3,
+        judul: 'Aplikasi Mobile Booking Salon',
+        deskripsi: 'Aplikasi booking untuk salon kecantikan dengan fitur jadwal dan pembayaran.',
+        catatan_client: 'Warna pink dan putih, feminine look.',
+        harga: 8000000,
+        biaya_platform: 800000,
+        total_bayar: 8800000,
+        waktu_pengerjaan: 30,
+        tenggat_waktu: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+        status: 'dikerjakan',
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updated_at: new Date()
       }
     ]);
     console.log('✓ Pesanan seeded');
@@ -478,6 +575,60 @@ async function seedDatabase() {
         dibayar_pada: new Date(),
         created_at: new Date(),
         updated_at: new Date()
+      },
+      // Pembayaran untuk pesanan Client1 ke Freelancer2
+      {
+        id: uuidv4(),
+        pesanan_id: pesananId3,
+        user_id: clientId1,
+        transaction_id: 'TXN-' + (Date.now() + 2),
+        jumlah: 5000000,
+        biaya_platform: 500000,
+        total_bayar: 5500000,
+        metode_pembayaran: 'transfer_bank',
+        channel: 'mandiri_va',
+        payment_gateway: 'mock',
+        status: 'berhasil',
+        nomor_invoice: 'INV-2025-00003',
+        dibayar_pada: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
+      },
+      // Pembayaran untuk pesanan selesai Client1 ke Freelancer2
+      {
+        id: uuidv4(),
+        pesanan_id: pesananId4,
+        user_id: clientId1,
+        transaction_id: 'TXN-' + (Date.now() + 3),
+        jumlah: 8000000,
+        biaya_platform: 800000,
+        total_bayar: 8800000,
+        metode_pembayaran: 'qris',
+        channel: 'qris',
+        payment_gateway: 'mock',
+        status: 'berhasil',
+        nomor_invoice: 'INV-2025-00004',
+        dibayar_pada: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        created_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000),
+        updated_at: new Date(Date.now() - 35 * 24 * 60 * 60 * 1000)
+      },
+      // Pembayaran untuk pesanan Client2 ke Freelancer2
+      {
+        id: uuidv4(),
+        pesanan_id: pesananId5,
+        user_id: clientId2,
+        transaction_id: 'TXN-' + (Date.now() + 4),
+        jumlah: 8000000,
+        biaya_platform: 800000,
+        total_bayar: 8800000,
+        metode_pembayaran: 'e_wallet',
+        channel: 'ovo',
+        payment_gateway: 'mock',
+        status: 'berhasil',
+        nomor_invoice: 'INV-2025-00005',
+        dibayar_pada: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        updated_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000)
       }
     ]);
     console.log('✓ Pembayaran seeded');
@@ -543,10 +694,10 @@ async function seedDatabase() {
     // DONE
     // =============================
     console.log('\n✅ Database seeded successfully!');
-    console.log('\n📝 Test Credentials:');
-    console.log('   Admin: admin@skillconnect.com / Admin123!');
-    console.log('   Client: client1@example.com / Client123!');
-    console.log('   Freelancer: freelancer1@example.com / Freelancer123!');
+    console.log('\n📝 Test Credentials (Password: Password123!):');
+    console.log('   Admin: admin@skillconnect.com');
+    console.log('   Client: client1@example.com, client2@example.com');
+    console.log('   Freelancer: freelancer1@example.com, freelancer2@example.com');
 
     await sequelize.close();
     process.exit(0);

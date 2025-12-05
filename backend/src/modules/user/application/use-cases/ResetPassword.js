@@ -1,4 +1,5 @@
 const UserTokenModel = require('../../../user/infrastructure/models/UserTokenModel');
+const Password = require('../../domain/value-objects/Password');
 
 class ResetPassword {
   constructor({ userRepository, hashService }) {
@@ -7,8 +8,31 @@ class ResetPassword {
     this.userTokenModel = UserTokenModel;
   }
 
-  async execute({ token, newPassword }) {
-    const tokenRow = await this.userTokenModel.findOne({ where: { token, type: 'password_reset' } });
+  async execute({ email, token, newPassword }) {
+    // Validate password strength (8 chars, letters, numbers, symbols)
+    try {
+      new Password(newPassword);
+    } catch (error) {
+      const err = new Error('Password does not meet strength requirements: minimum 8 characters, must include letters, numbers, and symbols');
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const user = await this.userRepository.findByEmail(email);
+    if (!user) {
+      const err = new Error('User not found');
+      err.statusCode = 404;
+      throw err;
+    }
+
+    // Validate token
+    const tokenRow = await this.userTokenModel.findOne({ 
+      where: { 
+        user_id: user.id,
+        token, 
+        type: 'password_reset' 
+      } 
+    });
     if (!tokenRow) {
       const err = new Error('Invalid or expired token');
       err.statusCode = 400;
@@ -27,20 +51,22 @@ class ResetPassword {
       throw err;
     }
 
-    const user = await this.userRepository.findById(tokenRow.user_id);
-    if (!user) {
-      const err = new Error('User not found');
-      err.statusCode = 404;
+    // Check if new password is same as old password
+    const isSamePassword = await this.hashService.compare(newPassword, user.password);
+    if (isSamePassword) {
+      const err = new Error('New password cannot be the same as old password');
+      err.statusCode = 400;
       throw err;
     }
 
+    // Hash and update password
     const hashed = await this.hashService.hash(newPassword);
     await user.update({ password: hashed });
 
-    // mark token used
+    // Mark token as used
     await tokenRow.update({ used_at: new Date() });
 
-    return { message: 'Password updated' };
+    return { message: 'Password updated successfully' };
   }
 }
 

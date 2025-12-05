@@ -22,26 +22,16 @@ async execute(adminId, userId, reason, ipAddress, userAgent) {
       { replacements: [userId] }
     );
 
-    // ======== TAMBAHKAN DEBUG INI ========
-    console.log('=== DEBUG BEFORE SAVE LOG ===');
-    console.log('adminId:', adminId);
-    console.log('userId:', userId);
-    console.log('reason:', reason);
-    console.log('ipAddress:', ipAddress);
-    console.log('userAgent:', userAgent);
-    console.log('===========================');
-    // =====================================
-
     // Log activity
-    await this.adminLogRepository.save({
-      admin_id: adminId,
-      aksi: 'block_user',
-      target_type: 'user',
-      target_id: userId,
-      detail: { reason },
-      ip_address: ipAddress,
-      user_agent: userAgent
-    });
+await this.adminLogRepository.save({
+  adminId: adminId,
+  action: 'block_user',
+  targetType: 'user',
+  targetId: userId,
+  detail: { reason },
+  ipAddress: ipAddress,
+  userAgent: userAgent
+});
 
     return {
       userId,

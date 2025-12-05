@@ -1,58 +1,48 @@
 /**
- * Accept Order Use Case (Seller/Penyedia Only)
+ * Accept Order Use Case (Freelancer Only)
  *
- * Ini dipanggil sama penyedia layanan buat accept order yang masuk.
- * Cuma penyedia yang bisa accept, jangan sampe orang random bisa accept.
+ * Use case untuk freelancer menerima pesanan yang masuk.
+ * Hanya freelancer pemilik layanan yang dapat accept.
  *
  * Steps:
- * 1. Validasi order exist dan status 'pending'
- * 2. Validasi yang request adalah penyedia dari layanan ini
- * 3. Validasi payment udah dibayar (cek di tabel pembayaran)
- * 4. Update status jadi 'accepted'
- * 5. Kirim notifikasi ke buyer
+ * 1. Validasi order exist dan status 'dibayar'
+ * 2. Validasi yang request adalah freelancer dari layanan ini
+ * 3. Update status jadi 'dikerjakan'
+ * 4. Return updated order
  */
 
 class AcceptOrder {
-  constructor(orderRepository, paymentRepository, notificationService = null) {
+  constructor(orderRepository) {
     this.orderRepository = orderRepository;
-    this.paymentRepository = paymentRepository;
-    this.notificationService = notificationService;
   }
 
   async execute(orderId, userId) {
-    // TODO: Validasi order exist
-    // const order = await this.orderRepository.findById(orderId);
-    // if (!order) {
-    //   throw new Error('Order not found');
-    // }
+    // Validasi order exist
+    const order = await this.orderRepository.findById(orderId);
+    if (!order) {
+      const error = new Error('Order tidak ditemukan');
+      error.statusCode = 404;
+      throw error;
+    }
 
-    // TODO: Validasi ownership - harus penyedia
-    // if (order.penyedia_id !== userId) {
-    //   throw new Error('Lu bukan penyedia layanan ini, jangan sok accept');
-    // }
+    // Validasi ownership - harus freelancer pemilik layanan
+    if (order.freelancer_id !== userId) {
+      const error = new Error('Anda tidak memiliki akses untuk menerima order ini');
+      error.statusCode = 403;
+      throw error;
+    }
 
-    // TODO: Validasi status harus pending
-    // if (!order.isPending()) {
-    //   throw new Error(`Order udah ${order.status}, ga bisa di-accept lagi`);
-    // }
+    // Validasi status harus 'dibayar'
+    if (order.status !== 'dibayar') {
+      const error = new Error(`Order dengan status ${order.status} tidak dapat diterima. Pastikan pembayaran sudah berhasil.`);
+      error.statusCode = 400;
+      throw error;
+    }
 
-    // TODO: Validasi payment udah dibayar
-    // const payment = await this.paymentRepository.findByOrderId(orderId);
-    // if (!payment || payment.status !== 'paid') {
-    //   throw new Error('Order ini belum dibayar, jangan accept dulu');
-    // }
+    // Update status jadi 'dikerjakan'
+    const updatedOrder = await this.orderRepository.updateStatus(orderId, 'dikerjakan');
 
-    // TODO: Update status jadi accepted
-    // const updatedOrder = await this.orderRepository.updateStatus(orderId, 'accepted');
-
-    // TODO: Kirim notifikasi ke buyer
-    // if (this.notificationService) {
-    //   await this.notificationService.sendOrderAcceptedNotification(order.user_id, order);
-    // }
-
-    // return updatedOrder;
-
-    throw new Error('Not implemented yet - Kerjain dong, penting ini');
+    return updatedOrder;
   }
 }
 

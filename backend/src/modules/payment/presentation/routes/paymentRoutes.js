@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const PaymentController = require('../controllers/PaymentController');
+const authMiddleware = require('../../../../shared/middleware/authMiddleware');
 
 // Initialize controller
 const paymentController = new PaymentController();
@@ -47,6 +48,7 @@ const paymentController = new PaymentController();
  */
 router.post(
   '/create',
+  authMiddleware,
   paymentController.createPayment.bind(paymentController)
 );
 
@@ -76,6 +78,60 @@ router.post(
 
 /**
  * @swagger
+ * /api/payments/check-status/{transactionId}:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Check payment status and get redirect URL
+ *     description: Check payment status by transaction ID and return appropriate redirect URL for frontend
+ *     parameters:
+ *       - in: path
+ *         name: transactionId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Transaction ID
+ *     responses:
+ *       200:
+ *         description: Payment status checked successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     payment_id:
+ *                       type: string
+ *                       format: uuid
+ *                     transaction_id:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                       enum: [berhasil, menunggu, kadaluarsa, gagal]
+ *                     redirect_url:
+ *                       type: string
+ *                       description: Frontend URL to redirect based on payment status
+ *                     amount:
+ *                       type: number
+ *                     created_at:
+ *                       type: string
+ *                       format: date-time
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/check-status/:transactionId',
+  paymentController.checkPaymentStatus.bind(paymentController)
+);
+
+/**
+ * @swagger
  * /api/payments/{id}:
  *   get:
  *     tags: [Payments]
@@ -88,7 +144,8 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Payment ID
  *     responses:
  *       200:
@@ -110,10 +167,11 @@ router.post(
  *       500:
  *         $ref: '#/components/responses/ServerError'
  */
-router.get(
-  '/:id',
-  paymentController.getPaymentById.bind(paymentController)
-);
+// MOVED: router.get(
+// MOVED:   '/:id',
+// MOVED:   authMiddleware,
+// MOVED:   paymentController.getPaymentById.bind(paymentController)
+// MOVED: );
 
 /**
  * @swagger
@@ -129,7 +187,8 @@ router.get(
  *         name: orderId
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Order ID
  *     responses:
  *       200:
@@ -153,6 +212,7 @@ router.get(
  */
 router.get(
   '/order/:orderId',
+  authMiddleware,
   paymentController.getPaymentByOrderId.bind(paymentController)
 );
 
@@ -189,6 +249,7 @@ router.get(
  */
 router.post(
   '/escrow/release',
+  authMiddleware,
   paymentController.releaseEscrow.bind(paymentController)
 );
 
@@ -206,7 +267,8 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Escrow ID
  *     responses:
  *       200:
@@ -230,6 +292,7 @@ router.post(
  */
 router.get(
   '/escrow/:id',
+  authMiddleware,
   paymentController.getEscrowById.bind(paymentController)
 );
 
@@ -269,7 +332,8 @@ router.get(
  *         $ref: '#/components/responses/ServerError'
  */
 router.post(
-  '/withdraw',
+  '/withdrawal/create',
+  authMiddleware,
   paymentController.createWithdrawal.bind(paymentController)
 );
 
@@ -287,7 +351,8 @@ router.post(
  *         name: id
  *         required: true
  *         schema:
- *           type: integer
+ *           type: string
+ *           format: uuid
  *         description: Withdrawal ID
  *     responses:
  *       200:
@@ -310,8 +375,47 @@ router.post(
  *         $ref: '#/components/responses/ServerError'
  */
 router.get(
-  '/withdrawals/:id',
+  '/withdrawal/:id',
+  authMiddleware,
   paymentController.getWithdrawalById.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/withdrawal/history:
+ *   get:
+ *     tags: [Withdrawals]
+ *     summary: Get withdrawal history
+ *     description: Get user's withdrawal history
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *     responses:
+ *       200:
+ *         description: Withdrawal history
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/withdrawal/history',
+  authMiddleware,
+  paymentController.getWithdrawalHistory.bind(paymentController)
 );
 
 /**
@@ -345,6 +449,7 @@ router.get(
  */
 router.get(
   '/:id/invoice',
+  authMiddleware,
   paymentController.getInvoice.bind(paymentController)
 );
 
@@ -385,6 +490,22 @@ router.get(
  */
 router.post(
   '/:id/send-invoice',
+  authMiddleware,
+  paymentController.sendInvoice.bind(paymentController)
+);
+
+/**
+ * Invoice alias routes - match frontend expectations
+ */
+router.get(
+  '/invoice/:id',
+  authMiddleware,
+  paymentController.getInvoice.bind(paymentController)
+);
+
+router.post(
+  '/invoice/:id/send-email',
+  authMiddleware,
   paymentController.sendInvoice.bind(paymentController)
 );
 
@@ -436,6 +557,7 @@ router.post(
  */
 router.get(
   '/analytics/summary',
+  authMiddleware,
   paymentController.getAnalyticsSummary.bind(paymentController)
 );
 
@@ -458,6 +580,7 @@ router.get(
  */
 router.get(
   '/analytics/escrow',
+  authMiddleware,
   paymentController.getEscrowAnalytics.bind(paymentController)
 );
 
@@ -480,7 +603,119 @@ router.get(
  */
 router.get(
   '/analytics/withdrawals',
+  authMiddleware,
   paymentController.getWithdrawalAnalytics.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/analytics/freelancer-earnings:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Get freelancer earnings analytics
+ *     description: Retrieve freelancer earnings data (freelancer sees own, admin can see any)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date (YYYY-MM-DD)
+ *       - in: query
+ *         name: freelancer_id
+ *         schema:
+ *           type: string
+ *         description: Freelancer ID (admin only)
+ *     responses:
+ *       200:
+ *         description: Freelancer earnings data
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Forbidden - only freelancers can access
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/analytics/freelancer-earnings',
+  authMiddleware,
+  paymentController.getFreelancerEarnings.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/analytics/client-spending:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Get client spending analytics
+ *     description: Retrieve client spending data (client sees own, admin can see any)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: start_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date (YYYY-MM-DD)
+ *       - in: query
+ *         name: end_date
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date (YYYY-MM-DD)
+ *       - in: query
+ *         name: client_id
+ *         schema:
+ *           type: string
+ *         description: Client ID (admin only)
+ *     responses:
+ *       200:
+ *         description: Client spending data
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Forbidden - only clients can access
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/analytics/client-spending',
+  authMiddleware,
+  paymentController.getClientSpending.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/balance:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Get user balance
+ *     description: Get freelancer's available balance, pending escrow, and withdrawn amount
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Balance data
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         description: Forbidden - only freelancers have balance
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/balance',
+  authMiddleware,
+  paymentController.getUserBalance.bind(paymentController)
 );
 
 /**
@@ -522,7 +757,46 @@ router.get(
  */
 router.post(
   '/:id/refund',
+  authMiddleware,
   paymentController.requestRefund.bind(paymentController)
+);
+
+/**
+ * @swagger
+ * /api/payments/refund/request:
+ *   post:
+ *     tags: [Payments]
+ *     summary: Request refund (alias)
+ *     description: Alternative endpoint - payment_id in body instead of URL
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - payment_id
+ *               - alasan
+ *             properties:
+ *               payment_id:
+ *                 type: string
+ *                 description: Payment ID to refund
+ *               alasan:
+ *                 type: string
+ *                 description: Refund reason
+ *               jumlah_refund:
+ *                 type: number
+ *                 description: Refund amount (optional)
+ *     responses:
+ *       201:
+ *         description: Refund request created
+ */
+router.post(
+  '/refund/request',
+  authMiddleware,
+  paymentController.requestRefundAlt.bind(paymentController)
 );
 
 /**
@@ -563,6 +837,7 @@ router.post(
  */
 router.put(
   '/refund/:id/process',
+  authMiddleware,
   paymentController.processRefund.bind(paymentController)
 );
 
@@ -596,7 +871,8 @@ router.put(
  *         description: Refund list
  */
 router.get(
-  '/refunds',
+  '/refund/all',
+  authMiddleware,
   paymentController.getAllRefunds.bind(paymentController)
 );
 
@@ -637,6 +913,7 @@ router.get(
  */
 router.post(
   '/:id/retry',
+  authMiddleware,
   paymentController.retryPayment.bind(paymentController)
 );
 
@@ -659,8 +936,9 @@ if (process.env.NODE_ENV === 'development') {
    *             type: object
    *             properties:
    *               paymentId:
-   *                 type: integer
-   *                 example: 1
+   *                 type: string
+   *                 format: uuid
+   *                 example: "550e8400-e29b-41d4-a716-446655440000"
    *     responses:
    *       200:
    *         description: Payment success triggered
@@ -685,8 +963,9 @@ if (process.env.NODE_ENV === 'development') {
    *             type: object
    *             properties:
    *               paymentId:
-   *                 type: integer
-   *                 example: 1
+   *                 type: string
+   *                 format: uuid
+   *                 example: "550e8400-e29b-41d4-a716-446655440000"
    *     responses:
    *       200:
    *         description: Payment failure triggered
@@ -697,4 +976,36 @@ if (process.env.NODE_ENV === 'development') {
   );
 }
 
+
+/**
+ * @swagger
+ * /api/payments/{id}:
+ *   get:
+ *     tags: [Payments]
+ *     summary: Get payment by ID
+ *     description: Get payment details by ID (any authenticated user can view payments they are involved in)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Payment ID
+ *     responses:
+ *       200:
+ *         description: Payment details
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get(
+  '/:id',
+  authMiddleware,
+  paymentController.getPaymentById.bind(paymentController)
+);
 module.exports = router;

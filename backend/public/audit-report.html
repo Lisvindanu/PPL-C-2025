@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillConnect - Project Audit Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-attachment: fixed;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+
+        /* Glassmorphism Effects */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Animated Gradient Header */
+        .gradient-animate {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Status Badges */
+        .status-complete {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.3);
+        }
+
+        .status-partial {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px rgba(245, 158, 11, 0.3);
+        }
+
+        .status-missing {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Priority Badges */
+        .priority-critical {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            box-shadow: 0 4px 6px rgba(220, 38, 38, 0.4);
+            animation: pulse-red 2s ease-in-out infinite;
+        }
+
+        .priority-high {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            box-shadow: 0 4px 6px rgba(249, 115, 22, 0.4);
+        }
+
+        .priority-medium {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            box-shadow: 0 4px 6px rgba(251, 191, 36, 0.4);
+        }
+
+        .priority-low {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.4);
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 4px 6px rgba(220, 38, 38, 0.4); }
+            50% { box-shadow: 0 6px 20px rgba(220, 38, 38, 0.6); }
+        }
+
+        /* Module Cards */
+        .module-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .module-card:hover::before {
+            left: 100%;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        /* Summary Cards */
+        .summary-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        /* Progress Bar Animation */
+        .progress-bar {
+            transition: width 1s ease-in-out;
+            animation: shimmer 2s infinite;
+            background: linear-gradient(90deg,
+                currentColor 0%,
+                rgba(255,255,255,0.5) 50%,
+                currentColor 100%);
+            background-size: 200% 100%;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Button Animations */
+        button {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        button:active::after {
+            width: 300px;
+            height: 300px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Filter Section */
+        select, input {
+            transition: all 0.3s ease;
+        }
+
+        select:focus, input:focus {
+            transform: scale(1.02);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+            outline: none;
+        }
+
+        /* Chart Container */
+        canvas {
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        /* Fade In Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        /* Loading Shimmer */
+        @keyframes loading-shimmer {
+            0% { background-position: -1000px 0; }
+            100% { background-position: 1000px 0; }
+        }
+
+        .shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 1000px 100%;
+            animation: loading-shimmer 2s infinite;
+        }
+
+        /* Feature List */
+        ul li {
+            transition: all 0.2s ease;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        ul li:hover {
+            transform: translateX(5px);
+            color: #667eea;
+        }
+
+        ul li:hover::before {
+            transform: translateX(3px);
+        }
+
+        /* Completion Badge Animation */
+        .completion-badge {
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        /* Header Floating Animation */
+        .float {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Section Headers */
+        h2 {
+            position: relative;
+            display: inline-block;
+            padding-bottom: 10px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 2px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .gradient-animate {
+                background-size: 200% 200%;
+            }
+
+            .module-card:hover {
+                transform: translateY(-4px);
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .module-card {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-animate text-white shadow-2xl no-print">
+        <div class="container mx-auto px-6 py-12">
+            <h1 class="text-5xl font-extrabold mb-3 float">🚀 SkillConnect Project Audit</h1>
+            <p class="text-lg text-white opacity-90">Comprehensive Full-Stack Analysis • Generated: 2025-11-22</p>
+            <div class="mt-6 flex gap-4 flex-wrap">
+                <button onclick="exportJSON()" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                    📥 Export JSON
+                </button>
+                <button onclick="window.print()" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold shadow-lg">
+                    🖨️ Print PDF
+                </button>
+                <button onclick="scrollToSection('critical')" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold shadow-lg">
+                    🔴 Critical Issues
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Summary Cards -->
+    <div class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8 fade-in">
+            <div class="summary-card rounded-xl shadow-xl p-6 hover:shadow-2xl">
+                <div class="text-purple-600 text-sm font-semibold uppercase tracking-wide">Backend Modules</div>
+                <div class="text-4xl font-extrabold text-gray-900 mt-2 completion-badge">10</div>
+                <div class="text-sm text-green-600 mt-2 font-medium">✨ ~65% Complete</div>
+                <div class="mt-3 text-xs text-gray-500">7 Complete • 2 Partial • 1 Missing</div>
+            </div>
+            <div class="summary-card rounded-xl shadow-xl p-6 hover:shadow-2xl">
+                <div class="text-indigo-600 text-sm font-semibold uppercase tracking-wide">Frontend Pages</div>
+                <div class="text-4xl font-extrabold text-gray-900 mt-2 completion-badge">33</div>
+                <div class="text-sm text-green-600 mt-2 font-medium">✨ ~70% Complete</div>
+                <div class="mt-3 text-xs text-gray-500">Authentication • Services • Payment</div>
+            </div>
+            <div class="summary-card rounded-xl shadow-xl p-6 hover:shadow-2xl border-2 border-red-200">
+                <div class="text-red-600 text-sm font-semibold uppercase tracking-wide">Critical Issues</div>
+                <div class="text-4xl font-extrabold text-red-600 mt-2 completion-badge">2</div>
+                <div class="text-sm text-red-600 mt-2 font-medium">⚠️ Urgent Fix Required</div>
+                <div class="mt-3 text-xs text-gray-500">Order Module • Integration Flow</div>
+            </div>
+            <div class="summary-card rounded-xl shadow-xl p-6 hover:shadow-2xl">
+                <div class="text-yellow-600 text-sm font-semibold uppercase tracking-wide">Overall Health</div>
+                <div class="text-5xl font-extrabold mt-2 completion-badge">🟡</div>
+                <div class="text-sm text-yellow-600 mt-2 font-medium">Moderate Status</div>
+                <div class="mt-3 text-xs text-gray-500">4-6 weeks to completion</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 fade-in">
+            <div class="glass-card rounded-xl shadow-xl p-6 hover:shadow-2xl">
+                <h3 class="text-xl font-bold mb-6 text-gray-800">📊 Module Status Distribution</h3>
+                <canvas id="statusChart"></canvas>
+            </div>
+            <div class="glass-card rounded-xl shadow-xl p-6 hover:shadow-2xl">
+                <h3 class="text-xl font-bold mb-6 text-gray-800">📈 Priority Breakdown</h3>
+                <canvas id="priorityChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="glass-card rounded-xl shadow-xl p-6 mb-8 fade-in">
+            <h3 class="text-xl font-bold mb-6 text-gray-800">🔍 Filters & Search</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                    <select id="statusFilter" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="all">All Status</option>
+                        <option value="complete">✅ Complete</option>
+                        <option value="partial">⚠️ Partial</option>
+                        <option value="missing">❌ Missing</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select id="priorityFilter" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="all">All Priorities</option>
+                        <option value="critical">🔴 Critical</option>
+                        <option value="high">🟠 High</option>
+                        <option value="medium">🟡 Medium</option>
+                        <option value="low">🟢 Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Module Type</label>
+                    <select id="typeFilter" onchange="applyFilters()" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                        <option value="all">All Types</option>
+                        <option value="backend">Backend</option>
+                        <option value="frontend">Frontend</option>
+                        <option value="integration">Integration</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                    <input type="text" id="searchInput" onkeyup="applyFilters()" placeholder="Search modules..." class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                </div>
+            </div>
+        </div>
+
+        <!-- Module Cards -->
+        <div id="moduleContainer">
+            <!-- Backend Modules -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Backend Modules</h2>
+                <div class="space-y-4" id="backendModules"></div>
+            </div>
+
+            <!-- Frontend Pages -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Frontend Pages</h2>
+                <div class="space-y-4" id="frontendModules"></div>
+            </div>
+
+            <!-- Integration Gaps -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 mb-4">Integration Gaps</h2>
+                <div class="space-y-4" id="integrationGaps"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Audit Data
+        const auditData = {
+            backend: [
+                {
+                    name: "User Management",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Registration & Authentication",
+                        "✅ Profile Management",
+                        "✅ Password Reset (OTP)",
+                        "✅ Role Management",
+                        "✅ Freelancer Profile"
+                    ],
+                    missing: [],
+                    notes: "Fully functional with JWT auth, OTP verification, and email service."
+                },
+                {
+                    name: "Service Listing & Search",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Full CRUD Operations",
+                        "✅ File Upload (Thumbnail + Images)",
+                        "✅ Search & Filtering",
+                        "✅ Category/Subcategory Management",
+                        "✅ Admin Approval Workflow"
+                    ],
+                    missing: [],
+                    notes: "Complete with taxonomy validation and pagination support."
+                },
+                {
+                    name: "Order & Booking System",
+                    status: "missing",
+                    priority: "critical",
+                    completion: 30,
+                    type: "backend",
+                    features: [
+                        "✅ GET /orders/:id - View order detail",
+                        "✅ GET /orders/incoming - Freelancer orders"
+                    ],
+                    missing: [
+                        "❌ POST /orders - Returns 501 Not Implemented",
+                        "❌ PATCH /orders/:id/accept - Not implemented",
+                        "❌ PATCH /orders/:id/start - Not implemented",
+                        "❌ PATCH /orders/:id/complete - Returns 501",
+                        "❌ PATCH /orders/:id/cancel - Not implemented",
+                        "❌ Order state machine & validation",
+                        "❌ Frontend uses localStorage mock data"
+                    ],
+                    notes: "CRITICAL: Core business flow is broken. Create order endpoint returns 501."
+                },
+                {
+                    name: "Payment Gateway",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Midtrans Integration",
+                        "✅ Mock Payment Gateway",
+                        "✅ Escrow Service",
+                        "✅ Invoice Generation (PDF)",
+                        "✅ Email Notifications",
+                        "✅ Withdrawal Management",
+                        "✅ Refund Handling",
+                        "✅ Payment Retry Logic"
+                    ],
+                    missing: [],
+                    notes: "Fully functional payment system with multiple gateways."
+                },
+                {
+                    name: "Review & Rating System",
+                    status: "partial",
+                    priority: "medium",
+                    completion: 80,
+                    type: "backend",
+                    features: [
+                        "✅ Basic CRUD Operations",
+                        "✅ Rating Calculation Service",
+                        "✅ Review Moderation",
+                        "✅ Review Reporting"
+                    ],
+                    missing: [
+                        "❌ Swagger Documentation",
+                        "❌ Review Reply Endpoint",
+                        "❌ Review Pagination",
+                        "❌ Review Filtering (by rating, date)",
+                        "❌ Helpful/Unhelpful Voting",
+                        "⚠️ Not Connected to Order Completion"
+                    ],
+                    notes: "Core features work but needs polish and integration with order flow."
+                },
+                {
+                    name: "Chat & Messaging",
+                    status: "missing",
+                    priority: "medium",
+                    completion: 10,
+                    type: "backend",
+                    features: [
+                        "✅ Domain Entities Defined",
+                        "✅ Repository Interfaces"
+                    ],
+                    missing: [
+                        "❌ All endpoints return 501 Not Implemented",
+                        "❌ Socket.io Not Configured",
+                        "❌ Real-time Messaging",
+                        "❌ Message Persistence",
+                        "❌ Conversation Management",
+                        "❌ Read/Unread Status",
+                        "❌ Push Notifications"
+                    ],
+                    notes: "Stub only. Complete implementation needed for user communication."
+                },
+                {
+                    name: "Admin Dashboard & Analytics",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Full Admin CRUD Operations",
+                        "✅ Analytics Service",
+                        "✅ Report Generation (CSV, Excel, PDF)",
+                        "✅ Fraud Detection Service",
+                        "✅ Activity Logging",
+                        "✅ Category/Subcategory Management"
+                    ],
+                    missing: [],
+                    notes: "Comprehensive admin panel with analytics and export features."
+                },
+                {
+                    name: "Recommendation & Personalization",
+                    status: "partial",
+                    priority: "low",
+                    completion: 40,
+                    type: "backend",
+                    features: [
+                        "✅ Domain Entities Defined",
+                        "✅ Basic Repository",
+                        "✅ User Interaction Tracking",
+                        "✅ Similar Services",
+                        "✅ Popular Services"
+                    ],
+                    missing: [
+                        "❌ Advanced Recommendation Algorithms",
+                        "❌ Collaborative Filtering",
+                        "❌ Content-based Filtering",
+                        "❌ ML/AI Integration",
+                        "❌ A/B Testing Support"
+                    ],
+                    notes: "Basic functionality exists. Advanced features for future enhancement."
+                },
+                {
+                    name: "Favorite/Bookmark",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Add/Remove Favorites",
+                        "✅ Get User Favorites",
+                        "✅ Check Favorite Status",
+                        "✅ Dual Endpoints (favorites + bookmarks)"
+                    ],
+                    missing: [],
+                    notes: "Fully functional bookmark system."
+                },
+                {
+                    name: "Exports Module",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "backend",
+                    features: [
+                        "✅ Export functionality exists in Admin module"
+                    ],
+                    missing: [],
+                    notes: "Directory empty but functionality implemented in Admin ReportGenerator."
+                }
+            ],
+            frontend: [
+                {
+                    name: "Authentication Pages",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "frontend",
+                    features: [
+                        "✅ Login Page",
+                        "✅ Register Client Page",
+                        "✅ Register Freelancer Page",
+                        "✅ Forgot Password Flow",
+                        "✅ OTP Confirmation",
+                        "✅ New Password Page"
+                    ],
+                    missing: [],
+                    notes: "Complete authentication flow with API integration."
+                },
+                {
+                    name: "Service Pages",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "frontend",
+                    features: [
+                        "✅ Service List with Filters",
+                        "✅ Service Detail Page",
+                        "✅ Create Service (Freelancer)",
+                        "✅ Edit Service (Freelancer)",
+                        "✅ My Services Dashboard"
+                    ],
+                    missing: [],
+                    notes: "Fully integrated with backend APIs."
+                },
+                {
+                    name: "Order Pages",
+                    status: "missing",
+                    priority: "critical",
+                    completion: 50,
+                    type: "frontend",
+                    features: [
+                        "✅ Order Detail Page (hybrid - attempts API)",
+                        "✅ Incoming Orders (Freelancer) - API connected"
+                    ],
+                    missing: [
+                        "❌ CreateOrderPage - Uses localStorage mock",
+                        "❌ OrderListPage - Status unknown",
+                        "❌ RiwayatPesananPage - localStorage only",
+                        "❌ No API integration for order creation",
+                        "❌ No order status updates UI",
+                        "❌ No order cancellation flow"
+                    ],
+                    notes: "CRITICAL: Only 1/5 pages fully integrated. Order creation broken."
+                },
+                {
+                    name: "Payment Pages",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "frontend",
+                    features: [
+                        "✅ Payment Gateway Selection",
+                        "✅ Payment Processing Page",
+                        "✅ Payment Success Page",
+                        "✅ Payment Error Page",
+                        "✅ Payment Expired Page",
+                        "✅ Payment Pending Page"
+                    ],
+                    missing: [],
+                    notes: "Complete payment flow with status checking."
+                },
+                {
+                    name: "Admin Pages",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "frontend",
+                    features: [
+                        "✅ Admin Dashboard",
+                        "✅ User Management",
+                        "✅ Service Management"
+                    ],
+                    missing: [],
+                    notes: "Fully functional admin interface."
+                },
+                {
+                    name: "Profile & Preferences",
+                    status: "complete",
+                    priority: "low",
+                    completion: 100,
+                    type: "frontend",
+                    features: [
+                        "✅ User Profile Page",
+                        "✅ Favorite/Bookmark Pages"
+                    ],
+                    missing: [],
+                    notes: "Complete profile management."
+                }
+            ],
+            integration: [
+                {
+                    name: "Order Flow (End-to-End)",
+                    status: "missing",
+                    priority: "critical",
+                    completion: 30,
+                    type: "integration",
+                    features: [
+                        "✅ Client can browse services",
+                        "✅ Payment gateway works",
+                        "✅ Freelancer sees incoming orders (if exists)"
+                    ],
+                    missing: [
+                        "❌ Client creates order → localStorage mock only",
+                        "❌ Payment created → order not in DB",
+                        "❌ Freelancer accepts → 501 error",
+                        "❌ Freelancer works → no status update",
+                        "❌ Freelancer completes → 501 error",
+                        "❌ Client reviews → escrow not released",
+                        "❌ Freelancer withdraws → no order connection"
+                    ],
+                    notes: "CRITICAL: Core business flow completely broken from order creation to completion."
+                },
+                {
+                    name: "Review-Escrow Flow",
+                    status: "missing",
+                    priority: "high",
+                    completion: 40,
+                    type: "integration",
+                    features: [
+                        "✅ Client can create review",
+                        "✅ Reviews display on service"
+                    ],
+                    missing: [
+                        "❌ Review not tied to completed order",
+                        "❌ Review doesn't trigger escrow release",
+                        "❌ No review approval workflow",
+                        "❌ Freelancer can't reply to reviews"
+                    ],
+                    notes: "Reviews work but not integrated with order completion and escrow."
+                },
+                {
+                    name: "Withdrawal Flow",
+                    status: "missing",
+                    priority: "high",
+                    completion: 50,
+                    type: "integration",
+                    features: [
+                        "✅ API exists for withdrawal requests",
+                        "✅ Admin API for processing withdrawals"
+                    ],
+                    missing: [
+                        "❌ No freelancer withdrawal dashboard",
+                        "❌ No admin withdrawal approval UI",
+                        "❌ No withdrawal history page",
+                        "❌ No connection to completed orders/escrow"
+                    ],
+                    notes: "Backend ready but no frontend interface."
+                },
+                {
+                    name: "Chat/Communication",
+                    status: "missing",
+                    priority: "medium",
+                    completion: 0,
+                    type: "integration",
+                    features: [],
+                    missing: [
+                        "❌ No backend implementation (all 501)",
+                        "❌ No Socket.io setup",
+                        "❌ No frontend chat UI",
+                        "❌ No notification system",
+                        "❌ No message persistence"
+                    ],
+                    notes: "Complete feature missing - important for user communication."
+                }
+            ]
+        };
+
+        // Initialize Charts
+        const statusCtx = document.getElementById('statusChart').getContext('2d');
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Complete', 'Partial', 'Missing'],
+                datasets: [{
+                    data: [7, 2, 3],
+                    backgroundColor: ['#10b981', '#f59e0b', '#ef4444']
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+
+        const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+        new Chart(priorityCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Critical', 'High', 'Medium', 'Low'],
+                datasets: [{
+                    label: 'Issues by Priority',
+                    data: [2, 3, 2, 7],
+                    backgroundColor: ['#dc2626', '#f97316', '#fbbf24', '#10b981']
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // Render Module Cards
+        function renderModules() {
+            ['backend', 'frontend', 'integration'].forEach(type => {
+                const container = document.getElementById(type === 'backend' ? 'backendModules' :
+                                                         type === 'frontend' ? 'frontendModules' :
+                                                         'integrationGaps');
+                container.innerHTML = auditData[type].map((module, idx) => `
+                    <div class="module-card bg-white rounded-lg shadow-md p-6 border-l-4
+                                ${module.status === 'complete' ? 'border-green-500' :
+                                  module.status === 'partial' ? 'border-yellow-500' : 'border-red-500'}"
+                         data-status="${module.status}"
+                         data-priority="${module.priority}"
+                         data-type="${module.type}">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex-1">
+                                <h3 class="text-xl font-semibold text-gray-900">${module.name}</h3>
+                                <div class="flex gap-2 mt-2">
+                                    <span class="px-2 py-1 text-xs rounded-full priority-${module.priority}">
+                                        ${module.priority.toUpperCase()}
+                                    </span>
+                                    <span class="px-2 py-1 text-xs rounded-full border status-${module.status}">
+                                        ${module.status === 'complete' ? '✅ Complete' :
+                                          module.status === 'partial' ? '⚠️ Partial' : '❌ Missing'}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold ${module.completion === 100 ? 'text-green-600' :
+                                                                 module.completion >= 50 ? 'text-yellow-600' : 'text-red-600'}">
+                                    ${module.completion}%
+                                </div>
+                                <div class="text-sm text-gray-500">Complete</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                                <div class="progress-bar h-3 rounded-full ${module.completion === 100 ? 'bg-green-500' :
+                                                               module.completion >= 50 ? 'bg-yellow-500' : 'bg-red-500'}"
+                                     style="width: 0%"
+                                     data-width="${module.completion}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-3">
+                            ${module.features.length > 0 ? `
+                                <div>
+                                    <h4 class="font-semibold text-gray-700 mb-2">Implemented Features:</h4>
+                                    <ul class="space-y-1 text-sm text-gray-600">
+                                        ${module.features.map(f => `<li>${f}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+
+                            ${module.missing.length > 0 ? `
+                                <div>
+                                    <h4 class="font-semibold text-red-700 mb-2">Missing/Incomplete:</h4>
+                                    <ul class="space-y-1 text-sm text-red-600">
+                                        ${module.missing.map(m => `<li>${m}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+
+                            <div class="bg-gray-50 rounded p-3 mt-4">
+                                <p class="text-sm text-gray-700"><strong>Notes:</strong> ${module.notes}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            });
+        }
+
+        // Apply Filters
+        function applyFilters() {
+            const status = document.getElementById('statusFilter').value;
+            const priority = document.getElementById('priorityFilter').value;
+            const type = document.getElementById('typeFilter').value;
+            const search = document.getElementById('searchInput').value.toLowerCase();
+
+            document.querySelectorAll('.module-card').forEach(card => {
+                const cardStatus = card.dataset.status;
+                const cardPriority = card.dataset.priority;
+                const cardType = card.dataset.type;
+                const cardText = card.textContent.toLowerCase();
+
+                const matchStatus = status === 'all' || cardStatus === status;
+                const matchPriority = priority === 'all' || cardPriority === priority;
+                const matchType = type === 'all' || cardType === type;
+                const matchSearch = search === '' || cardText.includes(search);
+
+                card.style.display = matchStatus && matchPriority && matchType && matchSearch ? 'block' : 'none';
+            });
+        }
+
+        // Export to JSON
+        function exportJSON() {
+            const dataStr = JSON.stringify(auditData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'skillconnect-audit-report.json';
+            link.click();
+        }
+
+        // Scroll to section
+        function scrollToSection(type) {
+            const cards = document.querySelectorAll('.module-card');
+            cards.forEach(card => {
+                if (type === 'critical' && card.dataset.priority === 'critical') {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.style.animation = 'pulse-red 1s ease-in-out 3';
+                }
+            });
+        }
+
+        // Update progress bars with animation
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach((bar, idx) => {
+                setTimeout(() => {
+                    bar.style.width = bar.dataset.width;
+                }, idx * 100);
+            });
+        }
+
+        // Initialize
+        renderModules();
+        setTimeout(animateProgressBars, 500);
+    </script>
+</body>
+</html>

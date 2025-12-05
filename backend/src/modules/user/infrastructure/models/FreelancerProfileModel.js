@@ -14,7 +14,16 @@ const FreelancerProfileModel = sequelize.define('profil_freelancer', {
   },
   judul_profesi: DataTypes.STRING(255),
   keahlian: DataTypes.JSON,
+  bahasa: DataTypes.JSON,
+  edukasi: DataTypes.JSON,
+  lisensi: DataTypes.JSON,
+  deskripsi_lengkap: DataTypes.TEXT,
   portfolio_url: DataTypes.STRING(255),
+  judul_portfolio: DataTypes.STRING(255),
+  deskripsi_portfolio: DataTypes.TEXT,
+  file_portfolio: DataTypes.JSON,
+  avatar: DataTypes.STRING(255),
+  foto_latar: DataTypes.STRING(255),
   total_pekerjaan_selesai: {
     type: DataTypes.INTEGER,
     defaultValue: 0

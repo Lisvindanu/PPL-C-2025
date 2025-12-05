@@ -88,7 +88,7 @@ module.exports = function setupAdminDependencies(sequelize) {
   const unblockService = new UnblockService(serviceRepository, adminLogRepository); // ← TAMBAHKAN INI
   const deleteReview = new DeleteReview(reviewRepository, adminLogRepository);
 
-  const reportGenerator = new ReportGenerator(sequelize);
+  const reportGenerator = new ReportGenerator(sequelize, adminLogService);
   const exportReport = new ExportReport(reportGenerator, adminLogRepository);
   const getAdminActivityLog = new GetAdminActivityLog(adminLogRepository);
 
