@@ -6,20 +6,20 @@ const ITEMS = [
     key: "dashboard",
     label: "Dashboard",
     icon: "home",
-    to: "/freelance/dashboard",
+    to: "/freelance/orders",
   },
   { key: "produk", label: "Produk", icon: "box", to: "/freelance/service" },
   {
     key: "analisis",
     label: "Analisis",
     icon: "chart",
-    to: "/freelance/analytics",
+    to: "/analytics/earnings",
   },
   {
     key: "settings",
     label: "Settings",
     icon: "settings",
-    to: "/freelance/settings",
+    to: "/profile/edit",
   },
 ];
 

@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const { sequelize } = require('./connection');
 
 async function seedUsers() {
-  const password = await bcrypt.hash('password123', 10);
+  const password = await bcrypt.hash('Password123!', 10);
 
   const users = [
     {
@@ -126,27 +126,27 @@ async function seedUsers() {
     });
 
     console.log('✅ Users seeded successfully!\n');
-    console.log('📋 Test Credentials (password: password123):');
+    console.log('📋 Test Credentials (password: Password123!):');
     console.log('━'.repeat(60));
     console.log('👤 Admin:');
     console.log('   Email: admin@skillconnect.com');
-    console.log('   Password: password123');
+    console.log('   Password: Password123!');
     console.log('');
     console.log('👤 Client #1:');
     console.log('   Email: client@skillconnect.com');
-    console.log('   Password: password123');
+    console.log('   Password: Password123!');
     console.log('');
     console.log('👤 Client #2:');
     console.log('   Email: client2@skillconnect.com');
-    console.log('   Password: password123');
+    console.log('   Password: Password123!');
     console.log('');
     console.log('👤 Freelancer #1:');
     console.log('   Email: freelancer@skillconnect.com');
-    console.log('   Password: password123');
+    console.log('   Password: Password123!');
     console.log('');
     console.log('👤 Freelancer #2:');
     console.log('   Email: freelancer2@skillconnect.com');
-    console.log('   Password: password123');
+    console.log('   Password: Password123!');
     console.log('━'.repeat(60));
   } catch (error) {
     console.error('❌ Seeding failed:', error.message);
@@ -489,6 +489,125 @@ async function seedLayanan() {
   }
 }
 
+
+async function seedPesanan() {
+  try {
+    // Get clients and layanan
+    const [clients] = await sequelize.query(
+      "SELECT id, nama_depan, nama_belakang FROM users WHERE role = 'client' ORDER BY created_at LIMIT 2"
+    );
+
+    const [layananList] = await sequelize.query(
+      "SELECT l.id, l.judul, l.harga, l.freelancer_id, u.nama_depan, u.nama_belakang FROM layanan l JOIN users u ON l.freelancer_id = u.id ORDER BY l.created_at LIMIT 4"
+    );
+
+    if (clients.length === 0) {
+      console.log('⚠️  No clients found. Please run seedUsers first.');
+      return;
+    }
+
+    if (layananList.length === 0) {
+      console.log('⚠️  No services found. Please run seedLayanan first.');
+      return;
+    }
+
+    // Check if pesanan already exist
+    const [existingPesanan] = await sequelize.query(
+      'SELECT id FROM pesanan LIMIT 1'
+    );
+
+    if (existingPesanan.length > 0) {
+      console.log('⚠️  Some orders already exist. Skipping seeding...');
+      return;
+    }
+
+    const pesananData = [];
+    const pembayaranData = [];
+    const statuses = ['menunggu_pembayaran', 'dibayar', 'dikerjakan', 'selesai', 'dibatalkan'];
+
+    // Create orders
+    for (let i = 0; i < Math.min(layananList.length, 4); i++) {
+      const client = clients[i % clients.length];
+      const layanan = layananList[i];
+      const status = statuses[i % statuses.length];
+      const pesananId = uuidv4();
+      const nomorPesanan = `ORD-${Date.now()}-${i + 1}`;
+
+      pesananData.push({
+        id: pesananId,
+        nomor_pesanan: nomorPesanan,
+        client_id: client.id,
+        layanan_id: layanan.id,
+        judul: layanan.judul,
+        deskripsi_pesanan: `Pesanan untuk layanan ${layanan.judul}`,
+        harga_total: layanan.harga,
+        status: status,
+        catatan_client: 'Mohon dikerjakan sesuai spesifikasi yang sudah dibahas.',
+        deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+        created_at: new Date(Date.now() - (i * 2 * 24 * 60 * 60 * 1000)),
+        updated_at: new Date()
+      });
+
+      if (status !== 'menunggu_pembayaran') {
+        pembayaranData.push({
+          id: uuidv4(),
+          pesanan_id: pesananId,
+          total_bayar: layanan.harga,
+          metode_pembayaran: ['bank_transfer', 'e_wallet', 'credit_card'][i % 3],
+          status: status === 'dibatalkan' ? 'gagal' : 'berhasil',
+          tanggal_bayar: new Date(Date.now() - (i * 24 * 60 * 60 * 1000)),
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+      }
+    }
+
+    await sequelize.query(`
+      INSERT INTO pesanan (
+        id, nomor_pesanan, client_id, layanan_id, judul, deskripsi_pesanan,
+        harga_total, status, catatan_client, deadline, created_at, updated_at
+      ) VALUES ?
+    `, {
+      replacements: [pesananData.map(p => [
+        p.id, p.nomor_pesanan, p.client_id, p.layanan_id, p.judul, p.deskripsi_pesanan,
+        p.harga_total, p.status, p.catatan_client, p.deadline, p.created_at, p.updated_at
+      ])]
+    });
+
+    if (pembayaranData.length > 0) {
+      await sequelize.query(`
+        INSERT INTO pembayaran (
+          id, pesanan_id, total_bayar, metode_pembayaran, status, tanggal_bayar, created_at, updated_at
+        ) VALUES ?
+      `, {
+        replacements: [pembayaranData.map(p => [
+          p.id, p.pesanan_id, p.total_bayar, p.metode_pembayaran, p.status, p.tanggal_bayar, p.created_at, p.updated_at
+        ])]
+      });
+    }
+
+    console.log('✅ Pesanan seeded successfully!');
+    console.log('📋 Orders Added:');
+    console.log('━'.repeat(60));
+    for (let i = 0; i < pesananData.length; i++) {
+      const p = pesananData[i];
+      const client = clients.find(c => c.id === p.client_id);
+      const layanan = layananList.find(l => l.id === p.layanan_id);
+      console.log(`   ${i + 1}. ${p.nomor_pesanan}`);
+      console.log(`      Layanan: ${p.judul}`);
+      console.log(`      Client: ${client.nama_depan} ${client.nama_belakang}`);
+      console.log(`      Freelancer: ${layanan.nama_depan} ${layanan.nama_belakang}`);
+      console.log(`      Harga: Rp ${p.harga_total.toLocaleString('id-ID')}`);
+      console.log(`      Status: ${p.status}`);
+      console.log('');
+    }
+    console.log('━'.repeat(60));
+  } catch (error) {
+    console.error('❌ Pesanan seeding failed:', error.message);
+    throw error;
+  }
+}
+
 async function runSeeders() {
   try {
     console.log('🌱 Starting database seeding...\n');
@@ -496,6 +615,7 @@ async function runSeeders() {
     await seedUsers();
     await seedKategori();
     await seedLayanan();
+    await seedPesanan();
 
     console.log('\n✅ All seeders completed successfully!');
     process.exit(0);
@@ -509,7 +629,7 @@ if (require.main === module) {
   runSeeders();
 }
 
-module.exports = { runSeeders, seedUsers, seedKategori, seedLayanan };
+module.exports = { runSeeders, seedUsers, seedKategori, seedLayanan, seedPesanan };
 
 console.log("File ini tidak digunakan. Jalankan: src/shared/database/seeders/seed.js");
 

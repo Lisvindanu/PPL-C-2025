@@ -21,7 +21,7 @@ export default function DashboardHeaderBar({
             <div className="justify-self-start">
               <Breadcrumb
                 items={[
-                  { label: "Dashboard", href: "/freelance/dashboard" },
+                  { label: "Dashboard", href: "/freelance/orders" },
                   { label: subPage },
                 ]}
               />
