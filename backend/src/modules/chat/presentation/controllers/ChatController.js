@@ -1,11 +1,44 @@
-/**
- * Chat Controller
- * HTTP handler untuk chat endpoints
- */
+
+const SequelizeConversationRepository = require('../../infrastructure/repositories/SequelizeConversationRepository');
+const SequelizeMessageRepository = require('../../infrastructure/repositories/SequelizeMessageRepository');
+const GetConversations = require('../../application/use-cases/GetConversations');
+const GetMessages = require('../../application/use-cases/GetMessages');
+const SequelizeUserRepository = require('../../../user/infrastructure/repositories/SequelizeUserRepository');
+const EmailService = require('../../../payment/infrastructure/services/EmailService');
+const EmailNotificationService = require('../../infrastructure/services/EmailNotificationService');
+const SendMessage = require('../../application/use-cases/SendMessage');
+const MarkAsRead = require('../../application/use-cases/MarkAsRead');
 
 class ChatController {
-  constructor(sequelize) {
+  constructor(sequelize, socketService) {
     this.sequelize = sequelize;
+    this.socketService = socketService;
+
+    // Inisialisasi repository
+    this.conversationRepository = new SequelizeConversationRepository(sequelize);
+    this.massageRepository = new SequelizeMessageRepository(sequelize);
+    this.userRepository = new SequelizeUserRepository(sequelize);
+    this.emailService = new EmailService(/* dependencies EmailService, misal: new Mailer() */);
+    this.notificationService = new EmailNotificationService(this.userRepository, this.emailService);
+
+    // Inisialisasi use case
+    this.getConversationsUseCase = new GetConversations(this.conversationRepository);
+    this.getMessagesUseCase = new GetMessages(this.messageRepository, this.conversationRepository);
+
+    // Inisialisasi MarkAsRead
+    this.markAsReadUseCase = new MarkAsRead(
+      this.messageRepository,
+      this.conversationRepository,
+      this.socketService
+    );
+
+    this.sendMessageUseCase = new SendMessage(
+      this.messageRepository,
+      this.conversationRepository,
+      this.socketService,
+      this.notificationService,
+      this.userRepository
+    );
   }
 
   /**
@@ -14,11 +47,16 @@ class ChatController {
    */
   async getConversations(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur chat conversations belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const userId = req.user.userId;
+      const { page, limit } = req.query;
+      const conversations = await this.getConversationsUseCase.execute(userId, { page, limit });
+      return res.status(200).json({
+        status: 'success',
+        data: conversations
       });
+
     } catch (error) {
+      console.error('Error getting conversations:', error)
       return res.status(500).json({
         status: 'error',
         message: error.message
@@ -32,17 +70,38 @@ class ChatController {
    */
   async getMessages(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur get messages belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { id: percakapanId } = req.params;
+      const userId = req.user.userId;
+      const { page = 1, limit = 20 } = req.query;
+
+      const data = await this.getMessagesUseCase.execute(
+        userId,
+        percakapanId,
+        { page, limit }
+      );
+
+      return res.status(200).json({
+        status: 'success',
+        data: data
       });
+
     } catch (error) {
+      console.error('Error getting messages:', error);
+      // Handel error spesifiknya
+      if (error.message === 'Percakapan tidak ditemukan') {
+        return res.status(404).json({ status: 'error', message: error.message });
+      }
+      if (error.message === 'Anda bukan bagian dari percakapan ini') {
+        return res.status(403).json({ status: 'error', message: error.message });
+      }
+      // Error  umumnya
       return res.status(500).json({
         status: 'error',
-        message: error.message
+        message: error.message || 'Internal Server Error'
       });
     }
   }
+
 
   /**
    * Send message
@@ -50,11 +109,25 @@ class ChatController {
    */
   async sendMessage(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur send message belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { id: percakapanId } = req.params;
+      const userId = req.user.userId;
+      const { pesan, tipe = 'text', lampiran = null } = req.body;
+
+      if (!pesan && tipe == 'text') {
+        return res.status(400).json({ status: 'error', message: 'Pesan teks tidak boleh kosong' });
+
+      }
+
+      const messageData = { pesan, tipe, lampiran };
+      const newMessage = await this.sendMessageUseCase.execute(userId, percakapanId, messageData);
+
+      return res.status(201).json({
+        status: 'success',
+        data: newMessage
       });
+
     } catch (error) {
+      console.error('Error sending message:', error)
       return res.status(500).json({
         status: 'error',
         message: error.message
@@ -68,14 +141,23 @@ class ChatController {
    */
   async markAsRead(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur mark as read belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { id: percakapanId } = req.params;
+      const userId = req.user.userId;
+
+      await this.markAsReadUseCase.execute(percakapanId, userId);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'Pesan berhasil ditandai sebagai terbaca'
       });
     } catch (error) {
+      console.error('Error marking as read:', error);
+      if (error.message.includes('Percakapan')) {
+        return res.status(404).json({ status: 'error', message: error.message });
+      }
       return res.status(500).json({
         status: 'error',
-        message: error.message
+        message: error.message || 'Internal Server Error'
       });
     }
   }
@@ -86,11 +168,23 @@ class ChatController {
    */
   async createConversation(req, res) {
     try {
-      return res.status(501).json({
-        status: 'error',
-        message: 'Fitur create conversation belum diimplementasikan - akan ditambahkan di sprint mendatang'
+      const { user2_id } = req.body;
+      const user1_id = req.user.userId;
+
+      if (!user2_id) {
+        return res.status(400).json({ status: 'error', message: 'user2_id diperlukan' });
+      }
+
+      const conversation = await this.conversationRepository.createOrFind(user1_id, user2_id);
+
+      return res.status(200).json({
+        status: 'success',
+        message: 'percakapan berhasil ditemukan atau dibuat',
+        data: conversation
       });
+
     } catch (error) {
+      console.error('Error creating conversation:', error);
       return res.status(500).json({
         status: 'error',
         message: error.message
